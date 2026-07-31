@@ -165,7 +165,7 @@ export function Sidebar({
       />
 
       <div className="relative px-5 py-5 border-b border-white/8 flex items-center gap-3">
-        <div className="relative h-10 w-10 rounded-xl bg-white/95 flex items-center justify-center shadow-sm ring-1 ring-inset ring-white/70 overflow-hidden">
+        <div className="relative h-12 w-12 rounded-xl bg-white/95 flex items-center justify-center shadow-sm ring-1 ring-inset ring-white/70 overflow-hidden">
           <img src={vcpmcLogo} alt="VCPMC" className="h-full w-full object-cover" />
           <span className="absolute -bottom-0.5 -right-0.5 h-1.5 w-1.5 rounded-full bg-[var(--vc-enterprise-accent)] shadow-[0_0_6px_rgba(45,212,191,0.8)]" />
         </div>

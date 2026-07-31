@@ -827,7 +827,7 @@ export const hasValidCalculationLines = (
 export const validateBusinessLocation = (
   location: BusinessUsageLocation,
   locationIndex: number,
-  isKvcDomain: boolean = false
+  isKvcDomain = false
 ): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
   const prefix = `areaBased.locations[${locationIndex}]`;
@@ -876,7 +876,7 @@ export const validateBusinessLocation = (
  */
 export const validateAreaBasedLocations = (
   areaBased: AreaBasedUsageInfo,
-  isKvcDomain: boolean = false
+  isKvcDomain = false
 ): ValidationIssue[] => {
   const issues: ValidationIssue[] = [];
 

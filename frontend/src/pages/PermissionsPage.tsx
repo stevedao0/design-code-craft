@@ -5,7 +5,6 @@ import {
   RotateCcwIcon,
   AlertCircleIcon,
   LoaderIcon,
-  ShieldCheckIcon,
   ChevronRightIcon,
   UserCheckIcon,
   UserXIcon,
@@ -24,7 +23,6 @@ import {
   updateUserRolePermissions,
   AdminUser,
   PermissionMatrix,
-  RolePermissionsPayload,
 } from "../lib/adminClient";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -139,7 +137,6 @@ export function PermissionsPage() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [toast, setToast] = useState<{ type: "success" | "error" | "warning"; message: string } | null>(
     null
   );
@@ -506,8 +503,6 @@ export function PermissionsPage() {
                       );
                       if (groupPerms.length === 0) return null;
                       const allChecked = groupPerms.every((p) => localPerms.includes(p.key));
-                      const someChecked =
-                        groupPerms.some((p) => localPerms.includes(p.key)) && !allChecked;
 
                       return (
                         <div key={group.key} className="space-y-3">

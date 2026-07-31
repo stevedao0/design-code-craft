@@ -216,6 +216,7 @@ function AdminKpiOverview(props: {
                   <MultiRingKpi
                     fields={ringFields as any}
                     selectedField={null}
+                    /* eslint-disable-next-line @typescript-eslint/no-empty-function */
                     onFieldSelect={() => {}}
                     size={72}
                   />

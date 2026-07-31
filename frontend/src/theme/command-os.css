@@ -1671,7 +1671,11 @@ Loaded LAST so it wins over enterprise.css rules.
   background: #D6B15E;
   box-shadow: 0 0 0 2px #FAF9F6, 0 0 6px rgba(47,125,115,0.55);
 }
-.vc-command-orb__logo { display: none !important; }
+.vc-command-orb__logo {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+}
 
 /* ── Command date pill: light ivory ───────────────────── */
 .vc-command-date-pill {
@@ -2262,7 +2266,7 @@ Loaded AFTER command-os.css so these win.
   --nav-size: 72px;
   --nav-rail-size: var(--nav-size);
   --nav-ribbon-size: var(--nav-size);
-  --nav-orb-size: 48px;            /* corner square for the brand mark */
+  --nav-orb-size: 56px;            /* corner square for the brand mark */
   --nav-icon-size: 22px;            /* nav icon stroke */
   --nav-brand-green: #4A7202;       /* authoritative brand green */
   --nav-brand-green-soft: rgba(74, 114, 2, 0.10);
@@ -2446,8 +2450,8 @@ Loaded AFTER command-os.css so these win.
 }
 .vcpmc-orb__logo {
   display: block;
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
@@ -3189,10 +3193,10 @@ Loaded AFTER command-os.css so these win.
 .vcpmc-rail__item--danger:hover { color: #FFD9D2 !important; background: rgba(214, 60, 40, 0.35) !important; }
 
 /* ── Orb: original logo, kept intact, lifted on a white disc ── */
-.vcpmc-rail__top { height: 52px; }
+.vcpmc-rail__top { height: 64px; }
 .vcpmc-orb {
-  width: 48px;
-  height: 48px;
+  width: 56px;
+  height: 56px;
   background: #FFFFFF !important;
   border: 2px solid rgba(255, 255, 255, 0.9) !important;
   box-shadow:
@@ -3213,7 +3217,7 @@ Loaded AFTER command-os.css so these win.
     0 0 0 6px rgba(255, 255, 255, 0.34),
     0 10px 22px -10px rgba(0, 0, 0, 0.6);
 }
-.vcpmc-orb__logo { width: 38px; height: 38px; }
+.vcpmc-orb__logo { width: 46px; height: 46px; }
 
 @media (max-width: 768px) {
   .vcpmc-rail {
@@ -3418,8 +3422,8 @@ Loaded AFTER command-os.css so these win.
 
 /* ── Orb: same square geometry as every rail item ───────────── */
 .vcpmc-orb {
-  width: 46px !important;
-  height: 46px !important;
+  width: 54px !important;
+  height: 54px !important;
   border-radius: var(--nav-corner-radius) !important;
   background: #FFFFFF !important;
   border: 1px solid rgba(255, 255, 255, 0.85) !important;
@@ -3439,7 +3443,7 @@ Loaded AFTER command-os.css so these win.
     0 0 0 4px rgba(255, 255, 255, 0.32),
     0 12px 22px -12px rgba(0, 0, 0, 0.7) !important;
 }
-.vcpmc-orb__logo { width: 34px; height: 34px; }
+.vcpmc-orb__logo { width: 38px; height: 38px; }
 .vcpmc-rail__item { border-radius: var(--nav-corner-radius); }
 
 /* ── Ribbon controls on the green surface ───────────────────── */

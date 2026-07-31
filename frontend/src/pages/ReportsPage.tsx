@@ -14,7 +14,7 @@
  *
  * Shared: year selector, refresh, export, page shell.
  */
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   RefreshCwIcon, PrinterIcon, ChevronDownIcon, AlertCircleIcon,
   FileSpreadsheetIcon, FileTextIcon, FileIcon,
@@ -873,6 +873,7 @@ function KpiManageTab({ year }: { year: number }) {
         onOpenChange={setOpen}
         initialYear={year}
         initialEmail=""
+        /* eslint-disable-next-line @typescript-eslint/no-empty-function */
         onChange={() => {}}
       />
     </>

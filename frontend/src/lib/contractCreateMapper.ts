@@ -1427,7 +1427,7 @@ function formatVND(value: number): string {
  * Create a new business usage location with default values.
  */
 export const createDefaultBusinessLocation = (
-  existingLocationsCount: number = 0
+  existingLocationsCount = 0
 ): BusinessUsageLocation => {
   return {
     id: `${LOCATION_ID_PREFIX}${Date.now()}-${existingLocationsCount}`,
@@ -1685,7 +1685,7 @@ export const roundIncrementBlocksHalfUp = (rawBlocks: number): number => {
 export const calculateVcpmcTariffLocation = (
   areaM2: number,
   locationId: string,
-  locationName: string = ''
+  locationName = ''
 ): VcpmcTariffLocationResult => {
   const excessArea = Math.max(0, areaM2 - KVC_BASE_INCLUDED_AREA_M2);
   const rawBlocks = excessArea / KVC_BLOCK_SIZE_M2;
@@ -1732,7 +1732,7 @@ export const calculateVcpmcTariffLocation = (
 export const calculateVcpmcTariff = (
   locations: { id: string; name: string; areaM2: number }[],
   gtgtPercent: number,
-  supportAmount: number = 0
+  supportAmount = 0
 ): VcpmcTariffResult => {
   // Calculate each location
   const locationResults = locations.map((loc) =>

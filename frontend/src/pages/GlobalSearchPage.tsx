@@ -106,7 +106,7 @@ interface GlobalSearchPageProps {
   onOpenDetail: (id: number) => void;
 }
 
-export function GlobalSearchPage({ onNavigate, onOpenDetail }: GlobalSearchPageProps) {
+export function GlobalSearchPage({ onNavigate: _onNavigate, onOpenDetail }: GlobalSearchPageProps) {
   useAuth();
 
   // Search state

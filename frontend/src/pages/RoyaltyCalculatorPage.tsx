@@ -13,7 +13,7 @@ import { createPortal } from 'react-dom';
 import * as Lucide from 'lucide-react';
 import {
   CalculatorIcon, InfoIcon, RotateCcwIcon, FileDownIcon, ChevronDownIcon,
-  CheckCircle2Icon, AlertTriangleIcon,
+  AlertTriangleIcon,
   PlusIcon, XIcon, SearchIcon,
 } from 'lucide-react';
 import {
@@ -28,8 +28,6 @@ import { recordSnapshot } from '../lib/calculations/calculationHistoryStore';
 import { ExcelExportButton } from '../components/calculations/ExcelExportButton';
 import type { ExcelExportUiState } from '../components/calculations/calculationTypes';
 import {
-  generateRoyaltyCalculationWorkbook,
-  workbookFilename,
 } from '../lib/calculations/generateRoyaltyCalculationWorkbook';
 import { ContractExcelExportDialog } from '../components/calculations/ContractExcelExportDialog';
 import { VcpmcMoneyTable } from '../components/app-ui/data-table/VcpmcMoneyTable';

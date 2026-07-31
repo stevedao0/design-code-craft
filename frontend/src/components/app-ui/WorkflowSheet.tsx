@@ -372,7 +372,7 @@ export function WorkflowSheet({
 function renderWorkflowBody(
   workflow: Exclude<WorkflowKind, null>,
   onOpenFullPage: () => void,
-  embedded: boolean = false,
+  embedded = false,
 ): React.ReactNode {
   switch (workflow) {
     case 'create-contract':
