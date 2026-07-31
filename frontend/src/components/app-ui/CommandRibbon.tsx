@@ -109,20 +109,7 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLaun
           </nav>
         </div>
 
-        {/* CENTER: command hint */}
-        <button
-          type="button"
-          onClick={onOpenLauncher}
-          className="vcpmc-ribbon__hint"
-          aria-label="Mở command launcher"
-          title="Mở command launcher (Ctrl + K)"
-        >
-          <Search className="vcpmc-ribbon__hint-icon" aria-hidden />
-          <span className="vcpmc-ribbon__hint-text">Tìm trang, hành động...</span>
-          <kbd className="vcpmc-ribbon__hint-kbd">⌘K</kbd>
-        </button>
-
-        {/* RIGHT: calculator action + date + avatar */}
+        {/* RIGHT: system tray — Bảng tính · đồng hồ · avatar */}
         <div className="vcpmc-ribbon__right">
           {onOpenCalculator && (
             <button
@@ -136,14 +123,18 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLaun
               <span className="vcpmc-header-action__label">Bảng tính</span>
             </button>
           )}
-          <span className="vcpmc-ribbon__date" aria-label={`Hôm nay ${weekday} ${dayMonth}`}>
-            <span className="vcpmc-ribbon__date-wd">{weekday}</span>
-            <span className="vcpmc-ribbon__date-dm">{dayMonth}</span>
-          </span>
-          <span className="vcpmc-ribbon__avatar" title={currentUser?.email || ''}>
-            {initials}
-          </span>
+          <div className="vcpmc-tray">
+            <span className="vcpmc-tray__clock" title={`${time} · ${fullDate}`}>
+              <span className="vcpmc-tray__time">{time}</span>
+              <span className="vcpmc-tray__date">{fullDate}</span>
+            </span>
+            <span className="vcpmc-tray__divider" aria-hidden />
+            <span className="vcpmc-ribbon__avatar" title={currentUser?.email || ''}>
+              {initials}
+            </span>
+          </div>
         </div>
+
       </div>
     </header>
   );
