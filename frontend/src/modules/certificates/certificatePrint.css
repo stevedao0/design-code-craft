@@ -1,0 +1,446 @@
+.gcn-locked-paper-preview {
+  width: 100%;
+}
+
+.gcn-locked-paper-preview--print {
+  width: 209.6mm;
+  height: 296.6mm;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.gcn-locked-paper-shell--screen {
+  overflow: auto;
+  border: 1px solid rgb(228 228 231);
+  border-radius: 12px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(15, 23, 42, 0.04) 0%, transparent 60%),
+    linear-gradient(180deg, #f6f6f7 0%, #ececef 100%);
+  padding: 24px 16px;
+  /* The shell is the scroll container for the A4 paper; it provides
+   * the canvas/desk background. When the paper is zoomed, we need
+   * to reserve enough space for the scaled paper, otherwise the
+   * paper will clip at the shell boundaries. */
+  min-height: 360px;
+  max-height: calc(100vh - 280px);
+}
+
+/* The outer wrapper is provided by the page; give it position: relative
+   so the ::before grid background of the inner shell positions correctly. */
+.gcn-paper-shell-wrap {
+  position: relative;
+}
+
+/* When the preview is in fit mode, the shell auto-centers the paper
+   and allows the paper to scale. We add extra horizontal padding so
+   the scaled paper can extend slightly beyond the container. */
+.gcn-locked-paper-shell--screen > .gcn-locked-paper-calibrated {
+  margin-left: auto;
+  margin-right: auto;
+  /* Allow the scaled paper to overflow horizontally slightly without
+     creating layout shifts; the shell's overflow:auto handles scrolling. */
+  will-change: transform;
+}
+
+.gcn-locked-paper-shell--print {
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.gcn-locked-paper {
+  position: relative;
+  box-sizing: border-box;
+  width: 209.6mm;
+  height: 296.6mm;
+  background: #fff;
+  overflow: hidden;
+  color: #111;
+  font-family: "Times New Roman", serif;
+  page-break-inside: avoid;
+  break-inside: avoid-page;
+}
+
+.gcn-locked-paper--screen {
+  margin: 0 auto;
+  /* Subtle but real paper shadow: layered, soft, top-anchored */
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 8px 24px -8px rgba(15, 23, 42, 0.18),
+    0 24px 60px -20px rgba(15, 23, 42, 0.22);
+  /* Clean white paper with a barely-perceptible off-white tint */
+  background:
+    linear-gradient(180deg, #ffffff 0%, #fdfdfc 100%);
+  border-radius: 1px;
+}
+
+/* The shell provides a clear "desk" canvas behind the paper */
+.gcn-locked-paper-shell--screen::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(15, 23, 42, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 23, 42, 0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-position: 12px 12px;
+  border-radius: 12px;
+  z-index: 0;
+}
+
+.gcn-locked-paper-shell--screen > * {
+  position: relative;
+  z-index: 1;
+}
+
+.gcn-locked-paper--print {
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.gcn-locked-field {
+  position: absolute;
+  box-sizing: border-box;
+  padding: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: "Times New Roman", serif;
+}
+
+.gcn-locked-bottom-anchor {
+  position: absolute;
+  box-sizing: border-box;
+  display: block;
+  padding: 0;
+  font-size: 11pt;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.gcn-locked-qr-field {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.gcn-locked-qr-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.gcn-locked-qr-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 1px dashed rgb(113 113 122);
+  color: rgb(82 82 91);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 7pt "Times New Roman", serif;
+}
+
+.gcn-locked-coordinate-tag {
+  position: absolute;
+  right: 0;
+  top: -6mm;
+  border-radius: 3px;
+  background: #e0f2fe;
+  color: #0c4a6e;
+  font-size: 8px;
+  line-height: 1;
+  padding: 0.4mm 0.8mm;
+}
+
+/* Print root shell — used by print mode to contain absolute-positioned paper */
+.gcn-locked-print-root {
+  position: relative;
+  box-sizing: border-box;
+  width: 209.6mm;
+  height: 296.6mm;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+/* Print page wrapper — single page container */
+.gcn-locked-print-page {
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  width: 209.6mm;
+  height: 296.6mm;
+  background: #fff;
+  overflow: hidden;
+}
+
+/* Inline display mode — for embedding inside print */
+.gcn-locked-print-root--inline {
+  display: none;
+}
+
+/* ============================================================ */
+/* @page: A4 portrait, no margins — LOCKED from OLD APP         */
+/* Paper size: 209.6mm x 296.6mm = A4 in tenths of millimeter  */
+/* ============================================================ */
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+/* ============================================================ */
+/* @media print: PORTED from OLD APP CertificatePrintStandalone   */
+/* Hides all UI chrome, forces exact paper dimensions,           */
+/* positions certificate absolutely at top-left of page          */
+/* ============================================================ */
+@media print {
+  /* Hide all non-print elements */
+  .no-print,
+  [data-radix-toast-viewport],
+  [data-radix-toast-root],
+  .toast,
+  .toaster,
+  .sonner-toaster,
+  .snackbar,
+  .alert,
+  .action-bar,
+  .sticky-footer,
+  .floating-actions {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Force html/body to exact paper size, no margins, no overflow */
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 209.6mm !important;
+    height: 296.6mm !important;
+    min-height: 296.6mm !important;
+    max-height: 296.6mm !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+
+  /* Force #root to exact paper size */
+  #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 209.6mm !important;
+    height: 296.6mm !important;
+    min-height: 296.6mm !important;
+    max-height: 296.6mm !important;
+    max-width: none !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  /* Force all shell wrappers to paper dimensions, no chrome */
+  .gcn-locked-paper-preview--print,
+  .gcn-locked-paper-shell--print,
+  .gcn-locked-paper {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    transform: none !important;
+    max-width: none !important;
+    width: 209.6mm !important;
+    height: 296.6mm !important;
+    min-height: 296.6mm !important;
+    max-height: 296.6mm !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+
+  /* Hide coordinate tags in print */
+  .gcn-locked-coordinate-tag {
+    display: none !important;
+  }
+
+  /* Ensure absolute positioned elements within paper stay within bounds */
+  .gcn-locked-paper > * {
+    /* Constrain to page */
+    max-width: 209.6mm !important;
+  }
+
+  /* ============================================================ */
+  /* body.certificate-print-mode: PORTED from OLD APP             */
+  /* This class is added to <body> when print is triggered.        */
+  /* It hides everything except the certificate paper content.     */
+  /* ============================================================ */
+  body.certificate-print-mode .no-print,
+  body.certificate-print-mode [data-radix-toast-viewport],
+  body.certificate-print-mode [data-radix-toast-root],
+  body.certificate-print-mode .toast,
+  body.certificate-print-mode .toaster,
+  body.certificate-print-mode .sonner-toaster,
+  body.certificate-print-mode .snackbar,
+  body.certificate-print-mode .alert,
+  body.certificate-print-mode .action-bar,
+  body.certificate-print-mode .sticky-footer,
+  body.certificate-print-mode .floating-actions {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  body.certificate-print-mode html,
+  body.certificate-print-mode body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 209.6mm !important;
+    height: 296.6mm !important;
+    min-height: 296.6mm !important;
+    max-height: 296.6mm !important;
+    overflow: hidden !important;
+    background: #fff !important;
+  }
+
+  body.certificate-print-mode #root {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 209.6mm !important;
+    height: 296.6mm !important;
+    min-height: 296.6mm !important;
+    max-height: 296.6mm !important;
+    max-width: none !important;
+    text-align: left !important;
+    overflow: hidden !important;
+  }
+
+  /* Everything inside #root is hidden first */
+  body.certificate-print-mode #root * {
+    visibility: hidden !important;
+  }
+
+  /* Then reveal print root/page and paper */
+  body.certificate-print-mode #root .gcn-locked-print-root,
+  body.certificate-print-mode #root .gcn-locked-print-root *,
+  body.certificate-print-mode #root .gcn-locked-print-page,
+  body.certificate-print-mode #root .gcn-locked-print-page * {
+    visibility: visible !important;
+  }
+
+  body.certificate-print-mode .gcn-locked-print-root,
+  body.certificate-print-mode .gcn-locked-print-page {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    box-sizing: border-box !important;
+    width: 209.6mm !important;
+    height: 296.6mm !important;
+    min-height: 296.6mm !important;
+    max-height: 296.6mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    break-after: avoid-page !important;
+    page-break-before: avoid !important;
+    break-before: avoid-page !important;
+    z-index: 2147483647 !important;
+  }
+
+  /* Hide coordinate tags in certificate-print-mode */
+  body.certificate-print-mode .gcn-locked-coordinate-tag {
+    display: none !important;
+  }
+}
+
+/* ============================================================ */
+/* Print calibration — Phase 1                                  */
+/* Wraps .gcn-locked-paper in .gcn-locked-paper-calibrated      */
+/* so the existing print rule (transform: none) does not         */
+/* override our offset transform.                                */
+/* ============================================================ */
+.gcn-locked-paper-calibrated {
+  display: block;
+  /* transform / width / height come from inline style so the
+     same component works for screen preview and popup print. */
+}
+
+.gcn-locked-calib-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.gcn-locked-calib-mark {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+.gcn-locked-calib-mark::before,
+.gcn-locked-calib-mark::after {
+  content: '';
+  position: absolute;
+  background: #111;
+}
+
+.gcn-locked-calib-mark::before {
+  left: -4mm;
+  top: -0.1mm;
+  width: 8mm;
+  height: 0.2mm;
+}
+
+.gcn-locked-calib-mark::after {
+  left: -0.1mm;
+  top: -4mm;
+  width: 0.2mm;
+  height: 8mm;
+}
+
+.gcn-locked-calib-mark-label {
+  position: absolute;
+  left: 1.2mm;
+  top: 1.2mm;
+  font: 6pt "Times New Roman", serif;
+  color: #111;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.gcn-locked-calib-label {
+  position: absolute;
+  top: 144mm;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font: 7pt "Times New Roman", serif;
+  color: #b91c1c;
+  letter-spacing: 0.2mm;
+}
+
+/* Hide calibration marks in official print (popup uses certificate-print-mode). */
+body.certificate-print-mode .gcn-locked-calib-overlay,
+body.certificate-print-mode .gcn-locked-calib-mark,
+body.certificate-print-mode .gcn-locked-calib-label {
+  display: none !important;
+}
+
+@media print {
+  .gcn-locked-calib-overlay,
+  .gcn-locked-calib-mark,
+  .gcn-locked-calib-label {
+    /* Belt and braces: if anything bypasses certificate-print-mode,
+       the @media print block still hides calibration chrome. */
+    visibility: hidden !important;
+  }
+}

@@ -1,0 +1,218 @@
+{
+  "ts": "2026-07-19T12:44:00Z",
+  "phase": "post-verify",
+  "A_annual_kpi_targets_exists": true,
+  "A_columns": {
+    "id": {
+      "column_name": "id",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": "nextval('annual_kpi_targets_id_seq'::regclass)"
+    },
+    "user_id": {
+      "column_name": "user_id",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    "year": {
+      "column_name": "year",
+      "data_type": "integer",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    "annual_target": {
+      "column_name": "annual_target",
+      "data_type": "bigint",
+      "is_nullable": "NO",
+      "column_default": null
+    },
+    "note": {
+      "column_name": "note",
+      "data_type": "text",
+      "is_nullable": "YES",
+      "column_default": null
+    },
+    "created_at": {
+      "column_name": "created_at",
+      "data_type": "timestamp without time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    },
+    "updated_at": {
+      "column_name": "updated_at",
+      "data_type": "timestamp without time zone",
+      "is_nullable": "NO",
+      "column_default": "now()"
+    }
+  },
+  "A_constraints": [
+    {
+      "conname": "annual_kpi_targets_year_check",
+      "contype": "c",
+      "def": "CHECK (((year >= 2000) AND (year <= 2100)))"
+    },
+    {
+      "conname": "annual_kpi_targets_annual_target_check",
+      "contype": "c",
+      "def": "CHECK ((annual_target >= 0))"
+    },
+    {
+      "conname": "annual_kpi_targets_pkey",
+      "contype": "p",
+      "def": "PRIMARY KEY (id)"
+    },
+    {
+      "conname": "uq_annual_kpi_user_year",
+      "contype": "u",
+      "def": "UNIQUE (user_id, year)"
+    },
+    {
+      "conname": "annual_kpi_targets_user_id_fkey",
+      "contype": "f",
+      "def": "FOREIGN KEY (user_id) REFERENCES users(id)"
+    }
+  ],
+  "A_indexes": [
+    {
+      "indexname": "annual_kpi_targets_pkey",
+      "indexdef": "CREATE UNIQUE INDEX annual_kpi_targets_pkey ON public.annual_kpi_targets USING btree (id)"
+    },
+    {
+      "indexname": "uq_annual_kpi_user_year",
+      "indexdef": "CREATE UNIQUE INDEX uq_annual_kpi_user_year ON public.annual_kpi_targets USING btree (user_id, year)"
+    }
+  ],
+  "A_row_count": 0,
+  "B_kpi_owner_column": {
+    "column_name": "kpi_owner_user_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  "B_reference_contract_column": {
+    "column_name": "reference_contract_id",
+    "data_type": "integer",
+    "is_nullable": "YES",
+    "column_default": null
+  },
+  "B_kpi_owner_user_id_non_null_count": 0,
+  "B_constraints": [
+    {
+      "conname": "fk_kpi_owner_user",
+      "contype": "f",
+      "def": "FOREIGN KEY (kpi_owner_user_id) REFERENCES users(id) ON DELETE SET NULL"
+    },
+    {
+      "conname": "fk_reference_contract",
+      "contype": "f",
+      "def": "FOREIGN KEY (reference_contract_id) REFERENCES contract_records(id) ON DELETE SET NULL"
+    },
+    {
+      "conname": "reference_contract_not_self",
+      "contype": "c",
+      "def": "CHECK (((reference_contract_id IS NULL) OR (reference_contract_id <> id))) NOT VALID"
+    }
+  ],
+  "B_indexes": [
+    "ix_kpi_owner_user_id",
+    "ix_reference_contract_id"
+  ],
+  "B_existing_legacy_column_previous_contract_id": true,
+  "B_existing_legacy_column_contract_signing_type": false,
+  "C_contract_records_total": 3990,
+  "C_annex_total": 202,
+  "C_contract_records_2026": 172,
+  "C_royalty_amount_before_vat_total": 3112160965,
+  "C_reference_contract_id_non_null": 0,
+  "C_nguoi_thuc_hien_email_non_null": 634,
+  "C_renewal_status_distribution": {
+    "NEW": 125,
+    "<NULL>": 3855,
+    "PENDING_RENEWAL": 9,
+    "RENEWED": 1
+  },
+  "COMPARE_contract_records_total": {
+    "pre": 3990,
+    "post": 3990,
+    "ok": true
+  },
+  "COMPARE_annex_total": {
+    "pre": 202,
+    "post": 202,
+    "ok": true
+  },
+  "COMPARE_contract_records_2026": {
+    "pre": 172,
+    "post": 172,
+    "ok": true
+  },
+  "COMPARE_royalty_amount_before_vat_total": {
+    "pre": 3112160965,
+    "post": 3112160965,
+    "ok": true
+  },
+  "COMPARE_nguoi_thuc_hien_email_non_null": {
+    "pre": 634,
+    "post": 634,
+    "ok": true
+  },
+  "COMPARE_reference_contract_id_non_null": {
+    "pre": 0,
+    "post": 0,
+    "ok": true
+  },
+  "COMPARE_renewal_status_distribution": {
+    "pre": {
+      "NEW": 125,
+      "<NULL>": 3855,
+      "PENDING_RENEWAL": 9,
+      "RENEWED": 1
+    },
+    "post": {
+      "NEW": 125,
+      "<NULL>": 3855,
+      "PENDING_RENEWAL": 9,
+      "RENEWED": 1
+    },
+    "ok": true
+  },
+  "D_compile_imports": {
+    "files": {
+      "backend/app/models/annual_kpi.py": "OK",
+      "backend/app/schemas/annual_kpi.py": "OK",
+      "backend/app/api/contracts.py": "OK",
+      "backend/app/models/contracts.py": "OK",
+      "backend/app/schemas/contracts.py": "OK",
+      "backend/migrations/run_migration_annual_kpi_data_foundation.py": "OK"
+    },
+    "imports": {
+      "annual_kpi_cols": [
+        "annual_target",
+        "created_at",
+        "id",
+        "note",
+        "updated_at",
+        "user_id",
+        "year"
+      ],
+      "kpi_owner_in_model": true,
+      "kpi_owner_in_allowed": false,
+      "list_contracts_args": [
+        "page",
+        "page_size",
+        "q",
+        "domain",
+        "status_filter",
+        "year",
+        "renewal_status",
+        "kpi_owner_user_id",
+        "credentials",
+        "db"
+      ]
+    }
+  },
+  "verdict": "PASS",
+  "failures": [],
+  "failure_count": 0
+}

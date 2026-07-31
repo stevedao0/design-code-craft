@@ -1,0 +1,351 @@
+/* ==============================================================
+ * VCPMC Contract Pages — polish & responsive overrides
+ * Layered on top of enterprise.css without touching other files.
+ * ============================================================== */
+
+/* Make contracts page header + workspace breathe on wide screens */
+@media (min-width: 1440px) {
+  .vc-contracts-page {
+    padding-left: clamp(20px, 3vw, 40px);
+    padding-right: clamp(20px, 3vw, 40px);
+  }
+}
+
+/* Contract table — keep column widths sensible on mid screens */
+@media (max-width: 1280px) {
+  .vc-col-customer,
+  .vc-col-address {
+    min-width: 180px;
+    max-width: 220px;
+  }
+}
+
+/* Contract table — tighter density + smaller fonts on tablet */
+@media (max-width: 1024px) {
+  .vc-contracts-table-scroll table {
+    font-size: 12.5px;
+  }
+  .vc-contracts-table-scroll thead th {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  .vc-contracts-table-scroll tbody td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+}
+
+/* ==============================================================
+ * Contracts list — dual renderer
+ * Below 1024px: contracts-mobile-list (real <article> cards).
+ * >= 1024px:  contracts-desktop-table (existing <table>).
+ *
+ * Table keeps its native desktop layout; nothing in this file
+ * anymore mutates tr/td to behave like cards. The cards live in
+ * `contracts-mobile-list` and have their own real DOM.
+ * ============================================================== */
+
+/* Default: mobile list visible, desktop table hidden */
+.contracts-mobile-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 12px calc(96px + env(safe-area-inset-bottom)) 12px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+.contracts-mobile-list > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.contracts-mobile-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 12px calc(96px + env(safe-area-inset-bottom)) 12px;
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+.contracts-mobile-footer > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.contracts-desktop-table {
+  display: none;
+}
+
+@media (min-width: 640px) and (max-width: 1023.98px) {
+  .contracts-mobile-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    padding: 14px 14px calc(96px + env(safe-area-inset-bottom)) 14px;
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .contracts-mobile-list,
+  .contracts-mobile-footer {
+    display: none !important;
+  }
+  .contracts-desktop-table {
+    display: block;
+  }
+}
+
+/* Card primitive — never fixed height, never overflow:hidden */
+.contract-mobile-card {
+  background: #fff;
+  border: 1px solid var(--vc-green-border, #e6e0d7);
+  border-radius: 14px;
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+  box-sizing: border-box;
+  /* No height, no overflow:hidden — content dictates height. */
+  min-width: 0;
+}
+.contract-mobile-card.is-selected {
+  border-color: var(--accent-primary, #76b400);
+  background: linear-gradient(180deg, #f6fbe6 0%, #ffffff 60%);
+}
+
+/* Header row: checkbox + identity + actions */
+.contract-mobile-card__header {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.contract-mobile-card__select,
+.contract-mobile-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  /* Click area only — no extra chrome. */
+}
+.contract-mobile-card__identity {
+  min-width: 0;
+}
+.contract-mobile-card__number {
+  font-size: 16px;
+  font-weight: 600;
+  color: #18181b;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.contract-mobile-card__partner {
+  font-size: 13px;
+  font-weight: 500;
+  color: #3f3f46;
+  margin-top: 2px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.contract-mobile-card__address {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #52525b;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.contract-mobile-card__address svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: #76b400;
+}
+.contract-mobile-card__address-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.contract-mobile-card__address-text--empty {
+  font-style: italic;
+  color: #a1a1aa;
+}
+
+/* Metadata: real <dl>/<dt>/<dd>, no pseudo-element labels */
+.contract-mobile-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin: 0;
+  padding: 10px 0;
+  border-top: 1px dashed rgba(0, 0, 0, 0.08);
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.08);
+}
+.contract-mobile-card__meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.contract-mobile-card__meta-row dt {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #71717a;
+  margin: 0;
+  line-height: 1.2;
+}
+.contract-mobile-card__meta-row dd {
+  font-size: 13px;
+  font-weight: 500;
+  color: #27272a;
+  margin: 0;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.contract-mobile-card__meta-row dd.mono {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* Footer: amount + status badge */
+.contract-mobile-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.contract-mobile-card__value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #18181b;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+  overflow-wrap: anywhere;
+}
+.contract-mobile-card__value-sub {
+  font-size: 11px;
+  color: #71717a;
+  margin-top: 2px;
+}
+
+/* Open detail area: rest of card body must remain clickable */
+.contract-mobile-card__openable {
+  cursor: pointer;
+}
+
+/* iPhone notch safe area */
+@supports (padding: max(0px)) {
+  .contracts-mobile-list {
+    padding-bottom: max(96px, calc(96px + env(safe-area-inset-bottom)));
+  }
+  .contracts-mobile-footer {
+    padding-bottom: max(96px, calc(96px + env(safe-area-inset-bottom)));
+  }
+}
+
+/* Mobile select-all toolbar above the cards */
+.contracts-mobile-list__toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 6px 10px;
+  font-size: 12.5px;
+  color: #52525b;
+  min-width: 0;
+}
+.contracts-mobile-list__toolbar-label {
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.contracts-mobile-list__toolbar > :first-child {
+  flex-shrink: 0;
+}
+
+/* Create / Edit form layout — keep section nav + form + summary aligned */
+.vc-create-form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .vc-create-layout {
+    grid-template-columns: 1fr !important;
+  }
+  .vc-create-layout > aside,
+  .vc-create-layout > nav {
+    position: static;
+  }
+}
+
+/* Sticky action bar for save */
+.vc-form-actionbar {
+  position: sticky;
+  bottom: 0;
+  background: linear-gradient(
+    to top,
+    rgba(255, 255, 255, 1) 60%,
+    rgba(255, 255, 255, 0)
+  );
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  border-top: 1px solid var(--vcpmc-border-soft, #e6e0d7);
+  z-index: 5;
+}
+
+/* Section nav chips — wrap nicely on phone */
+.vc-section-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* Calculator dialog — wider desktop, sheet on mobile */
+@media (max-width: 720px) {
+  .vc-calc-dialog {
+    width: 100vw !important;
+    max-width: 100vw !important;
+    height: calc(100vh - 64px) !important;
+    margin: 0 !important;
+    border-radius: 16px 16px 0 0;
+    top: auto !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    transform: none !important;
+  }
+}
+
+/* Form fields — taller touch targets on mobile */
+@media (max-width: 720px) {
+  .vc-form-input,
+  .vc-form-select,
+  .vc-form-textarea {
+    min-height: 44px;
+  }
+  .vc-btn-primary,
+  .vc-btn-secondary {
+    min-height: 44px;
+  }
+}

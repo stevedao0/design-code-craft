@@ -1,0 +1,58 @@
+# =========================================
+# VCPMC Production Docker Stack
+# =========================================
+# Phase 2: Local production test
+# - No Caddy/HTTPS (Phase 5)
+# - No port 8000 conflict with dev
+# - Access: http://127.0.0.1:18000
+# =========================================
+
+services:
+  # -----------------------------------------
+  # VCPMC App — FastAPI + React
+  # Connects to REAL database: vcpmc_postgres (port 5432)
+  # via host.docker.internal on the host machine.
+  # -----------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: vcpmc_app_prod
+    restart: unless-stopped
+    # env_file loads .env.production variables
+    env_file:
+      - ./.env.production
+    environment:
+      # All secrets and config come from .env.production via env_file below.
+      # These environment variables are container-internal paths
+      # that must match the bind mount paths in volumes.
+      EXPORT_TEMPLATE_ROOT: /app/templates
+      EXPORT_OUTPUT_ROOT: /app/storage
+      PREVIEW_STORAGE_PATH: /app/storage/preview
+      INTERNAL_QR_DOWNLOAD_DIR: /app/storage/gcn_qr
+    volumes:
+      # Bind mount storage from host — data persists across restarts
+      - ./storage:/app/storage
+      # Bind mount templates read-only — update DOCX templates without rebuild
+      - ./templates:/app/templates:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - vcpmc_prod_net
+    # -----------------------------------------
+    # Ports
+    # -----------------------------------------
+    # 127.0.0.1:18000:8000 — only accessible from local machine
+    # Not exposed to LAN/internet in Phase 2
+    ports:
+      - "127.0.0.1:18000:8000"
+
+# =========================================
+# Network
+# =========================================
+networks:
+  vcpmc_prod_net:

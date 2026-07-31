@@ -1,0 +1,79 @@
+# =========================================
+# Docker build ignore
+# Excludes secrets, runtime data, and heavy files.
+# =========================================
+
+# --- Secrets / Env ---
+.env
+.env.*
+**/.env
+**/.env.backup
+**/.env.backup_*
+**/.env.local
+**/.env.production
+**/.env.production.*
+**/.env.backup_smoke_*
+# Match any file with .env anywhere in its name (e.g. .env.example, .env.local.example)
+**/.*env*
+
+# --- Secrets directory ---
+secrets/
+
+# --- Runtime data ---
+storage/
+backups/
+**/smoke_tests/
+
+# --- Python ---
+backend/.venv
+backend/__pycache__
+backend/**/*.pyc
+backend/**/__pycache__
+.venv/
+venv/
+**/*.pyc
+.mypy_cache/
+.pytest_cache/
+*.egg-info/
+
+# --- Node.js ---
+frontend/node_modules/
+frontend/.vite/
+frontend/dist/            # rebuilt inside container
+frontend/*.log
+
+# --- Git ---
+.git/
+.gitignore
+
+# --- Docker files (generated per deploy) ---
+docker-compose.yml        # do NOT copy — use docker-compose.prod.yml
+docker-compose.override.yml
+
+# --- IDE ---
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# --- OS ---
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# --- Docs (optional, can include if needed) ---
+# docs/
+# *.md
+
+# --- Scripts (use host scripts, not in container) ---
+scripts/
+*.ps1
+# docker-entrypoint.sh must NOT be ignored — required by Dockerfile.app
+docker-entrypoint.sh
+
+# --- Extension (built separately) ---
+browser-extension/
+
+# --- Production compose (use only named file) ---
+# docker-compose.prod.yml is the correct production compose file
+# DO NOT copy a default docker-compose.yml into the image

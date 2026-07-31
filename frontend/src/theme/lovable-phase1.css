@@ -1,0 +1,503 @@
+/* ================================================
+ * VCPMC Lovable Phase 1 — Design Tokens (Luminous Ivory)
+ * Source: Lovable project 22be19b2-4947-426d-962f-f36eb946147d
+ * Locked ref: d2805156f70b9f984869bcf7473fb9c2174ef112
+ *
+ * Scope: Phase 1 only (AppShell, DashboardPage, CommandLauncher).
+ * Do NOT touch enterprise.css or tokens.css.
+ * Loaded by enterprise.css via @import './lovable-phase1.css'.
+ * ================================================ */
+
+/* Token shim — map legacy bare names to --vcpmc- names used by CertificatePrintPage */
+:root {
+  /* Surface aliases */
+  --surface-canvas: var(--vcpmc-surface-canvas);
+  --surface-main: var(--vcpmc-surface-main);
+  --surface: var(--vcpmc-surface);
+  --surface-raised: var(--vcpmc-surface-raised);
+  --surface-soft: var(--vcpmc-surface-soft);
+  --surface-sunken: var(--vcpmc-surface-sunken);
+  --surface-rail: var(--vcpmc-surface-rail);
+  --surface-rail-hover: var(--vcpmc-surface-rail-hover);
+  /* Ink aliases */
+  --ink-primary: var(--vcpmc-ink-primary);
+  --ink-secondary: var(--vcpmc-ink-secondary);
+  --ink-tertiary: var(--vcpmc-ink-tertiary);
+  --ink-faint: var(--vcpmc-ink-faint);
+  --ink-inverse: var(--vcpmc-ink-inverse);
+  --ink-muted: var(--vcpmc-ink-muted);
+  /* Border aliases */
+  --border: var(--vcpmc-border);
+  --border-soft: var(--vcpmc-border-soft);
+  --border-strong: var(--vcpmc-border-strong);
+  --border-rail: var(--vcpmc-border-rail);
+
+  /* Layout extras */
+  --sheet-width: 400px;
+}
+
+:root {
+  /* Luminous Surface — warm ivory/cream (from Lovable) */
+  --vcpmc-surface-canvas: #f7f4ee;
+  --vcpmc-surface-main: #fcfbf8;
+  --vcpmc-surface: #ffffff;
+  --vcpmc-surface-raised: #ffffff;
+  --vcpmc-surface-soft: #f1ece4;
+  --vcpmc-surface-sunken: #ebe4da;
+  --vcpmc-surface-rail: #fffdf9;
+  --vcpmc-surface-rail-hover: #f3ede5;
+  --vcpmc-surface-topbar: rgba(252, 251, 248, 0.96);
+
+  /* Ink — graphite */
+  --vcpmc-ink: #1f1d1a;
+  --vcpmc-ink-primary: #1f1d1a;
+  --vcpmc-ink-secondary: #68635c;
+  --vcpmc-ink-tertiary: #8a847c;
+  --vcpmc-ink-faint: #aaa39a;
+  --vcpmc-ink-inverse: #ffffff;
+  --vcpmc-ink-muted: #68635c;
+
+  /* Border */
+  --vcpmc-border: #e6e0d7;
+  --vcpmc-border-soft: #e6e0d7;
+  --vcpmc-border-strong: #d6cec2;
+  --vcpmc-border-rail: #ddd4c8;
+
+  /* Identity accents */
+  --vcpmc-accent-coral: #c95867;
+  --vcpmc-accent-coral-soft: #f7e4e5;
+  --vcpmc-accent-coral-tint: #fbeaec;
+  --vcpmc-accent-coral-dark: #a94456;
+  --vcpmc-accent-plum: #6d365b;
+  --vcpmc-accent-plum-soft: #efe5ec;
+  --vcpmc-accent-blue: #497fa6;
+  --vcpmc-accent-blue-soft: #e6eff5;
+  --vcpmc-accent-teal: #2f8a7a;
+  --vcpmc-accent-teal-soft: #e1f0ec;
+  --vcpmc-accent-amber: #c3872c;
+  --vcpmc-accent-amber-soft: #f5ebd8;
+  /* Sapphire / Indigo primary */
+  --vcpmc-accent-indigo: #4f46e5;
+  --vcpmc-accent-indigo-soft: rgba(79, 70, 229, 0.35);
+  --vcpmc-accent-indigo-tint: #eef0fc;
+
+  /* Orb halos */
+  --vcpmc-orb-halo: rgba(201, 88, 103, 0.22);
+  --vcpmc-orb-active-halo: rgba(109, 54, 91, 0.28);
+
+  /* Semantic — warm tones */
+  --vcpmc-success: #4f7a52;
+  --vcpmc-success-soft: #e8efe5;
+  --vcpmc-warning: #c58a2e;
+  --vcpmc-warning-soft: #f8edd8;
+  --vcpmc-danger: #b0463c;
+  --vcpmc-danger-soft: #f7e1dd;
+  --vcpmc-info: #4a6b85;
+  --vcpmc-info-soft: #e4ecf2;
+
+  /* Focus + Shadow */
+  --vcpmc-focus: rgba(200, 73, 58, 0.4);
+  --vcpmc-shadow-sm: 0 1px 2px rgba(31, 29, 26, 0.04);
+  --vcpmc-shadow-md: 0 4px 14px rgba(31, 29, 26, 0.06);
+  --vcpmc-shadow-lg: 0 16px 40px rgba(31, 29, 26, 0.08);
+  --vcpmc-shadow-rail: 1px 0 0 var(--vcpmc-border-soft);
+  --vcpmc-accent-rule: linear-gradient(90deg, var(--vcpmc-accent-coral) 0%, var(--vcpmc-accent-plum) 60%, transparent 100%);
+
+  /* Radius */
+  --vcpmc-radius-sm: 6px;
+  --vcpmc-radius-md: 10px;
+  --vcpmc-radius-lg: 14px;
+  --vcpmc-radius-xl: 20px;
+
+  /* Layout — Lovable's rail/topbar/sidecar widths */
+  --vcpmc-rail-w: 72px;
+  --vcpmc-topbar-h: 64px;
+  --vcpmc-sidecar-w: 372px;
+
+  /* Typography scale */
+  --vcpmc-text-xs: 12px;
+  --vcpmc-text-sm: 13px;
+  --vcpmc-text-body: 14px;
+  --vcpmc-text-md: 15px;
+  --vcpmc-text-lg: 17px;
+  --vcpmc-text-section: 20px;
+  --vcpmc-text-page: 30px;
+  --vcpmc-text-metric: 38px;
+  --vcpmc-text-display: clamp(1.75rem, 2.4vw, 2.125rem);
+  --vcpmc-text-metric-lg: clamp(2.25rem, 3vw, 2.75rem);
+
+  /* Motion */
+  --vcpmc-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --vcpmc-dur-fast: 120ms;
+  --vcpmc-dur-base: 150ms;
+  --vcpmc-dur-slow: 220ms;
+
+  /* Spacing */
+  --vcpmc-space-2xs: 4px;
+  --vcpmc-space-xs: 6px;
+  --vcpmc-space-sm: 8px;
+  --vcpmc-space-md: 12px;
+  --vcpmc-space-lg: 16px;
+  --vcpmc-space-xl: 24px;
+  --vcpmc-space-2xl: 32px;
+
+  /* Prototype aliases — used by Lovable source */
+  --prototype-brand-primary: var(--vcpmc-accent-coral);
+  --prototype-brand-primary-soft: var(--vcpmc-accent-coral-soft);
+  --prototype-brand-primary-tint: var(--vcpmc-accent-coral-tint);
+  --prototype-brand-primary-dark: var(--vcpmc-accent-coral-dark);
+
+  /* Tracking */
+  --vcpmc-track-tight: -0.01em;
+  --vcpmc-track-display: -0.02em;
+}
+
+/* ================================================
+ * Utility helpers — minimal, component-scoped
+ * ================================================ */
+
+.vcpmc-focus-ring:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--vcpmc-focus);
+}
+
+.vcpmc-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ================================================
+ * Card helpers — Lovable Phase 1 surface tokens
+ * Soft border, soft shadow, 16px radius
+ * ================================================ */
+
+.vcpmc-card {
+  background: var(--vcpmc-surface-main);
+  border: 1px solid var(--vcpmc-border-soft);
+  border-radius: var(--vcpmc-radius-lg);
+  box-shadow: var(--vcpmc-shadow-sm);
+}
+
+.vcpmc-card-header {
+  padding: var(--vcpmc-space-lg) var(--vcpmc-space-lg) var(--vcpmc-space-md);
+  border-bottom: 1px solid var(--vcpmc-border);
+}
+
+.vcpmc-card-body {
+  padding: var(--vcpmc-space-lg);
+}
+
+/* Card with coral-plum top accent line — Lovable card header pattern */
+.vcpmc-card-accent {
+  position: relative;
+}
+.vcpmc-card-accent::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--vcpmc-accent-rule);
+  border-radius: var(--vcpmc-radius-lg) var(--vcpmc-radius-lg) 0 0;
+  pointer-events: none;
+}
+
+/* ================================================
+ * Table helpers — Lovable card tokens
+ * ================================================ */
+
+.vcpmc-table-th {
+  font-size: var(--vcpmc-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--vcpmc-ink-tertiary);
+}
+
+.vcpmc-table-sticky-thead thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--vcpmc-surface-raised);
+  box-shadow: inset 0 -1px 0 var(--vcpmc-border);
+}
+
+/* ================================================
+ * GCN page independent scroll regions
+ * ================================================ */
+
+[data-gcn-scroll="sidebar"] {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+[data-gcn-scroll="sidebar"]::-webkit-scrollbar {
+  width: 8px;
+}
+
+[data-gcn-scroll="sidebar"]::-webkit-scrollbar-track {
+  background: var(--vcpmc-surface-soft);
+}
+
+[data-gcn-scroll="sidebar"]::-webkit-scrollbar-thumb {
+  background: var(--vcpmc-border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--vcpmc-surface-soft);
+}
+
+[data-gcn-scroll="sidebar"]::-webkit-scrollbar-thumb:hover {
+  background: var(--vcpmc-ink-faint);
+}
+
+[data-gcn-scroll="preview"] {
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  overscroll-behavior: contain;
+}
+
+[data-gcn-scroll="preview"]::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+[data-gcn-scroll="preview"]::-webkit-scrollbar-track {
+  background: var(--vcpmc-surface-soft);
+}
+
+[data-gcn-scroll="preview"]::-webkit-scrollbar-thumb {
+  background: var(--vcpmc-border-strong);
+  border-radius: 999px;
+  border: 2px solid var(--vcpmc-surface-soft);
+}
+
+[data-gcn-scroll="preview"]::-webkit-scrollbar-thumb:hover {
+  background: var(--vcpmc-ink-faint);
+}
+
+/* ================================================
+ * In GCN workspace — bounded height chain
+ * ================================================ */
+
+[data-workspace-route="in-gcn"] {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+.gcn-print-root {
+  position: absolute;
+  inset: 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Workspace: grid 2-pane with 8px splitter */
+.gcn-workspace {
+  display: grid;
+  grid-template-columns: var(--gcn-editor-width, 560px) 8px minmax(0, 1fr);
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gcn-editor-aside {
+  overflow-y: auto;
+  overflow-x: hidden;
+  height: 100%;
+  min-width: 0;
+  flex-shrink: 0;
+}
+
+.gcn-splitter {
+  position: relative;
+  z-index: 10;
+  user-select: none;
+  cursor: col-resize;
+}
+
+.gcn-splitter:hover > div,
+.gcn-splitter:active > div {
+  background: var(--vcpmc-accent-coral) !important;
+}
+
+.gcn-splitter .absolute {
+  pointer-events: none;
+}
+
+.gcn-paper-shell-wrap {
+  min-height: 0;
+  min-width: 0;
+}
+
+/* ================================================
+ * Phase 2 — Universal page primitives (Lovable editorial)
+ * Used as drop-in wrappers across contracts / dispatches / users / reports / search / import / deployment / etc.
+ * ================================================ */
+
+.vcpmc-page-header {
+  position: relative;
+  padding: var(--vcpmc-space-xl) var(--vcpmc-space-2xl) var(--vcpmc-space-lg);
+  background: var(--vcpmc-surface-canvas);
+}
+
+.vcpmc-page-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--vcpmc-space-xl);
+  flex-wrap: wrap;
+}
+
+.vcpmc-page-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--vcpmc-ink-tertiary);
+}
+
+.vcpmc-page-title {
+  margin-top: 6px;
+  color: var(--vcpmc-ink);
+  font-size: var(--vcpmc-text-display);
+  line-height: 1.1;
+  letter-spacing: var(--vcpmc-track-display);
+  font-weight: 600;
+}
+
+.vcpmc-page-subtitle {
+  margin-top: 6px;
+  color: var(--vcpmc-ink-muted);
+  font-size: var(--vcpmc-text-md);
+  max-width: 60ch;
+}
+
+.vcpmc-page-rule {
+  height: 3px;
+  width: 48px;
+  border-radius: 999px;
+  background: var(--vcpmc-accent-rule);
+  margin-top: var(--vcpmc-space-sm);
+}
+
+.vcpmc-summary-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--vcpmc-space-lg);
+  padding: var(--vcpmc-space-lg) var(--vcpmc-space-2xl);
+  background: var(--vcpmc-surface-raised);
+  border-bottom: 1px solid var(--vcpmc-border);
+}
+
+.vcpmc-summary-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.vcpmc-summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--vcpmc-ink-tertiary);
+}
+
+.vcpmc-summary-value {
+  font-size: var(--vcpmc-text-section);
+  font-weight: 600;
+  letter-spacing: var(--vcpmc-track-tight);
+  color: var(--vcpmc-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.vcpmc-summary-value--success { color: var(--vcpmc-success); }
+.vcpmc-summary-value--warning { color: var(--vcpmc-warning); }
+.vcpmc-summary-value--danger  { color: var(--vcpmc-danger); }
+
+.vcpmc-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--vcpmc-space-md);
+  padding: var(--vcpmc-space-md) var(--vcpmc-space-2xl);
+  background: var(--vcpmc-surface-raised);
+  border-bottom: 1px solid var(--vcpmc-border);
+}
+
+.vcpmc-toolbar-spacer { flex: 1; }
+
+.vcpmc-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: var(--vcpmc-space-2xl);
+  background: var(--vcpmc-surface-main);
+  border: 1px dashed var(--vcpmc-border-strong);
+  border-radius: var(--vcpmc-radius-lg);
+  color: var(--vcpmc-ink-muted);
+  gap: var(--vcpmc-space-sm);
+}
+
+.vcpmc-empty-title {
+  font-size: var(--vcpmc-text-md);
+  font-weight: 600;
+  color: var(--vcpmc-ink);
+}
+
+.vcpmc-tabnav {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--vcpmc-border);
+  background: var(--vcpmc-surface-raised);
+  padding: 0 var(--vcpmc-space-2xl);
+}
+
+.vcpmc-tabnav-item {
+  position: relative;
+  padding: var(--vcpmc-space-md) var(--vcpmc-space-lg);
+  font-size: var(--vcpmc-text-sm);
+  font-weight: 500;
+  color: var(--vcpmc-ink-muted);
+  background: transparent;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color var(--vcpmc-dur-fast) var(--vcpmc-ease),
+    border-color var(--vcpmc-dur-fast) var(--vcpmc-ease);
+}
+
+.vcpmc-tabnav-item:hover { color: var(--vcpmc-ink); }
+
+.vcpmc-tabnav-item[aria-selected="true"],
+.vcpmc-tabnav-item--active {
+  color: var(--vcpmc-ink);
+  border-bottom-color: var(--vcpmc-accent-coral);
+}
+
+.vcpmc-section-card {
+  background: var(--vcpmc-surface-main);
+  border: 1px solid var(--vcpmc-border-soft);
+  border-radius: var(--vcpmc-radius-lg);
+  box-shadow: var(--vcpmc-shadow-sm);
+}
+

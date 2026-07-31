@@ -1,0 +1,45 @@
+/* ================================================
+ TYPOGRAPHY — global font, size, and text rules
+ ================================================ */
+
+html,
+body,
+#root {
+ height: 100%;
+}
+
+body {
+ font-family: var(--font-sans);
+ font-size: var(--text-body);
+ line-height: var(--line-height-normal);
+ font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+ -webkit-font-smoothing: antialiased;
+ -moz-osx-font-smoothing: grayscale;
+ color: var(--text-primary);
+ background: var(--app-bg);
+}
+
+h1,
+h2,
+h3,
+h4 {
+ color: var(--text-primary);
+ letter-spacing: var(--letter-spacing-header);
+}
+
+h1 {
+ font-size: var(--text-page-title);
+ line-height: var(--line-height-tight);
+}
+
+h2,
+h3 {
+ line-height: var(--line-height-tight);
+}
+
+.font-mono,
+.nums {
+ font-family: var(--font-mono);
+ font-variant-numeric: tabular-nums;
+ font-feature-settings: 'tnum' 1;
+}

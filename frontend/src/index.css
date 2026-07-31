@@ -1,0 +1,156 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500;600&family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+@import './theme/index.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Mobile hardening ────────────────────────────────────────
+ * 1) Disable browser font-boosting (Android Chrome inflates text when a
+ *    block is wider than the viewport — this was blowing up headings and
+ *    list rows on phones).
+ * 2) Never allow the document to scroll horizontally; wide content must
+ *    scroll inside its own container instead. */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+html,
+body {
+  max-width: 100%;
+  overflow-x: clip;
+}
+#root {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.presentation-mode aside,
+.presentation-mode header,
+.presentation-mode footer {
+  display: none !important;
+}
+
+.presentation-mode .filter-bar-root,
+.presentation-mode [data-hide-on-present='true'] {
+  display: none !important;
+}
+
+.presentation-mode main {
+  padding: 2.5rem 3rem !important;
+  background: linear-gradient(180deg, #fbf6ed 0%, #ffffff 100%);
+  min-height: 100vh;
+}
+
+.presentation-mode .nums,
+.presentation-mode [class*='text-[28px]'] {
+  font-size: 36px !important;
+}
+
+.presentation-mode h1,
+.presentation-mode h2 {
+  letter-spacing: -0.02em;
+}
+
+.presentation-mode .recharts-wrapper {
+  font-size: 14px;
+}
+
+.presentation-mode {
+  cursor: default;
+}
+
+.presentation-mode.with-watermark main::before {
+  content: attr(data-watermark);
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: clamp(120px, 18vw, 240px);
+  font-weight: 800;
+  color: rgba(156, 109, 62, 0.07);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  transform: rotate(-22deg);
+  pointer-events: none;
+  z-index: 9999;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.presentation-mode.dark-preset main {
+  background: radial-gradient(ellipse at top, #2a221a 0%, #14100b 60%, #0a0805 100%) !important;
+  color: #f0e4d0;
+}
+
+.presentation-mode.dark-preset h1,
+.presentation-mode.dark-preset h2,
+.presentation-mode.dark-preset h3 {
+  color: #f5ead2 !important;
+}
+
+.presentation-mode.dark-preset p,
+.presentation-mode.dark-preset span,
+.presentation-mode.dark-preset td,
+.presentation-mode.dark-preset th {
+  color: #d4c4a8 !important;
+}
+
+.presentation-mode.dark-preset .bg-white,
+.presentation-mode.dark-preset [class*='bg-white'] {
+  background: rgba(40, 32, 24, 0.85) !important;
+  backdrop-filter: blur(10px);
+}
+
+.presentation-mode.dark-preset [class*='ring-zinc-900'] {
+  --tw-ring-color: rgba(200, 153, 104, 0.25) !important;
+}
+
+.presentation-mode.dark-preset [class*='text-zinc-900'],
+.presentation-mode.dark-preset [class*='text-zinc-700'] {
+  color: #f0e4d0 !important;
+}
+
+.presentation-mode.dark-preset [class*='text-zinc-500'],
+.presentation-mode.dark-preset [class*='text-zinc-400'] {
+  color: #9c8c6e !important;
+}
+
+.presentation-mode.dark-preset [class*='bg-zinc-50'],
+.presentation-mode.dark-preset [class*='bg-zinc-100'] {
+  background: rgba(60, 48, 36, 0.5) !important;
+}
+
+@media print {
+  aside, header.app-topbar, .filter-bar-root, [data-hide-on-present='true'] {
+    display: none !important;
+  }
+
+  body, html {
+    background: white !important;
+  }
+
+  main {
+    padding: 1rem !important;
+    background: white !important;
+  }
+
+  .recharts-wrapper, .recharts-surface {
+    page-break-inside: avoid;
+  }
+
+  section, [class*='rounded-2xl'] {
+    page-break-inside: avoid;
+    box-shadow: none !important;
+  }
+}
+
+.print-snapshot main {
+  background: white !important;
+}

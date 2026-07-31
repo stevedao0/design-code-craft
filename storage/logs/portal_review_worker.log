@@ -1,0 +1,10 @@
+2026-05-20 20:25:54,674 [INFO] Worker started with payload: {'portal_username': '', 'portal_password': '***', 'certificate_no': 'TEST/001'}
+2026-05-20 20:25:54,708 [INFO] Calling open_portal_for_review() ...
+2026-05-20 20:25:54,708 [INFO] [OpenPortalReview] STAGE=VALIDATION
+2026-05-20 20:25:54,708 [INFO] open_portal_for_review() returned: ok=False, status=VALIDATION_FAILED, stage=VALIDATION, filled=[], missing=[]
+2026-05-20 20:25:54,708 [INFO] Result written to: C:\Users\TUAN-CP\AppData\Local\Temp\tmp3swjo_i0.json
+2026-05-20 20:26:08,123 [INFO] Worker started with payload: {'portal_username': '', 'portal_password': '***', 'certificate_no': 'TEST/001'}
+2026-05-20 20:26:08,156 [INFO] Calling open_portal_for_review() ...
+2026-05-20 20:26:08,156 [INFO] [OpenPortalReview] STAGE=VALIDATION
+2026-05-20 20:26:08,156 [INFO] open_portal_for_review() returned: ok=False, status=VALIDATION_FAILED, stage=VALIDATION, filled=[], missing=[]
+2026-05-20 20:26:08,156 [INFO] Result written to: C:\Users\TUAN-CP\AppData\Local\Temp\tmpcti8t2xy.json

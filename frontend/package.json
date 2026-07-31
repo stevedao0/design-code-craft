@@ -1,0 +1,41 @@
+{
+  "name": "magic-patterns-vite-template",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev:watch": "vite build --watch --emptyOutDir false",
+    "build": "vite build --emptyOutDir true",
+    "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+    "preview": "vite preview --host 127.0.0.1 --port 5198 --strictPort"
+  },
+  "dependencies": {
+    "@emotion/react": "^11.13.3",
+    "docx": "^9.7.1",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
+    "html2canvas-pro": "^2.0.2",
+    "lucide-react": "0.522.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "@types/file-saver": "^2.0.7",
+    "@types/node": "^20.11.18",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "latest",
+    "eslint": "^8.50.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.3",
+    "postcss": "latest",
+    "tailwindcss": "3.4.17",
+    "typescript": "^5.5.4",
+    "vite": "^5.2.0"
+  }
+}

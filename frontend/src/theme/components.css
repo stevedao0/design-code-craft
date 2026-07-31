@@ -1,0 +1,822 @@
+/* ================================================
+ COMPONENTS — shared ds-* UI utility classes
+ ================================================ */
+
+/* Focus ring */
+.ds-focus-ring:focus-visible,
+.ds-button:focus-visible,
+.ds-input:focus-visible,
+.ds-select:focus-visible,
+.ds-textarea:focus-visible,
+.ds-row-action-trigger:focus-visible {
+ outline: none;
+ box-shadow: var(--shadow-focus);
+}
+
+/* Field */
+.ds-field {
+ display: flex;
+ flex-direction: column;
+ gap: var(--space-1);
+}
+
+.ds-label {
+ font-size: var(--text-label);
+ line-height: var(--line-height-normal);
+ font-weight: 600;
+ color: var(--text-secondary);
+}
+
+.ds-helper {
+ font-size: var(--text-helper);
+ color: var(--text-muted);
+}
+
+.ds-error {
+ font-size: var(--text-helper);
+ color: var(--accent-danger);
+}
+
+/* Input / Select / Textarea */
+.ds-input,
+.ds-select,
+.ds-textarea {
+ width: 100%;
+ border-radius: var(--radius-md);
+ border: 1px solid var(--border-default);
+ background: var(--surface-elevated);
+ color: var(--text-primary);
+ transition: border-color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard);
+}
+
+.ds-input,
+.ds-select {
+ min-height: 2.5rem;
+ padding: 0 var(--space-3);
+ font-size: var(--text-body-sm);
+}
+
+.ds-textarea {
+ min-height: 5rem;
+ padding: var(--space-2) var(--space-3);
+ font-size: var(--text-body-sm);
+ line-height: var(--line-height-normal);
+ resize: vertical;
+}
+
+.ds-input::placeholder,
+.ds-textarea::placeholder {
+ color: var(--text-muted);
+}
+
+.ds-input:hover,
+.ds-select:hover,
+.ds-textarea:hover {
+ border-color: var(--border-strong);
+}
+
+.ds-input:disabled,
+.ds-select:disabled,
+.ds-textarea:disabled {
+ background: var(--surface-muted);
+ color: var(--text-muted);
+ cursor: not-allowed;
+}
+
+/* Button */
+.ds-button {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ gap: var(--space-2);
+ border-radius: var(--radius-md);
+ border: 1px solid transparent;
+ font-size: var(--text-body-sm);
+ font-weight: 600;
+ line-height: 1;
+ transition: background-color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), box-shadow var(--motion-fast) var(--ease-standard), transform var(--motion-fast) var(--ease-standard);
+}
+
+.ds-button:hover {
+ transform: translateY(-1px);
+}
+
+.ds-button:disabled {
+ opacity: 0.5;
+ cursor: not-allowed;
+ transform: none;
+}
+
+.ds-button-primary {
+ background: linear-gradient(180deg, var(--accent-copper) 0%, var(--accent-primary) 100%);
+ color: #fff;
+ box-shadow: 0 10px 20px rgba(156, 109, 62, 0.18);
+}
+
+.ds-button-primary:hover {
+ background: linear-gradient(180deg, color-mix(in srgb, var(--accent-copper) 80%, white) 0%, var(--accent-primary-hover) 100%);
+}
+
+.ds-button-secondary {
+ background: var(--surface-elevated);
+ border-color: var(--border-default);
+ color: var(--text-secondary);
+}
+
+.ds-button-ghost {
+ background: transparent;
+ color: var(--text-secondary);
+}
+
+.ds-button-ghost:hover {
+ background: var(--surface-muted);
+ color: var(--text-primary);
+}
+
+.ds-button-danger {
+ background: var(--accent-danger);
+ color: #fff;
+}
+
+/* Badge / Chip */
+.ds-badge,
+.ds-chip {
+ display: inline-flex;
+ align-items: center;
+ gap: var(--space-1);
+ border-radius: 999px;
+ font-size: var(--text-badge);
+ font-weight: 700;
+ letter-spacing: 0.04em;
+ text-transform: uppercase;
+}
+
+.ds-badge {
+ padding: 0.25rem 0.5rem;
+}
+
+/* Compact badge — for table rows */
+.ds-badge-compact {
+ padding: 0.125rem 0.375rem;
+}
+
+.ds-badge-tone-success {
+ background: var(--accent-emerald);
+ color: #fff;
+}
+
+.ds-badge-tone-warning {
+ background: var(--accent-warning);
+ color: #fff;
+}
+
+.ds-badge-tone-danger {
+ background: var(--accent-danger);
+ color: #fff;
+}
+
+.ds-badge-tone-info {
+ background: var(--accent-info);
+ color: #fff;
+}
+
+.ds-badge-tone-violet {
+ background: var(--accent-primary);
+ color: #fff;
+}
+
+.ds-badge-tone-orange {
+ background: color-mix(in srgb, var(--accent-warning) 82%, var(--accent-danger));
+ color: #fff;
+}
+
+.ds-badge-tone-neutral {
+ background: var(--accent-neutral);
+ color: #fff;
+}
+
+.ds-badge-dot-success {
+ background: color-mix(in srgb, var(--accent-emerald) 28%, white);
+}
+
+.ds-badge-dot-warning,
+.ds-badge-dot-violet {
+ background: color-mix(in srgb, var(--accent-warning) 18%, white);
+}
+
+.ds-badge-dot-danger {
+ background: color-mix(in srgb, var(--accent-danger) 22%, white);
+}
+
+.ds-badge-dot-info {
+ background: color-mix(in srgb, var(--accent-info) 22%, white);
+}
+
+.ds-badge-dot-orange {
+ background: color-mix(in srgb, var(--accent-warning) 34%, white);
+}
+
+.ds-badge-dot-neutral {
+ background: color-mix(in srgb, var(--accent-neutral) 34%, white);
+}
+
+.ds-chip {
+ padding: 0.3125rem 0.625rem;
+ border: 1px solid var(--border-default);
+ background: var(--surface);
+ color: var(--text-secondary);
+}
+
+.ds-chip-tone-neutral {
+ background: var(--surface-muted);
+ color: var(--fg-secondary);
+}
+
+.ds-chip-tone-info {
+ background: var(--accent-info-soft);
+ color: var(--accent-info);
+}
+
+.ds-chip-tone-success {
+ background: color-mix(in srgb, var(--accent-emerald) 16%, white);
+ color: var(--accent-emerald);
+}
+
+.ds-chip-tone-warning {
+ background: color-mix(in srgb, var(--accent-warning) 14%, white);
+ color: var(--accent-warning);
+}
+
+.ds-chip-tone-danger {
+ background: color-mix(in srgb, var(--accent-danger) 12%, white);
+ color: var(--accent-danger);
+}
+
+.ds-toolbar-surface {
+ border-radius: var(--radius-xl);
+ border: 1px solid var(--border-subtle);
+ background: var(--surface);
+ box-shadow: var(--shadow-sm);
+}
+
+.ds-toolbar-panel {
+ position: relative;
+ overflow: hidden;
+}
+
+.ds-toolbar-panel::before,
+.ds-card-panel::before {
+ content: '';
+ position: absolute;
+ inset-inline: 0;
+ top: 0;
+ height: 1px;
+ pointer-events: none;
+ background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+}
+
+.ds-card-accent::before {
+ content: '';
+ position: absolute;
+ inset-inline: 0;
+ top: 0;
+ height: 2px;
+ pointer-events: none;
+ background: linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent-primary) 50%, transparent), transparent);
+ z-index: 1;
+}
+
+.ds-toolbar-summary {
+ border-top: 1px solid var(--border-subtle);
+ background: var(--surface-muted);
+}
+
+.ds-filter-chip {
+ display: inline-flex;
+ align-items: center;
+ gap: var(--space-1);
+ border-radius: var(--radius-sm);
+ padding: 0.125rem 0.375rem;
+ font-size: 0.625rem;
+ font-weight: 600;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ background: color-mix(in srgb, var(--accent-warning) 18%, white);
+ color: color-mix(in srgb, var(--accent-warning) 82%, var(--text-primary));
+ box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-warning) 28%, transparent);
+}
+
+.ds-metric-icon {
+ border-radius: var(--radius-lg);
+ border: 1px solid color-mix(in srgb, var(--border-default) 85%, transparent);
+ background: color-mix(in srgb, var(--surface-muted) 55%, white);
+ color: var(--accent-primary);
+}
+
+.ds-metric-icon-tone-success {
+ background: color-mix(in srgb, var(--accent-emerald) 12%, white);
+ color: var(--accent-emerald);
+}
+
+.ds-metric-icon-tone-warning {
+ background: color-mix(in srgb, var(--accent-warning) 14%, white);
+ color: var(--accent-warning);
+}
+
+.ds-metric-icon-tone-danger {
+ background: color-mix(in srgb, var(--accent-danger) 12%, white);
+ color: var(--accent-danger);
+}
+
+.ds-metric-icon-tone-info {
+ background: color-mix(in srgb, var(--accent-info) 12%, white);
+ color: var(--accent-info);
+}
+
+.ds-metric-icon-tone-violet {
+ background: color-mix(in srgb, var(--accent-primary) 14%, white);
+ color: var(--accent-primary);
+}
+
+.ds-metric-icon-tone-cyan {
+ background: color-mix(in srgb, var(--accent-info) 10%, white);
+ color: color-mix(in srgb, var(--accent-info) 88%, var(--text-primary));
+}
+
+.ds-metric-icon-tone-amber {
+ background: color-mix(in srgb, var(--accent-warning) 12%, white);
+ color: color-mix(in srgb, var(--accent-warning) 88%, var(--text-primary));
+}
+
+.ds-metric-icon-tone-emerald {
+ background: color-mix(in srgb, var(--accent-emerald) 12%, white);
+ color: color-mix(in srgb, var(--accent-emerald) 88%, var(--text-primary));
+}
+
+.ds-metric-icon-tone-indigo {
+ background: color-mix(in srgb, var(--accent-primary) 12%, white);
+ color: color-mix(in srgb, var(--accent-primary) 86%, var(--text-primary));
+}
+
+.ds-metric-icon-tone-rose {
+ background: color-mix(in srgb, var(--accent-danger) 12%, white);
+ color: color-mix(in srgb, var(--accent-danger) 86%, var(--text-primary));
+}
+
+.ds-metric-card {
+ position: relative;
+ overflow: hidden;
+}
+
+.ds-metric-value {
+ font-variant-numeric: tabular-nums;
+ letter-spacing: -0.02em;
+}
+
+.ds-metric-trend {
+ display: inline-flex;
+ align-items: center;
+ gap: 0.25rem;
+ border-radius: 999px;
+ padding: 0.125rem 0.5rem;
+ font-size: 0.625rem;
+ font-weight: 700;
+ letter-spacing: 0.04em;
+ text-transform: uppercase;
+}
+
+.ds-delta-up {
+ background: color-mix(in srgb, var(--accent-emerald) 14%, white);
+ color: color-mix(in srgb, var(--accent-emerald) 78%, var(--text-primary));
+ box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-emerald) 18%, transparent);
+}
+
+.ds-delta-down {
+ background: color-mix(in srgb, var(--accent-danger) 12%, white);
+ color: color-mix(in srgb, var(--accent-danger) 78%, var(--text-primary));
+ box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent-danger) 18%, transparent);
+}
+
+.ds-delta-flat {
+ background: color-mix(in srgb, var(--surface-muted) 76%, white);
+ color: var(--text-secondary);
+ box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--border-default) 65%, transparent);
+}
+
+.ds-compare-dot {
+ background: color-mix(in srgb, var(--text-muted) 45%, transparent);
+}
+
+/* Table */
+.ds-table-shell {
+ overflow: hidden;
+ border-radius: var(--radius-xl);
+ border: 1px solid var(--border-subtle);
+ background: var(--surface-elevated);
+ box-shadow: var(--shadow-card);
+}
+
+.ds-table-head {
+ background: var(--surface-muted);
+ color: var(--text-secondary);
+ font-size: var(--text-table-header);
+ text-transform: uppercase;
+ letter-spacing: 0.06em;
+}
+
+.ds-table-head-cell {
+ height: var(--table-header-height);
+ vertical-align: middle;
+ border-bottom: 1px solid var(--border-subtle);
+ background: inherit;
+}
+
+.ds-table-row {
+ min-height: var(--table-row-comfortable);
+ border-top: 1px solid var(--border-subtle);
+ transition: background-color var(--motion-fast) var(--ease-standard);
+}
+
+.ds-table-row-compact {
+ min-height: var(--table-row-compact);
+}
+
+.ds-table-row-comfortable {
+ min-height: var(--table-row-comfortable);
+}
+
+.ds-table-row-detailed {
+ min-height: var(--table-row-detailed);
+}
+
+.ds-table-row-alt {
+ background: color-mix(in srgb, var(--surface) 75%, transparent);
+}
+
+.ds-table-row-selected {
+ background: color-mix(in srgb, var(--accent-primary-soft) 90%, var(--surface-elevated));
+}
+
+.ds-table-row:hover {
+ background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+}
+
+.ds-table-cell {
+ color: var(--text-primary);
+ font-size: var(--text-table);
+ border-top: 1px solid var(--border-subtle);
+ vertical-align: middle;
+}
+
+/* Row action trigger */
+.ds-row-action-trigger {
+ display: inline-flex;
+ align-items: center;
+ justify-content: center;
+ border-radius: var(--radius-sm);
+ border: 1px solid transparent;
+ background: transparent;
+ color: var(--text-secondary);
+ transition: background-color var(--motion-fast) var(--ease-standard), color var(--motion-fast) var(--ease-standard), border-color var(--motion-fast) var(--ease-standard);
+}
+
+.ds-row-action-trigger:hover {
+ background: var(--surface-muted);
+ color: var(--text-primary);
+ border-color: var(--border-default);
+}
+
+/* Skeleton */
+.skeleton {
+ position: relative;
+ overflow: hidden;
+ background: linear-gradient(90deg, color-mix(in srgb, var(--surface-muted) 94%, white) 0%, color-mix(in srgb, var(--surface-muted) 70%, white) 50%, color-mix(in srgb, var(--surface-muted) 94%, white) 100%);
+}
+
+.skeleton::after {
+ content: '';
+ position: absolute;
+ inset: 0;
+ background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+ animation: shimmer 1.6s infinite;
+}
+
+/* ================================================
+ PAGE TABLE CONTRACT — visual-only wrappers for
+ page-owned tables that are not migrating logic.
+ ================================================ */
+
+/* Centralized contract for Dispatches / Contracts / Reports / Users page tables. */
+.ds-page-table-shell {
+ display: flex;
+ flex-direction: column;
+ min-height: 0;
+ overflow: hidden;
+ border-radius: var(--radius-xl);
+ border: 1px solid var(--border-subtle);
+ background: var(--surface-elevated);
+ box-shadow: var(--shadow-card);
+}
+
+.ds-page-table-toolbar {
+ display: flex;
+ flex-wrap: wrap;
+ align-items: center;
+ gap: var(--space-3);
+ padding: var(--space-3) var(--space-4);
+ border-bottom: 1px solid var(--border-subtle);
+ background:
+ linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 78%, transparent) 0%, transparent 100%),
+ var(--surface);
+}
+
+.ds-page-table-toolbar-summary {
+ font-size: 0.75rem;
+ line-height: 1.5;
+ color: var(--text-muted);
+}
+
+.ds-page-table-toolbar-summary strong {
+ color: var(--text-primary);
+ font-weight: 700;
+}
+
+.ds-page-table-scroll {
+ min-height: 0;
+ overflow: auto;
+}
+
+.ds-page-table-scroll-y {
+ flex: 1 1 auto;
+ min-height: 0;
+ overflow-x: hidden;
+ overflow-y: auto;
+}
+
+.ds-page-table {
+ width: 100%;
+ border-collapse: separate;
+ border-spacing: 0;
+ font-size: var(--text-table);
+}
+
+.ds-page-table-header {
+ background:
+ linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 90%, white) 0%, color-mix(in srgb, var(--surface-muted) 75%, white) 100%);
+}
+
+.ds-page-table-head-row {
+ background: transparent;
+}
+
+.ds-page-table-head-cell {
+ height: var(--table-header-height);
+ padding: 0.75rem 0.875rem;
+ border-bottom: 1px solid var(--border-subtle);
+ color: var(--text-secondary);
+ font-size: var(--text-table-header);
+ font-weight: 700;
+ letter-spacing: 0.08em;
+ text-transform: uppercase;
+ vertical-align: middle;
+ white-space: nowrap;
+}
+
+.ds-page-table-body {
+ background: var(--surface-elevated);
+}
+
+.ds-page-table-row {
+ position: relative;
+ background: transparent;
+ transition:
+ background-color var(--motion-fast) var(--ease-standard),
+ box-shadow var(--motion-fast) var(--ease-standard);
+}
+
+.ds-page-table-row:hover {
+ background: color-mix(in srgb, var(--surface-muted) 68%, transparent);
+}
+
+.ds-page-table-row > .ds-page-table-cell {
+ border-top: 1px solid color-mix(in srgb, var(--border-subtle) 92%, transparent);
+}
+
+.ds-page-table-body .ds-page-table-row:first-child > .ds-page-table-cell {
+ border-top: none;
+}
+
+.ds-page-table-row-selected {
+ background: color-mix(in srgb, var(--accent-primary-soft) 72%, var(--surface-elevated));
+}
+
+.ds-page-table-row-selected:hover {
+ background: color-mix(in srgb, var(--accent-primary-soft) 82%, var(--surface-elevated));
+}
+
+.ds-page-table-cell {
+ padding: 0.75rem 0.875rem;
+ vertical-align: top;
+ color: var(--text-primary);
+}
+
+.ds-page-table-cell-muted {
+ color: var(--text-secondary);
+}
+
+.ds-page-table-cell-subtle {
+ color: var(--text-muted);
+}
+
+.ds-page-table-cell-strong {
+ color: var(--text-primary);
+ font-weight: 600;
+}
+
+.ds-page-table-truncate {
+ min-width: 0;
+ overflow: hidden;
+ text-overflow: ellipsis;
+ white-space: nowrap;
+}
+
+.ds-page-table-clamp-2 {
+ display: -webkit-box;
+ -webkit-box-orient: vertical;
+ -webkit-line-clamp: 2;
+ overflow: hidden;
+}
+
+.ds-page-table-clamp-3 {
+ display: -webkit-box;
+ -webkit-box-orient: vertical;
+ -webkit-line-clamp: 3;
+ overflow: hidden;
+}
+
+.ds-page-table-footer {
+ display: flex;
+ align-items: center;
+ justify-content: space-between;
+ gap: var(--space-3);
+ padding: var(--space-3) var(--space-4);
+ border-top: 1px solid var(--border-subtle);
+ background:
+ linear-gradient(180deg, color-mix(in srgb, var(--surface-muted) 45%, transparent) 0%, transparent 100%),
+ var(--surface);
+}
+
+.ds-page-row-action {
+ opacity: 0.5;
+ transition: opacity var(--motion-fast) var(--ease-standard);
+}
+
+.ds-page-table-row:hover .ds-page-row-action,
+.ds-page-table-row:focus-within .ds-page-row-action,
+.ds-page-table-row-selected .ds-page-row-action {
+ opacity: 1;
+}
+
+.ds-page-table-density-compact .ds-page-table-head-cell,
+.ds-page-table-density-compact .ds-page-table-cell {
+ padding-top: 0.5rem;
+ padding-bottom: 0.5rem;
+}
+
+.ds-page-table-density-comfortable .ds-page-table-head-cell,
+.ds-page-table-density-comfortable .ds-page-table-cell {
+ padding-top: 0.625rem;
+ padding-bottom: 0.625rem;
+}
+
+.ds-page-table-density-detailed .ds-page-table-head-cell,
+.ds-page-table-density-detailed .ds-page-table-cell {
+ padding-top: 0.875rem;
+ padding-bottom: 0.875rem;
+}
+
+/* ================================================
+ LEGACY PAGE CLASSES (pre-normalization pages)
+ These are used by ContractsListPage and other
+ pages that were not yet migrated to ds-* tokens.
+ ================================================ */
+
+/* Table header row */
+.premium-table-head {
+ background: var(--surface-muted);
+ color: var(--text-secondary);
+ font-size: var(--text-table-header);
+ text-transform: uppercase;
+ letter-spacing: 0.05em;
+ font-weight: 600;
+}
+
+/* Contract number link button */
+.contract-no-chip {
+ color: var(--accent-primary);
+ font-weight: 600;
+ background: none;
+ border: none;
+ padding: 0;
+ cursor: pointer;
+ font-family: inherit;
+ border-radius: var(--radius-sm);
+ transition: color var(--motion-fast) var(--ease-standard), background-color var(--motion-fast) var(--ease-standard);
+}
+.contract-no-chip:hover {
+ color: var(--accent-primary-hover);
+ text-decoration: underline;
+ text-underline-offset: 2px;
+}
+
+/* Table row — selected state */
+.row-selected-premium {
+ background: color-mix(in srgb, var(--accent-primary-soft) 80%, var(--surface-elevated));
+}
+
+/* Table row — hover state */
+.row-hover-premium:hover {
+ background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+}
+
+/* Compact contract number chip */
+.contract-no-chip {
+ color: var(--accent-primary);
+ background: none;
+ border: none;
+ padding: 0;
+ cursor: pointer;
+ font-family: inherit;
+ border-radius: var(--radius-sm);
+ transition: color var(--motion-fast) var(--ease-standard);
+}
+.contract-no-chip:hover {
+ color: var(--accent-primary-hover);
+}
+
+/* Contract number suffix chip */
+.contract-no-suffix {
+ display: inline-block;
+ padding: 0.05rem 0.35rem;
+ border-radius: var(--radius-sm);
+ background: color-mix(in srgb, var(--accent-primary-soft) 60%, white);
+ color: var(--accent-primary);
+ font-size: 0.65rem;
+ font-weight: 600;
+ letter-spacing: 0.04em;
+ text-transform: uppercase;
+ vertical-align: middle;
+ line-height: 1.4;
+}
+
+/* Usage area chip */
+.usage-area-chip {
+ display: inline-flex;
+ align-items: center;
+ padding: 0.15rem 0.45rem;
+ border-radius: var(--radius-sm);
+ background: var(--surface-muted);
+ color: var(--text-secondary);
+ font-size: 0.65rem;
+ font-weight: 500;
+ border: 1px solid var(--border-subtle);
+}
+
+/* Extra-areas chip (overflow) */
+.usage-extra-chip {
+ display: inline-flex;
+ align-items: center;
+ padding: 0.15rem 0.45rem;
+ border-radius: var(--radius-sm);
+ background: color-mix(in srgb, var(--accent-warning-soft) 80%, white);
+ color: var(--accent-warning);
+ font-size: 0.65rem;
+ font-weight: 600;
+ border: 1px solid color-mix(in srgb, var(--accent-warning) 22%, transparent);
+}
+
+/* Detail link in usage area cell */
+.usage-detail-link {
+ font-size: 0.65rem;
+ font-weight: 600;
+ color: var(--accent-primary);
+ letter-spacing: 0.03em;
+ text-transform: uppercase;
+ padding: 0.1rem 0;
+ transition: color var(--motion-fast) var(--ease-standard);
+}
+.usage-detail-link:hover {
+ color: var(--accent-primary-hover);
+ text-decoration: underline;
+ text-underline-offset: 2px;
+}
+
+/* Table row action trigger — always visible enough */
+.row-action-trigger {
+ opacity: 0.45;
+ transition: opacity var(--motion-fast) var(--ease-standard);
+}
+tr:hover .row-action-trigger,
+tr:focus-within .row-action-trigger {
+ opacity: 1;
+}

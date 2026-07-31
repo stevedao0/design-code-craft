@@ -1,0 +1,22 @@
+{
+  "ts": "2026-07-19T12:41:36Z",
+  "phase": "pre-apply",
+  "contract_records_total": 3990,
+  "annex_total": 202,
+  "contract_records_2026": 172,
+  "contract_records_2025": 146,
+  "royalty_amount_before_vat_total": 3112160965,
+  "nguoi_thuc_hien_email_non_null": 634,
+  "reference_contract_id_non_null": 0,
+  "kpi_owner_user_id_non_null": null,
+  "renewal_status_distribution": {
+    "NEW": 125,
+    "<NULL>": 3855,
+    "PENDING_RENEWAL": 9,
+    "RENEWED": 1
+  },
+  "users_total": 6,
+  "companies_total": 1231,
+  "works_total": 80759,
+  "schema": "public"
+}

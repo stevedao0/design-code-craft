@@ -1,0 +1,6001 @@
+@import './tokens.css';
+@import './themes.css';
+@import './typography.css';
+@import './layout.css';
+@import './motion.css';
+@import './components.css';
+
+:root {
+  --vc-enterprise-bg: #faf9f7;
+  --vc-enterprise-bg-elevated: #ffffff;
+  --vc-enterprise-bg-panel: rgba(255, 255, 255, 0.98);
+  --vc-enterprise-bg-strong: #f3f0ea;
+  --vc-enterprise-text: #18181b;
+  --vc-enterprise-text-soft: #57534e;
+  --vc-enterprise-text-muted: #78716c;
+  --vc-enterprise-text-inverse: #f5f5f4;
+  --vc-enterprise-border: rgba(41, 37, 36, 0.12);
+  --vc-enterprise-border-strong: rgba(41, 37, 36, 0.18);
+  --vc-enterprise-accent: #0f8f72;
+  --vc-enterprise-accent-strong: #0b6d58;
+  --vc-enterprise-accent-soft: rgba(15, 143, 114, 0.08);
+  --vc-enterprise-warning-soft: rgba(196, 136, 59, 0.12);
+  --vc-enterprise-danger-soft: rgba(177, 67, 56, 0.1);
+  --vc-enterprise-radius-sm: 10px;
+  --vc-enterprise-radius-md: 14px;
+  --vc-enterprise-radius-lg: 18px;
+  --vc-enterprise-shadow: 0 10px 30px -22px rgba(28, 25, 23, 0.16);
+  --vcpmc-grand-total-bg: #4A7202;
+  --vcpmc-grand-total-fg: #ffffff;
+  --vcpmc-table-header-bg: #f8fafc;
+  --vcpmc-table-header-fg: #0f172a;
+  --vcpmc-table-row-alt: #faf9f6;
+  --vcpmc-table-border: #e2e8f0;
+  --vcpmc-money-fg: #0f172a;
+  --vcpmc-money-tint: #475569;
+}
+
+:root[data-theme='dark'] {
+  --vc-enterprise-bg: #08110f;
+  --vc-enterprise-bg-elevated: #0d1714;
+  --vc-enterprise-bg-panel: rgba(13, 23, 20, 0.92);
+  --vc-enterprise-bg-strong: #10201c;
+  --vc-enterprise-text: #ebf5f1;
+  --vc-enterprise-text-soft: #b4c9c1;
+  --vc-enterprise-text-muted: #8ea49d;
+  --vc-enterprise-text-inverse: #eef7f2;
+  --vc-enterprise-border: rgba(190, 226, 213, 0.12);
+  --vc-enterprise-border-strong: rgba(190, 226, 213, 0.22);
+  --vc-enterprise-accent: #38b899;
+  --vc-enterprise-accent-strong: #68d0b4;
+  --vc-enterprise-accent-soft: rgba(56, 184, 153, 0.14);
+}
+
+.vc-enterprise-shell {
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  background: #0c0d0e;
+}
+
+.vc-enterprise-shell__frame {
+  height: 100%;
+  display: flex;
+  overflow: hidden;
+}
+
+.vc-enterprise-main {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: #faf9f7;
+}
+
+:root[data-theme='dark'] .vc-enterprise-main {
+  background: #111315;
+}
+
+.vc-enterprise-content {
+  min-width: 0;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: #faf9f7;
+}
+
+:root[data-theme='dark'] .vc-enterprise-content {
+  background: #111315;
+}
+
+.vc-enterprise-footer {
+  display: none;
+}
+
+.vc-enterprise-dev-badge {
+  color: #d97706;
+  background: rgba(255, 244, 230, 0.82);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+:root[data-theme='dark'] .vc-enterprise-dev-badge {
+  color: #fbbf24;
+  background: rgba(48, 30, 6, 0.55);
+  border-bottom-color: rgba(251, 191, 36, 0.16);
+}
+
+.vc-enterprise-sidebar {
+  background: #141618;
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--vc-enterprise-text-inverse);
+}
+
+.vc-enterprise-icon-rail {
+  width: 56px;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+  background: #0c0d0e;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 8px 14px;
+}
+
+.vc-enterprise-icon-rail__top,
+.vc-enterprise-rail-stack,
+.vc-enterprise-rail-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.vc-enterprise-rail-stack {
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.vc-enterprise-rail-home,
+.vc-enterprise-rail-button,
+.vc-enterprise-rail-status {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vc-enterprise-rail-home {
+  color: rgba(255, 255, 255, 0.62);
+  background: transparent;
+  border: 1px solid transparent;
+  transition: background 180ms ease, color 180ms ease, border-color 180ms ease;
+}
+
+.vc-enterprise-rail-home:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.vc-enterprise-rail-button {
+  position: relative;
+  color: rgba(255, 255, 255, 0.58);
+  background: transparent;
+  transition: background 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.vc-enterprise-rail-button:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vc-enterprise-rail-button.is-active {
+  color: var(--vc-enterprise-accent);
+  background: rgba(56, 184, 153, 0.10);
+  box-shadow: inset 0 0 0 1px rgba(56, 184, 153, 0.16);
+}
+
+.vc-enterprise-rail-button.is-active::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 13px;
+  bottom: 13px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--vc-enterprise-accent);
+  box-shadow: 0 0 6px rgba(56, 184, 153, 0.45);
+}
+
+.vc-enterprise-rail-status {
+  color: rgba(255, 255, 255, 0.55);
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.vc-enterprise-sidebar-panel {
+  background: linear-gradient(180deg, #1c1f22 0%, #141618 100%);
+}
+
+/* Workspace card */
+.vc-enterprise-workspace-card {
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.035);
+  padding: 10px 12px;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.vc-enterprise-workspace-card__eyebrow {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: rgba(255, 255, 255, 0.38);
+  margin: 0;
+  line-height: 1.2;
+}
+
+.vc-enterprise-workspace-card__title {
+  margin: 4px 0 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: white;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc-enterprise-workspace-card__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px 3px 6px;
+  border-radius: 999px;
+  background: rgba(56, 184, 153, 0.08);
+  border: 1px solid rgba(56, 184, 153, 0.14);
+}
+
+.vc-enterprise-workspace-card__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--vc-enterprise-accent);
+  box-shadow: 0 0 6px rgba(56, 184, 153, 0.6);
+}
+
+.vc-enterprise-workspace-card__status-label {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--vc-enterprise-accent-strong, #68d0b4);
+  line-height: 1;
+}
+
+/* Sidebar footer */
+.vc-enterprise-sidebar-footer {
+  margin-top: auto;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.vc-enterprise-sidebar-footer__version {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.vc-enterprise-sidebar-footer__divider {
+  width: 1px;
+  height: 10px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.vc-enterprise-sidebar-footer__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.vc-enterprise-sidebar-footer__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #10b981;
+  box-shadow: 0 0 6px rgba(16, 185, 129, 0.55);
+}
+
+.vc-enterprise-topbar {
+  background: rgba(255, 255, 255, 0.96);
+  border-bottom: 1px solid rgba(41, 37, 36, 0.1);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 8px 22px -20px rgba(28, 25, 23, 0.2);
+}
+
+.vc-enterprise-search {
+  background: #ffffff;
+  border: 1px solid rgba(41, 37, 36, 0.12);
+  color: #1c1917;
+}
+
+.vc-enterprise-search:hover {
+  background: #ffffff;
+  border-color: rgba(15, 143, 114, 0.24);
+}
+
+.vc-enterprise-search:focus-visible {
+  outline: none;
+  border-color: rgba(56, 184, 153, 0.36);
+  box-shadow: 0 0 0 3px rgba(56, 184, 153, 0.15);
+}
+
+.vc-enterprise-topbar-chip {
+  background: #ffffff;
+  border: 1px solid rgba(41, 37, 36, 0.12);
+  color: #1c1917;
+}
+
+.vc-enterprise-topbar-chip:hover {
+  background: #fafaf9;
+  border-color: rgba(15, 143, 114, 0.24);
+}
+
+.vc-enterprise-page {
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  /* ensure children don't overflow due to padding */
+  min-width: 0;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: clip;
+}
+
+.vc-enterprise-page::before {
+  content: '';
+  position: absolute;
+  inset: -1rem -1rem auto;
+  height: 10rem;
+  background: radial-gradient(circle at top left, rgba(15, 143, 114, 0.05), transparent 52%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.vc-enterprise-page > * {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.vc-enterprise-command-header,
+.vc-enterprise-surface,
+.vc-enterprise-panel,
+.vc-enterprise-table-shell {
+  background: var(--vc-enterprise-bg-panel);
+  border: 1px solid var(--vc-enterprise-border);
+  border-radius: var(--vc-enterprise-radius-md);
+  box-shadow: var(--vc-enterprise-shadow);
+  backdrop-filter: blur(10px);
+}
+
+.vc-enterprise-panel,
+.vc-enterprise-command-header {
+  padding: 0.9rem 1rem;
+}
+
+.vc-enterprise-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.85rem;
+}
+
+.vc-enterprise-section-header h2,
+.vc-enterprise-section-header h3,
+.vc-enterprise-section-header p {
+  margin: 0;
+}
+
+.vc-enterprise-section-header p {
+  margin-top: 0.3rem;
+  color: var(--vc-enterprise-text-soft);
+}
+
+.vc-enterprise-metric-grid {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+.vc-enterprise-metric-card {
+  position: relative;
+  overflow: hidden;
+  min-height: 7.4rem;
+  padding: 0.85rem 0.95rem;
+  border-radius: 16px;
+  border: 1px solid rgba(18, 45, 37, 0.08);
+  background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,255,255,0.9));
+}
+
+:root[data-theme='dark'] .vc-enterprise-metric-card {
+  background: linear-gradient(180deg, rgba(13, 23, 20, 0.92), rgba(16, 32, 28, 0.8));
+}
+
+.vc-enterprise-metric-card::after {
+  display: none;
+}
+
+.vc-enterprise-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--vc-enterprise-text-soft);
+}
+
+.vc-enterprise-value {
+  font-size: clamp(1.35rem, 1.9vw, 1.8rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  color: var(--vc-enterprise-text);
+}
+
+.vc-enterprise-subtle {
+  color: var(--vc-enterprise-text-soft);
+}
+
+.vc-enterprise-pill,
+.vc-enterprise-badge,
+.vc-enterprise-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  border-radius: 999px;
+  border: 1px solid var(--vc-enterprise-border);
+  background: var(--vc-enterprise-bg-elevated);
+  color: var(--vc-enterprise-text-soft);
+  line-height: 1;
+}
+
+.vc-enterprise-pill,
+.vc-enterprise-chip {
+  padding: 0.28rem 0.58rem;
+  font-size: 0.71rem;
+}
+
+.vc-enterprise-badge {
+  padding: 0.34rem 0.62rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+}
+
+.vc-enterprise-tone-accent { background: rgba(15, 143, 114, 0.1); color: var(--vc-enterprise-accent-strong); border-color: rgba(15, 143, 114, 0.16); }
+.vc-enterprise-tone-success { background: rgba(30, 128, 94, 0.1); color: #197451; border-color: rgba(30, 128, 94, 0.16); }
+.vc-enterprise-tone-warning { background: var(--vc-enterprise-warning-soft); color: #8b5d18; border-color: rgba(196, 136, 59, 0.16); }
+.vc-enterprise-tone-danger { background: var(--vc-enterprise-danger-soft); color: #8b3a31; border-color: rgba(177, 67, 56, 0.16); }
+.vc-enterprise-tone-info { background: rgba(52, 120, 188, 0.1); color: #235b8f; border-color: rgba(52, 120, 188, 0.16); }
+.vc-enterprise-tone-neutral { background: rgba(18, 45, 37, 0.05); color: var(--vc-enterprise-text-soft); }
+.vc-enterprise-tone-violet { background: rgba(113, 73, 180, 0.1); color: #6841a8; border-color: rgba(113, 73, 180, 0.16); }
+.vc-enterprise-tone-teal { background: rgba(10, 119, 126, 0.1); color: #0f6970; border-color: rgba(10, 119, 126, 0.16); }
+
+.vc-enterprise-table-shell {
+  overflow: hidden;
+}
+
+.vc-enterprise-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem 1rem 0;
+}
+
+.vc-enterprise-table-toolbar-summary {
+  font-size: 0.8rem;
+  color: var(--vc-enterprise-text-soft);
+}
+
+.vc-enterprise-table-scroll {
+  overflow: auto;
+  scrollbar-width: thin;
+}
+
+.vc-enterprise-table-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+
+.vc-enterprise-table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(18, 45, 37, 0.16);
+  border-radius: 999px;
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-header {
+  background: linear-gradient(180deg, rgba(247, 248, 247, 0.98), rgba(251, 252, 251, 0.98));
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-head-row {
+  border-bottom: 1px solid var(--vc-enterprise-border);
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-head-cell {
+  color: var(--vc-enterprise-text-soft);
+  font-size: 0.68rem;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-scroll-y {
+  max-height: min(68vh, 960px);
+  overflow: auto;
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-row {
+  background: transparent;
+  transition: background 180ms ease, box-shadow 180ms ease;
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-row:hover {
+  background: rgba(15, 143, 114, 0.035);
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-row-selected {
+  background: rgba(15, 143, 114, 0.08);
+}
+
+.vc-enterprise-contracts-shell .ds-page-table-cell {
+  border-bottom-color: rgba(18, 45, 37, 0.08);
+}
+
+.vc-enterprise-contracts-shell .contract-no-chip {
+  padding: 0.28rem 0.45rem;
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 143, 114, 0.1);
+  background: rgba(15, 143, 114, 0.045);
+}
+
+.vc-enterprise-contracts-shell .contract-no-suffix,
+.vc-enterprise-contracts-shell .usage-extra-chip,
+.vc-enterprise-contracts-shell .usage-area-chip {
+  color: var(--vc-enterprise-text-soft);
+  font-size: 0.72rem;
+}
+
+.vc-enterprise-contracts-shell .money-strong {
+  color: var(--vc-enterprise-accent-strong);
+  font-weight: 700;
+}
+
+.vc-enterprise-contracts-shell .vc-enterprise-pill,
+.vc-enterprise-contracts-shell .vc-enterprise-chip,
+.vc-enterprise-contracts-shell .usage-area-chip,
+.vc-enterprise-contracts-shell .usage-extra-chip {
+  padding: 0.2rem 0.48rem;
+  border-radius: 999px;
+}
+
+.vc-enterprise-command-grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: minmax(0, 1.72fr) minmax(300px, 0.92fr);
+  align-items: start;
+}
+
+.vc-enterprise-command-main,
+.vc-enterprise-side-stack,
+.vc-enterprise-queue-list,
+.vc-enterprise-lower-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.vc-enterprise-intelligence-panel {
+  min-height: 100%;
+}
+
+.vc-enterprise-queue-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.7rem 0.78rem;
+  border-radius: 0.9rem;
+  border: 1px solid var(--vc-enterprise-border);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+:root[data-theme='dark'] .vc-enterprise-queue-item {
+  background: rgba(16, 32, 28, 0.72);
+}
+
+@media (max-width: 1100px) {
+  .vc-enterprise-command-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ─── Magic-style layout primitives ─────────────────────────────────────────── */
+
+/* Workspace tabs — the pill-tab bar used across Magic screens */
+.vc-workspace-tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  border-radius: 0.9rem;
+  background: rgba(18, 45, 37, 0.04);
+  border: 1px solid rgba(18, 45, 37, 0.08);
+  width: fit-content;
+}
+
+.vc-workspace-tabs__item {
+  padding: 0.38rem 0.85rem;
+  border-radius: 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--vc-enterprise-text-soft);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.vc-workspace-tabs__item:hover {
+  background: rgba(18, 45, 37, 0.06);
+  color: var(--vc-enterprise-text);
+}
+
+.vc-workspace-tabs__item.is-active {
+  background: white;
+  color: var(--vc-enterprise-accent-strong);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(18, 45, 37, 0.1), 0 1px 2px rgba(18, 45, 37, 0.06);
+}
+
+/* Toolbar group */
+.vc-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Two-column asymmetric grid (used in Magic dashboard / print screens) */
+.vc-grid-2 {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1fr 1fr;
+}
+
+.vc-grid-2--asymmetric {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1.65fr 0.92fr;
+}
+
+/* Three-column grid */
+.vc-grid-3 {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Stack layouts */
+.vc-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.vc-stack-sm {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Print station layout */
+.vc-print-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 1fr;
+  gap: 0.9rem;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .vc-print-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .vc-print-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Create contract wizard layout */
+.vc-create-layout {
+  display: grid;
+  grid-template-columns: 200px 1fr 280px;
+  gap: 0.9rem;
+  align-items: start;
+}
+
+@media (max-width: 1200px) {
+  .vc-create-layout {
+    grid-template-columns: 180px 1fr 240px;
+  }
+}
+
+@media (max-width: 900px) {
+  .vc-create-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Command strip — KPI row */
+.vc-command-strip {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+/* Command status card */
+.vc-cockpit-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.85rem;
+}
+
+/* Phase 3: GCN badge variants for contract list */
+.gcn-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.gcn-badge-final_printed {
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  font-weight: 700;
+}
+
+.gcn-badge-test_printed {
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  font-weight: 600;
+}
+
+.gcn-badge-draft {
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  font-weight: 500;
+}
+
+.gcn-badge-no_gcn {
+  color: #6b7280;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+}
+
+/* =============================================================================
+   VCPMC COMMAND CENTER — topbar-first layout (default)
+   No full sidebar. Full-width content. Floating left dock.
+   ============================================================================= */
+
+.vc-command-center {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #1c2624 0%, #161e1c 100%);
+}
+
+:root[data-theme='dark'] .vc-command-center {
+  background: linear-gradient(180deg, #1a2321 0%, #131a18 100%);
+}
+
+.vc-command-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: linear-gradient(180deg, rgba(28, 38, 36, 0.78) 0%, rgba(20, 28, 26, 0.72) 100%);
+  border-bottom: 1px solid rgba(190, 226, 213, 0.08);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.10),
+    0 8px 24px -22px rgba(0, 0, 0, 0.45);
+}
+
+:root[data-theme='dark'] .vc-command-topbar {
+  background: linear-gradient(180deg, rgba(34, 44, 42, 0.82) 0%, rgba(24, 32, 30, 0.78) 100%);
+  border-bottom-color: rgba(190, 226, 213, 0.06);
+}
+
+.vc-command-topbar__inner {
+  /* V5: explicit three-zone grid so left / center / right are
+     intentionally composed instead of clustered by flex-start. */
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(280px, 520px) minmax(max-content, 1fr);
+  align-items: center;
+  column-gap: 1rem;
+  height: 60px;
+  padding: 0 1rem;
+}
+
+.vc-command-topbar__zone {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.vc-command-topbar__zone--left {
+  justify-self: start;
+}
+
+.vc-command-topbar__zone--center {
+  justify-self: center;
+  width: 100%;
+}
+
+.vc-command-topbar__zone--right {
+  justify-self: end;
+  gap: 0.55rem;
+}
+
+/* V4 minimal variant: slimmer breathing room when the topbar carries only
+   context (orb, breadcrumb, search, avatar, date pill). The chrome feels
+   lighter and the orb has more visual weight. */
+.vc-command-topbar--minimal .vc-command-topbar__inner {
+  column-gap: 0.85rem;
+  height: 56px;
+}
+
+.vc-command-topbar--minimal .vc-command-topbar__zone {
+  gap: 0.55rem;
+}
+
+/* Fallback for narrow viewports — collapse center zone width and let
+   controls shrink gracefully without overlapping. */
+@media (max-width: 1023px) {
+  .vc-command-topbar__inner {
+    grid-template-columns: minmax(max-content, 1fr) minmax(220px, 1fr) minmax(max-content, 1fr);
+    column-gap: 0.65rem;
+    padding: 0 0.75rem;
+  }
+  .vc-command-topbar--minimal .vc-command-topbar__inner {
+    column-gap: 0.55rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .vc-command-topbar__inner {
+    grid-template-columns: minmax(max-content, 1fr) minmax(180px, 1fr) minmax(max-content, 1fr);
+    column-gap: 0.5rem;
+  }
+  .vc-command-topbar--minimal .vc-command-topbar__inner {
+    height: 52px;
+  }
+}
+
+/* ── Topbar date pill (V4) ─────────────────────────────────────────────── */
+
+.vc-command-date-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 28px;
+  padding: 0 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(190, 226, 213, 0.10);
+  color: rgba(190, 226, 213, 0.72);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  user-select: none;
+  flex: 0 0 auto;
+}
+
+.vc-command-date-pill__weekday {
+  color: rgba(190, 226, 213, 0.92);
+}
+
+.vc-command-date-pill__sep {
+  opacity: 0.45;
+}
+
+.vc-command-date-pill__day {
+  font-variant-numeric: tabular-nums;
+  color: rgba(190, 226, 213, 0.92);
+}
+
+@media (max-width: 720px) {
+  .vc-command-date-pill { display: none; }
+}
+
+/* ── Bare avatar variant (V4 minimal topbar) ───────────────────────────── */
+
+.vc-topbar-user-bare {
+  background: transparent;
+  flex: 0 0 auto;
+}
+
+.vc-topbar-user-bare:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(190, 226, 213, 0.10);
+}
+
+/* =============================================================================
+   Topbar utility cluster — topbar polish (Phase 4)
+   - workspace chip adapts to dark Command Center topbar
+   - utility items have consistent 12-14px gap
+   - theme icon and user avatar sit with proper breathing room
+   ============================================================================= */
+
+.vc-topbar-utility {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+}
+
+.vc-topbar-utility__group {
+  display: flex;
+  align-items: center;
+}
+
+.vc-topbar-utility__actions {
+  gap: 0.5rem;          /* 8px within action group */
+}
+
+.vc-topbar-utility__account {
+  gap: 0.4rem;          /* ~6-7px within account group */
+}
+
+.vc-topbar-utility__divider {
+  align-self: center;
+  height: 1.25rem;     /* 20px — within the 18-22px target */
+  width: 1px;
+  background: rgba(255, 255, 255, 0.10);
+  margin: 0 0.875rem;  /* 14px — within the 12-16px inter-group target */
+}
+
+/* User menu floats cleanly below the user button. */
+.vc-topbar-user-menu {
+  background: rgba(15, 27, 24, 0.96);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    0 24px 60px -12px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+/* ──────────────────────────────────────────────────────────── */
+/*  Contracts table: column widths                            */
+/*  Professional enterprise grid with balanced columns.         */
+/*  Fixed layout + explicit widths = predictable distribution.  */
+/*  Gridline policy: horizontal separators only, no vertical lines */
+/* ──────────────────────────────────────────────────────────── */
+
+/* Scrollable table wrapper: establishes scroll context for sticky cols */
+.vc-contracts-table-scroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  position: relative;
+}
+/* Fixed table layout forces colgroup widths to be respected */
+.vc-contracts-table-scroll table {
+  table-layout: fixed;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Sticky right column (actions): stays visible during horizontal scroll */
+.vc-col-actions {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+}
+
+.vc-col-contract-no {
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+}
+.vc-col-customer {
+  width: 30%;
+  min-width: 280px;
+  max-width: 420px;
+}
+.vc-col-term {
+  width: 165px;
+  min-width: 165px;
+  max-width: 165px;
+}
+.vc-col-amount {
+  width: 140px;
+  min-width: 140px;
+  max-width: 140px;
+}
+.vc-col-owner {
+  width: 130px;
+  min-width: 110px;
+  max-width: 160px;
+}
+.vc-col-status {
+  width: 145px;
+  min-width: 145px;
+  max-width: 175px;
+}
+.vc-col-address {
+  width: 20%;
+  min-width: 200px;
+  max-width: 260px;
+}
+/* NO vertical gridlines - only horizontal row separators */
+.vc-col-domain {
+  width: 90px;
+  min-width: 90px;
+  max-width: 90px;
+}
+.vc-col-date {
+  width: 95px;
+  min-width: 95px;
+  max-width: 95px;
+}
+.vc-col-expiry {
+  width: 170px;
+  min-width: 170px;
+  max-width: 170px;
+}
+.vc-col-amount {
+  width: 150px;
+  min-width: 150px;
+  max-width: 150px;
+}
+.vc-col-status {
+  width: 130px;
+  min-width: 130px;
+  max-width: 130px;
+}
+.vc-col-cert {
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+}
+
+/* Table grid: clean horizontal row separators only - NO vertical lines */
+.vc-contracts-table-scroll tbody tr {
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+.vc-contracts-table-scroll tbody tr:last-child {
+  border-bottom: none;
+}
+.vc-contracts-table-scroll tbody tr:hover {
+  background-color: rgba(15,143,114,0.03);
+}
+
+/* Header row: subtle bottom border, clean background */
+.vc-contracts-table-scroll thead tr {
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+.vc-contracts-table-scroll thead th {
+  background: linear-gradient(180deg, #fafafa 0%, #f5f5f4 100%);
+}
+
+/* Sticky action column: clean background matching table, no box-shadow/visual layer */
+.vc-contracts-table-scroll .vc-col-actions-sticky {
+  position: sticky;
+  right: 0;
+  background: #fafafa;
+  z-index: 10;
+}
+.vc-contracts-table-scroll thead .vc-col-actions-sticky {
+  background: linear-gradient(180deg, #fafafa 0%, #f5f5f4 100%);
+  z-index: 20;
+}
+
+/* Density toggle: active state uses the enterprise accent (gold) */
+.vc-contracts-density-active {
+  background: linear-gradient(135deg, #c89968, #9c6d3e) !important;
+  color: #fff !important;
+  box-shadow: 0 1px 4px rgba(200, 153, 104, 0.35);
+}
+
+/* Density mode indicators - subtle row accent to show current mode */
+.vc-density-compact tbody tr {
+  border-bottom-color: rgba(0,0,0,0.04);
+}
+.vc-density-compact tbody tr:hover {
+  background-color: rgba(200,153,104,0.04);
+}
+.vc-density-mid tbody tr:hover {
+  background-color: rgba(15,143,114,0.04);
+}
+.vc-density-detail {
+  border-top: 2px solid rgba(15,143,114,0.15);
+  border-radius: 0 0 8px 8px;
+}
+.vc-density-detail tbody tr:hover {
+  background-color: rgba(15,143,114,0.06);
+}
+.vc-density-detail .vc-density-extra {
+  display: block;
+}
+
+/* Density-specific secondary text visibility */
+.vc-density-compact .vc-secondary-text {
+  display: none; /* Hide secondary text in compact mode */
+}
+.vc-density-detail .vc-secondary-text {
+  color: rgba(82, 80, 75, 0.8); /* Slightly stronger in detail */
+}
+
+/* Density detail mode on smaller screens: allow scroll, no forced overlap */
+@media (max-width: 1439px) {
+  .vc-density-detail.vc-contracts-table-scroll {
+    overflow-x: auto;
+  }
+}
+
+/* Table row base styles - clean and consistent */
+.vc-table-row {
+  background-color: #fff;
+}
+.vc-table-row.vc-row-selected {
+  background-color: rgba(200,153,104,0.12);
+}
+.vc-density-compact .vc-table-row.vc-row-selected {
+  background-color: rgba(200,153,104,0.15);
+}
+.vc-density-detail .vc-table-row.vc-row-selected {
+  background-color: rgba(15,143,114,0.1);
+}
+
+/* Header row - clean professional style */
+.vc-table-header-row th {
+  background: linear-gradient(180deg, #fafafa 0%, #f5f5f4 100%);
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+/* On very wide screens (>= 1920px): full width, generous flexible columns */
+@media (min-width: 1920px) {
+  .vc-col-customer {
+    min-width: 280px;
+    max-width: 360px;
+  }
+  .vc-col-address {
+    min-width: 260px;
+    max-width: 320px;
+  }
+}
+
+/* On wide screens (1600-1919px): balanced layout */
+@media (min-width: 1600px) and (max-width: 1919px) {
+  .vc-col-customer {
+    min-width: 240px;
+    max-width: 320px;
+  }
+  .vc-col-address {
+    min-width: 220px;
+    max-width: 280px;
+  }
+}
+
+/* On medium-large screens (1440-1599px): comfortable with mild truncation */
+@media (min-width: 1440px) and (max-width: 1599px) {
+  .vc-col-customer {
+    min-width: 200px;
+    max-width: 260px;
+  }
+  .vc-col-address {
+    min-width: 180px;
+    max-width: 240px;
+  }
+  .vc-col-cert {
+    min-width: 140px;
+    max-width: 140px;
+  }
+}
+
+/* On laptop screens (1366-1439px): compact but readable */
+@media (min-width: 1366px) and (max-width: 1439px) {
+  .vc-col-customer {
+    min-width: 160px;
+    max-width: 220px;
+  }
+  .vc-col-address {
+    min-width: 140px;
+    max-width: 200px;
+  }
+  .vc-col-expiry {
+    min-width: 150px;
+    max-width: 150px;
+  }
+  .vc-col-cert {
+    min-width: 130px;
+    max-width: 130px;
+  }
+  .vc-col-status {
+    min-width: 120px;
+    max-width: 120px;
+  }
+}
+
+/* On smaller screens (< 1366px): horizontal scroll expected */
+@media (max-width: 1365px) {
+  .vc-col-customer {
+    min-width: 140px;
+    max-width: 180px;
+  }
+  .vc-col-address {
+    min-width: 120px;
+    max-width: 160px;
+  }
+  .vc-col-expiry {
+    min-width: 140px;
+    max-width: 140px;
+  }
+  .vc-col-cert {
+    min-width: 120px;
+    max-width: 120px;
+  }
+  .vc-col-status {
+    min-width: 110px;
+    max-width: 110px;
+  }
+  .vc-col-amount {
+    min-width: 130px;
+    max-width: 130px;
+  }
+}
+
+/* -- Workspace chip: dark-context adapt -------------------- */
+
+/* In the dark Command Center topbar, the legacy light chip needs to be restyled
+ *  to a glassy chip so it doesn't look stuck on. */
+.vc-command-topbar .vc-enterprise-topbar-chip,
+.vc-command-topbar .vc-topbar-workspace {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025));
+  border: 1px solid rgba(190, 226, 213, 0.12);
+  color: #ffffff;
+  box-shadow: 0 1px 0 rgba(190, 226, 213, 0.04) inset;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.vc-command-topbar .vc-enterprise-topbar-chip:hover,
+.vc-command-topbar .vc-topbar-workspace:hover {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  border-color: rgba(56, 184, 153, 0.42);
+  box-shadow: 0 0 0 1px rgba(56, 184, 153, 0.18) inset, 0 6px 18px -10px rgba(56, 184, 153, 0.40);
+}
+
+.vc-command-topbar .vc-topbar-workspace__label {
+  color: rgba(190, 226, 213, 0.60);
+  font-weight: 500;
+  font-size: 0.78rem;
+}
+
+.vc-command-topbar .vc-topbar-workspace__value {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+
+.vc-command-topbar .vc-topbar-workspace__chev {
+  color: rgba(190, 226, 213, 0.40);
+}
+
+/* Dropdown panel when the workspace dropdown is open inside the dark topbar. */
+.vc-command-topbar .vc-topbar-workspace__menu {
+  background: linear-gradient(180deg, rgba(13, 23, 20, 0.96) 0%, rgba(8, 14, 12, 0.98) 100%);
+  border: 1px solid rgba(190, 226, 213, 0.12);
+  box-shadow: 0 18px 40px -16px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+}
+
+.vc-command-topbar .vc-topbar-workspace__menu-label {
+  color: rgba(190, 226, 213, 0.42);
+}
+
+.vc-command-topbar .vc-topbar-workspace__menu-item {
+  color: rgba(235, 245, 241, 0.78);
+}
+
+.vc-command-topbar .vc-topbar-workspace__menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.vc-command-topbar .vc-topbar-workspace__menu-item.is-active {
+  background: rgba(56, 184, 153, 0.10);
+  color: #ffffff;
+}
+
+/* -- Theme toggle: subtle adapt ----------------------------- */
+
+.vc-command-topbar .theme-toggle,
+.vc-command-topbar button[aria-label*="chế độ"] {
+  color: rgba(190, 226, 213, 0.70);
+}
+
+.vc-command-topbar .theme-toggle:hover,
+.vc-command-topbar button[aria-label*="chế độ"]:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+/* -- User avatar button: dark-context adapt ----------------- */
+
+.vc-command-topbar .vc-topbar-user {
+  height: 36px;
+  padding: 0 0.5rem 0 0.25rem;
+  border-radius: 0.55rem;
+  background: transparent;
+  border: 1px solid transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(235, 245, 241, 0.86);
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease;
+}
+
+.vc-command-topbar .vc-topbar-user:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(190, 226, 213, 0.10);
+}
+
+.vc-command-topbar .vc-topbar-user__email {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: rgba(235, 245, 241, 0.86);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .vc-command-topbar .vc-topbar-user__email { display: none; }
+}
+
+@media (max-width: 720px) {
+  .vc-topbar-utility { gap: 0.5rem; }
+  .vc-topbar-utility__divider { display: none; }
+  .vc-topbar-utility__actions { gap: 0.4rem; }
+  .vc-topbar-utility__account { gap: 0.3rem; }
+}
+
+.vc-command-brand {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.55rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, rgba(56, 184, 153, 0.18), rgba(56, 184, 153, 0.06));
+  color: var(--vc-enterprise-accent-strong, #68d0b4);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid rgba(56, 184, 153, 0.22);
+  white-space: nowrap;
+}
+
+.vc-command-brand__sub {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(190, 226, 213, 0.45);
+}
+
+.vc-command-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.25rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(190, 226, 213, 0.07);
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.vc-command-nav__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 34px;
+  padding: 0 0.78rem;
+  border-radius: 0.65rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: rgba(190, 226, 213, 0.62);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 160ms ease, color 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+}
+
+.vc-command-nav__item:hover {
+  color: rgba(235, 245, 241, 0.92);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.vc-command-nav__item.is-active {
+  color: #ffffff;
+  background: linear-gradient(180deg, rgba(56, 184, 153, 0.18), rgba(56, 184, 153, 0.08));
+  border-color: rgba(56, 184, 153, 0.32);
+  box-shadow: 0 1px 0 rgba(56, 184, 153, 0.18) inset, 0 1px 6px -2px rgba(56, 184, 153, 0.25);
+  font-weight: 600;
+}
+
+.vc-command-nav__item.is-active .vc-command-nav__icon {
+  color: var(--vc-enterprise-accent-strong, #68d0b4);
+}
+
+.vc-command-nav__icon {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(190, 226, 213, 0.55);
+  transition: color 160ms ease;
+}
+
+.vc-command-subnav {
+  position: sticky;
+  top: 56px;
+  z-index: 20;
+  background: rgba(8, 17, 15, 0.72);
+  border-bottom: 1px solid rgba(190, 226, 213, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+:root[data-theme='dark'] .vc-command-subnav {
+  background: rgba(8, 17, 15, 0.82);
+}
+
+.vc-command-subnav__inner {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  height: 44px;
+  padding: 0 1rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.vc-command-subnav__inner::-webkit-scrollbar { display: none; }
+
+.vc-command-subnav__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 30px;
+  padding: 0 0.7rem;
+  border-radius: 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: rgba(190, 226, 213, 0.62);
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.vc-command-subnav__item:hover {
+  color: rgba(235, 245, 241, 0.92);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vc-command-subnav__item.is-active {
+  color: var(--vc-enterprise-accent-strong, #68d0b4);
+  background: rgba(56, 184, 153, 0.10);
+  border-color: rgba(56, 184, 153, 0.22);
+  font-weight: 600;
+}
+
+.vc-command-subnav__badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(56, 184, 153, 0.12);
+  color: var(--vc-enterprise-accent-strong, #68d0b4);
+  border: 1px solid rgba(56, 184, 153, 0.22);
+}
+
+.vc-command-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: #faf9f7;
+}
+
+:root[data-theme='dark'] .vc-command-body {
+  background: #0f1211;
+}
+
+.vc-command-dock {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 56px;
+  flex: 0 0 56px;
+  padding: 12px 8px;
+  background: linear-gradient(180deg, rgba(20, 22, 24, 0.96), rgba(12, 13, 14, 0.92));
+  border-right: 1px solid rgba(190, 226, 213, 0.08);
+}
+
+/* Dock is hidden by default in the Command Center. The CSS is preserved
+ *  for the COMMANDBAR.CENTER.CENTER_BAR.COMMAND_DOCK_ENABLED feature flag. */
+@media (min-width: 1024px) {
+  .vc-command-center[data-dock='on'] .vc-command-dock { display: flex; }
+}
+
+.vc-command-dock__tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.3rem 0.55rem;
+  border-radius: 0.45rem;
+  background: rgba(15, 27, 24, 0.96);
+  color: #e7f3ee;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  border: 1px solid rgba(190, 226, 213, 0.12);
+  box-shadow: 0 6px 18px -8px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+  z-index: 5;
+}
+
+.vc-command-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vc-command-dev-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.35rem 1rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #b45309;
+  background: rgba(255, 244, 230, 0.82);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.18);
+}
+
+:root[data-theme='dark'] .vc-command-dev-badge {
+  color: #fbbf24;
+  background: rgba(48, 30, 6, 0.55);
+  border-bottom-color: rgba(251, 191, 36, 0.16);
+}
+
+.vc-command-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+}
+
+/* =============================================================================
+   VCPMC ORB COMMAND DRAWER — Phase 2
+   Orb launcher + compact taskbar + dark glass drawer.
+   Scoped prefix: vc-command-* (already used above)
+   ============================================================================= */
+
+/* ── Orb launcher ─────────────────────────────────────────────────────── */
+
+.vc-command-orb {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  border-radius: 15px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.vc-command-orb:hover { transform: translateY(-1.5px) scale(1.05); }
+.vc-command-orb:active { transform: translateY(0) scale(0.97); }
+.vc-command-orb.is-open { transform: scale(1.02); }
+
+.vc-command-orb__core {
+  position: relative;
+  z-index: 2;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  background: linear-gradient(135deg, #ffffff 0%, #f4ecdc 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 2px 4px rgba(0, 0, 0, 0.10),
+    0 8px 20px -8px rgba(56, 184, 153, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+  transition: box-shadow 240ms ease, transform 240ms ease;
+}
+
+.vc-command-orb:hover .vc-command-orb__core,
+.vc-command-orb.is-open .vc-command-orb__core {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9) inset,
+    0 2px 6px rgba(0, 0, 0, 0.12),
+    0 10px 28px -6px rgba(56, 184, 153, 0.65),
+    0 0 0 2px rgba(56, 184, 153, 0.32);
+}
+
+/* Stronger visual link between the orb and the floating launcher when
+   the launcher is open: brighter ring + emerald halo. */
+.vc-command-orb.is-open .vc-command-orb__core {
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.95) inset,
+    0 4px 10px rgba(0, 0, 0, 0.18),
+    0 14px 36px -8px rgba(56, 184, 153, 0.75),
+    0 0 0 2.5px rgba(56, 184, 153, 0.55),
+    0 0 0 5px rgba(56, 184, 153, 0.18);
+}
+
+.vc-command-orb__logo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.vc-command-orb__halo {
+  position: absolute;
+  inset: -6px;
+  z-index: 1;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 50%, rgba(56, 184, 153, 0.40) 0%, rgba(56, 184, 153, 0) 65%);
+  opacity: 0;
+  filter: blur(10px);
+  pointer-events: none;
+  transition: opacity 260ms ease;
+}
+
+.vc-command-orb:hover .vc-command-orb__halo,
+.vc-command-orb.is-open .vc-command-orb__halo {
+  opacity: 1;
+}
+
+/* When the launcher is open, give the orb a stronger ring/halo so the
+   visual link between orb and floating launcher is obvious. */
+.vc-command-orb.is-open .vc-command-orb__halo {
+  inset: -10px;
+  background: radial-gradient(circle at 50% 50%,
+    rgba(56, 184, 153, 0.55) 0%,
+    rgba(56, 184, 153, 0.18) 45%,
+    rgba(56, 184, 153, 0) 70%);
+  filter: blur(8px);
+  animation: vc-orb-pulse 1800ms ease-in-out infinite;
+}
+
+@keyframes vc-orb-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50%      { transform: scale(1.06); opacity: 0.85; }
+}
+
+/* ── Current page breadcrumb (replaces Phase 1/2 taskbar pills) ──────── */
+
+.vc-command-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex: 0 1 auto;
+  min-width: 0;
+  padding: 0 0.65rem;
+  height: 32px;
+  border-radius: 0.55rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02));
+  border: 1px solid rgba(190, 226, 213, 0.10);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.78rem;
+  color: rgba(190, 226, 213, 0.72);
+}
+
+.vc-command-breadcrumb__group {
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: rgba(190, 226, 213, 0.65);
+}
+
+.vc-command-breadcrumb__sep {
+  height: 11px;
+  width: 11px;
+  color: rgba(190, 226, 213, 0.30);
+  flex: 0 0 auto;
+}
+
+.vc-command-breadcrumb__label {
+  font-weight: 600;
+  color: #ffffff;
+  letter-spacing: 0.005em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .vc-command-breadcrumb { display: none; }
+}
+
+/* ── Compact topbar "+ Tạo mới" dropdown ─────────────────────────────── */
+
+.vc-command-create {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.vc-command-create__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 32px;
+  padding: 0 0.65rem;
+  border-radius: 0.55rem;
+  background: linear-gradient(180deg, rgba(56, 184, 153, 0.22), rgba(56, 184, 153, 0.10));
+  border: 1px solid rgba(56, 184, 153, 0.40);
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  white-space: nowrap;
+}
+
+.vc-command-create__btn:hover {
+  background: linear-gradient(180deg, rgba(56, 184, 153, 0.30), rgba(56, 184, 153, 0.16));
+  border-color: rgba(56, 184, 153, 0.55);
+  box-shadow: 0 0 0 1px rgba(56, 184, 153, 0.18), 0 6px 16px -8px rgba(56, 184, 153, 0.40);
+}
+
+.vc-command-create__btn.is-open {
+  background: linear-gradient(180deg, rgba(56, 184, 153, 0.32), rgba(56, 184, 153, 0.18));
+  border-color: rgba(56, 184, 153, 0.65);
+  box-shadow: 0 0 0 1px rgba(56, 184, 153, 0.22) inset;
+}
+
+.vc-command-create__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 220px;
+  padding: 0.3rem;
+  background: linear-gradient(180deg, rgba(13, 23, 20, 0.96) 0%, rgba(8, 14, 12, 0.98) 100%);
+  border: 1px solid rgba(190, 226, 213, 0.12);
+  border-radius: 0.7rem;
+  box-shadow:
+    0 18px 40px -16px rgba(0, 0, 0, 0.55),
+    0 0 60px -20px rgba(56, 184, 153, 0.18);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  z-index: 40;
+  transform-origin: top right;
+  animation: vc-create-in 160ms ease-out;
+}
+
+@keyframes vc-create-in {
+  from { opacity: 0; transform: scale(0.97) translateY(-2px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.vc-command-create__item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  height: 32px;
+  padding: 0 0.6rem;
+  border-radius: 0.5rem;
+  background: transparent;
+  border: 0;
+  color: rgba(235, 245, 241, 0.82);
+  font-size: 0.8rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.vc-command-create__item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.vc-command-create__item-icon {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(190, 226, 213, 0.65);
+  flex: 0 0 auto;
+}
+
+.vc-command-create__item:hover .vc-command-create__item-icon {
+  color: #c2ecdb;
+}
+
+.vc-command-create__item-label {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 640px) {
+  .vc-command-create__btn span:not(.sr-only) { display: none; }
+  .vc-command-create__btn { padding: 0 0.5rem; }
+}
+
+/* ── Topbar search pill (now a button that opens Ctrl K palette) ──────── */
+
+.vc-command-search {
+  display: none;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  height: 36px;
+  padding: 0 0.55rem 0 0.8rem;
+  border-radius: 0.6rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.025));
+  border: 1px solid rgba(190, 226, 213, 0.12);
+  color: rgba(190, 226, 213, 0.82);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: border-color 180ms ease, background 180ms ease, box-shadow 180ms ease;
+}
+
+.vc-command-search:hover {
+  border-color: rgba(56, 184, 153, 0.42);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 0 0 1px rgba(56, 184, 153, 0.18), 0 6px 18px -10px rgba(56, 184, 153, 0.35);
+}
+
+.vc-command-search svg {
+  color: rgba(190, 226, 213, 0.70);
+  transition: color 180ms ease;
+  flex: 0 0 auto;
+}
+
+.vc-command-search:hover svg {
+  color: #c2ecdb;
+}
+
+/* Show the search pill whenever the center zone is wide enough to host it.
+   On the smallest viewports we hide it to avoid overlap; the Ctrl K shortcut
+   still opens the palette. */
+@media (min-width: 720px) {
+  .vc-command-search { display: inline-flex; }
+}
+
+.vc-command-search__kbd {
+  margin-left: auto;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.12rem 0.45rem;
+  border-radius: 0.32rem;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(190, 226, 213, 0.85);
+  border: 1px solid rgba(190, 226, 213, 0.16);
+  box-shadow: 0 1px 0 rgba(190, 226, 213, 0.06) inset;
+}
+
+/* ── Command Launcher V2: floating rail + panel ─────────────────────────── */
+
+/* Root: pointer-events none so topbar/orb (z:30) stay clickable */
+.vc-launcher-root {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+}
+
+/* Backdrop: dims page content below topbar. Tracks the minimal topbar (56px)
+   so the launcher panel sits cleanly under it on Command Center pages. */
+.vc-launcher-backdrop {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: auto;
+  background: rgba(2, 6, 5, 0.28);
+  backdrop-filter: blur(3px) saturate(120%);
+  -webkit-backdrop-filter: blur(3px) saturate(120%);
+  animation: vc-launcher-fade 180ms ease-out;
+}
+
+@keyframes vc-launcher-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* ── Launcher shell: rail + panel grid ─────────────────────────────────── */
+
+.vc-launcher-shell {
+  position: absolute;
+  top: calc(60px + 10px);
+  left: 12px;
+  width: min(820px, calc(100vw - 24px));
+  height: min(760px, calc(100vh - 84px));
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  background: linear-gradient(160deg,
+    rgba(16, 22, 20, 0.97) 0%,
+    rgba(10, 14, 12, 0.99) 100%
+  );
+  border: 1px solid rgba(190, 226, 213, 0.13);
+  border-radius: 24px;
+  box-shadow:
+    0 40px 100px -24px rgba(0, 0, 0, 0.65),
+    0 16px 40px -12px rgba(0, 0, 0, 0.45),
+    0 0 0 0.5px rgba(56, 184, 153, 0.06),
+    0 0 80px -20px rgba(56, 184, 153, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  overflow: hidden;
+  transform-origin: top left;
+  animation: vc-launcher-in 220ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  pointer-events: auto;
+}
+
+@keyframes vc-launcher-in {
+  from { opacity: 0; transform: scale(0.96) translateY(-6px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* =============================================================================
+   ORB-ANCHORED LAUNCHER VARIANT (V3)
+   Floating compact popup visually emerging from the VCPMC orb (top-left).
+   The orb stays bright on top; the launcher sits below-right of the orb
+   with a connector notch on its top-left corner. The backdrop dims the
+   page but NOT the topbar/orb area.
+   ============================================================================= */
+
+.vc-launcher-root--orb-anchored .vc-launcher-backdrop {
+  /* Avoid the topbar/orb area so the orb stays clearly visible */
+  top: 56px;
+  left: 88px; /* leave orb visible on the left */
+  background: rgba(2, 6, 5, 0.32);
+  backdrop-filter: blur(3.5px) saturate(125%);
+  -webkit-backdrop-filter: blur(3.5px) saturate(125%);
+  animation: vc-launcher-fade 200ms ease-out;
+}
+
+.vc-launcher-shell--orb-anchored {
+  position: absolute;
+  /* Anchored below-right of the VCPMC orb (orb is 40px wide, in a topbar
+     60px tall, with ~24px left padding). Launcher emerges from the orb. */
+  top: calc(60px + 6px);
+  left: 24px;
+  width: min(600px, calc(100vw - 48px));
+  height: auto;
+  max-height: calc(100vh - 88px);
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  background:
+    radial-gradient(120% 80% at 0% 0%,
+      rgba(56, 184, 153, 0.06) 0%,
+      transparent 55%),
+    linear-gradient(160deg,
+      rgba(18, 24, 22, 0.98) 0%,
+      rgba(10, 14, 12, 0.99) 100%);
+  border: 1px solid rgba(190, 226, 213, 0.16);
+  border-radius: 24px;
+  box-shadow:
+    0 40px 110px -28px rgba(0, 0, 0, 0.75),
+    0 18px 44px -14px rgba(0, 0, 0, 0.50),
+    0 0 0 0.5px rgba(56, 184, 153, 0.10),
+    0 0 90px -22px rgba(56, 184, 153, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  overflow: visible; /* notch overflows the panel slightly */
+  transform-origin: top left;
+  animation: vc-launcher-orb-in 240ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  pointer-events: auto;
+}
+
+/* The inner container (rail + content) needs overflow:hidden so the
+   panel contents don't overflow the rounded corners. The notch is
+   placed on the outer shell and overflows upward toward the orb. */
+.vc-launcher-shell--orb-anchored > .vc-launcher-rail,
+.vc-launcher-shell--orb-anchored > .vc-launcher-panel {
+  border-top-left-radius: 23px;
+  border-bottom-left-radius: 23px;
+  border-top-right-radius: 23px;
+  border-bottom-right-radius: 23px;
+}
+
+.vc-launcher-shell__notch {
+  position: absolute;
+  top: -8px;
+  left: 22px;
+  width: 16px;
+  height: 8px;
+  pointer-events: none;
+  filter: drop-shadow(0 -2px 3px rgba(0, 0, 0, 0.35));
+}
+.vc-launcher-shell__notch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg,
+    rgba(20, 26, 24, 0.98) 0%,
+    rgba(20, 26, 24, 0.98) 50%,
+    transparent 50%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+}
+.vc-launcher-shell__notch::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 1px;
+  background: rgba(190, 226, 213, 0.16);
+}
+
+@keyframes vc-launcher-orb-in {
+  from { opacity: 0; transform: scale(0.94) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* On narrow viewports, the launcher still floats under the orb but takes
+   the full width minus gutters. */
+@media (max-width: 720px) {
+  .vc-launcher-shell--orb-anchored {
+    width: calc(100vw - 24px);
+    left: 12px;
+    grid-template-columns: 54px 1fr;
+  }
+}
+
+/* ── Rail ──────────────────────────────────────────────────────────────── */
+
+.vc-launcher-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 0 12px 0;
+  background: rgba(0, 0, 0, 0.20);
+  border-right: 1px solid rgba(190, 226, 213, 0.06);
+  gap: 4px;
+}
+
+.vc-launcher-rail__brand {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 10px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(56, 184, 153, 0.20), rgba(56, 184, 153, 0.08));
+  border: 1px solid rgba(56, 184, 153, 0.22);
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(56, 184, 153, 0.20);
+}
+
+.vc-launcher-rail__logo {
+  width: 32px;
+  height: 32px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+
+.vc-launcher-rail__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex: 1 1 auto;
+}
+
+.vc-launcher-rail__btn {
+  width: 48px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(190, 226, 213, 0.55);
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  position: relative;
+}
+
+.vc-launcher-rail__btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(235, 245, 241, 0.95);
+  border-color: rgba(190, 226, 213, 0.10);
+}
+
+.vc-launcher-rail__btn.is-active {
+  background: linear-gradient(135deg, rgba(56, 184, 153, 0.28), rgba(56, 184, 153, 0.14));
+  border-color: rgba(56, 184, 153, 0.40);
+  color: #c2ecdb;
+  box-shadow: 0 0 12px rgba(56, 184, 153, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.vc-launcher-rail__btn.is-active::before {
+  content: '';
+  position: absolute;
+  left: -1px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 2px;
+  height: 24px;
+  border-radius: 0 2px 2px 0;
+  background: #38b899;
+  box-shadow: 0 0 8px rgba(56, 184, 153, 0.80);
+}
+
+.vc-launcher-rail__btn:focus-visible {
+  outline: 2px solid rgba(56, 184, 153, 0.50);
+  outline-offset: 1px;
+}
+
+.vc-launcher-rail__bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  margin-top: auto;
+}
+
+.vc-launcher-rail__theme {
+  color: rgba(190, 226, 213, 0.45);
+}
+
+.vc-launcher-rail__theme:hover {
+  color: rgba(235, 245, 241, 0.90);
+}
+
+/* ── Panel ──────────────────────────────────────────────────────────────── */
+
+.vc-launcher-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Header */
+.vc-launcher-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem 0.8rem 1.1rem;
+  border-bottom: 1px solid rgba(190, 226, 213, 0.08);
+  flex-shrink: 0;
+}
+
+.vc-launcher-panel__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vc-launcher-panel__brand-mark {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.48rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, rgba(56, 184, 153, 0.24), rgba(56, 184, 153, 0.10));
+  color: #c2ecdb;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid rgba(56, 184, 153, 0.28);
+  box-shadow: 0 1px 0 rgba(56, 184, 153, 0.08) inset;
+}
+
+.vc-launcher-panel__brand-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.01em;
+}
+
+.vc-launcher-panel__brand-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.08rem 0.38rem;
+  border-radius: 999px;
+  background: rgba(190, 226, 213, 0.06);
+  color: rgba(190, 226, 213, 0.60);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid rgba(190, 226, 213, 0.08);
+}
+
+.vc-launcher-panel__header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vc-launcher-panel__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.22rem 0.6rem 0.22rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(56, 184, 153, 0.08);
+  border: 1px solid rgba(56, 184, 153, 0.18);
+  box-shadow: 0 0 10px -4px rgba(56, 184, 153, 0.25);
+}
+
+.vc-launcher-panel__chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #38b899;
+  box-shadow: 0 0 6px rgba(56, 184, 153, 0.80);
+}
+
+.vc-launcher-panel__chip-label {
+  font-size: 0.70rem;
+  font-weight: 600;
+  color: #c2ecdb;
+  letter-spacing: 0.01em;
+}
+
+.vc-launcher-panel__close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(190, 226, 213, 0.10);
+  color: rgba(235, 245, 241, 0.65);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-launcher-panel__close:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(56, 184, 153, 0.38);
+  color: #ffffff;
+}
+
+.vc-launcher-panel__close:focus-visible {
+  outline: 2px solid rgba(56, 184, 153, 0.50);
+  outline-offset: 1px;
+}
+
+/* Search */
+.vc-launcher-panel__search {
+  padding: 0.65rem 1rem 0.6rem 1rem;
+  border-bottom: 1px solid rgba(190, 226, 213, 0.06);
+  flex-shrink: 0;
+}
+
+.vc-launcher-search-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 34px;
+  padding: 0 0.65rem;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(190, 226, 213, 0.08);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.vc-launcher-search-label:focus-within {
+  border-color: rgba(56, 184, 153, 0.38);
+  box-shadow: 0 0 0 2px rgba(56, 184, 153, 0.10);
+}
+
+.vc-launcher-search-label-text {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  color: rgba(190, 226, 213, 0.45);
+  white-space: nowrap;
+}
+
+.vc-launcher-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #ebf5f1;
+  font-size: 0.78rem;
+  font-family: inherit;
+}
+
+.vc-launcher-search-input::placeholder {
+  color: rgba(190, 226, 213, 0.38);
+}
+
+.vc-launcher-search-clear {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(235, 245, 241, 0.65);
+  font-size: 14px;
+  line-height: 1;
+  border: 0;
+  cursor: pointer;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.vc-launcher-search-clear:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #ffffff;
+}
+
+/* ── V6: single primary search — the only search entry point ───────────── */
+
+/* The primary search label that holds the icon + input + clear/kbd badge. */
+.vc-launcher-primary-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 38px;
+  padding: 0 0.7rem;
+  border-radius: 0.65rem;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(190, 226, 213, 0.14);
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+
+.vc-launcher-primary-search:focus-within {
+  border-color: rgba(56, 184, 153, 0.45);
+  box-shadow: 0 0 0 2px rgba(56, 184, 153, 0.10);
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.vc-launcher-primary-search__icon {
+  color: rgba(190, 226, 213, 0.50);
+  flex: 0 0 auto;
+}
+
+.vc-launcher-primary-search__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  color: #ebf5f1;
+  font-size: 0.80rem;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.vc-launcher-primary-search__input::placeholder {
+  color: rgba(190, 226, 213, 0.38);
+}
+
+.vc-launcher-primary-search__clear {
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(235, 245, 241, 0.65);
+  font-size: 14px;
+  line-height: 1;
+  border: 0;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.vc-launcher-primary-search__clear:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.vc-launcher-primary-search__kbd {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.08rem 0.45rem;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(190, 226, 213, 0.55);
+  border: 1px solid rgba(190, 226, 213, 0.14);
+  box-shadow: 0 1px 0 rgba(190, 226, 213, 0.06) inset;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.vc-launcher-search-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  height: 30px;
+  padding: 0 0.55rem 0 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(190, 226, 213, 0.10);
+  color: rgba(190, 226, 213, 0.72);
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.vc-launcher-search-toggle:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(190, 226, 213, 0.18);
+  color: #ffffff;
+}
+
+.vc-launcher-search-toggle__hint {
+  margin-left: auto;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 0.05rem 0.35rem;
+  border-radius: 0.3rem;
+  background: rgba(0, 0, 0, 0.28);
+  color: rgba(190, 226, 213, 0.55);
+  border: 1px solid rgba(190, 226, 213, 0.12);
+}
+
+.vc-launcher-search-label.is-open {
+  background: rgba(56, 184, 153, 0.05);
+}
+
+/* Scrollable content */
+.vc-launcher-panel__scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(190, 226, 213, 0.16) transparent;
+}
+
+.vc-launcher-panel__scroll::-webkit-scrollbar { width: 5px; }
+.vc-launcher-panel__scroll::-webkit-scrollbar-thumb {
+  background: rgba(190, 226, 213, 0.16);
+  border-radius: 999px;
+}
+
+/* Quick actions */
+.vc-launcher-quick {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.4rem;
+  padding: 0.7rem 0.9rem 0.65rem 0.9rem;
+  border-bottom: 1px solid rgba(190, 226, 213, 0.06);
+}
+
+.vc-launcher-quick__btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  height: 64px;
+  padding: 0.5rem 0.4rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(190, 226, 213, 0.08);
+  color: rgba(235, 245, 241, 0.80);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+.vc-launcher-quick__btn:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(56, 184, 153, 0.38);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px -8px rgba(56, 184, 153, 0.40);
+}
+
+.vc-launcher-quick__btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+.vc-launcher-quick__btn.is-active {
+  background: linear-gradient(160deg, rgba(56, 184, 153, 0.22), rgba(56, 184, 153, 0.08));
+  border-color: rgba(56, 184, 153, 0.45);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(56, 184, 153, 0.14) inset, 0 6px 18px -8px rgba(56, 184, 153, 0.35);
+}
+
+.vc-launcher-quick__icon {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(190, 226, 213, 0.80);
+  transition: color 180ms ease;
+}
+
+.vc-launcher-quick__btn.is-active .vc-launcher-quick__icon {
+  color: #c2ecdb;
+}
+
+.vc-launcher-quick__label {
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Nav groups */
+.vc-launcher-nav {
+  padding: 0.55rem 0.8rem 0.5rem 0.8rem;
+}
+
+.vc-launcher-nav__empty {
+  padding: 1.5rem 0.75rem;
+  text-align: center;
+  font-size: 0.78rem;
+  color: rgba(190, 226, 213, 0.50);
+}
+
+.vc-launcher-helper {
+  margin: 0.75rem 0 0.25rem 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  color: rgba(190, 226, 213, 0.55);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px dashed rgba(255, 255, 255, 0.10);
+  border-radius: 10px;
+  text-align: center;
+}
+
+.vc-launcher-group {
+  margin-top: 0.5rem;
+}
+
+.vc-launcher-group:first-child { margin-top: 0; }
+
+.vc-launcher-group.is-system {
+  margin-top: 0.3rem;
+}
+
+.vc-launcher-group__label {
+  margin: 0;
+  padding: 0.4rem 0.5rem 0.3rem 0.5rem;
+  font-size: 0.60rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: rgba(190, 226, 213, 0.45);
+}
+
+.vc-launcher-group.is-system .vc-launcher-group__label {
+  color: rgba(190, 226, 213, 0.35);
+  letter-spacing: 0.22em;
+}
+
+.vc-launcher-group__items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.vc-launcher-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  height: 36px;
+  padding: 0 0.6rem;
+  border-radius: 10px;
+  background: transparent;
+  border: 0;
+  color: rgba(235, 245, 241, 0.78);
+  font-size: 0.80rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.vc-launcher-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.vc-launcher-item.is-active {
+  background: linear-gradient(160deg, rgba(56, 184, 153, 0.18), rgba(56, 184, 153, 0.06));
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: inset 2px 0 0 #38b899, 0 1px 0 rgba(56, 184, 153, 0.08) inset;
+}
+
+.vc-launcher-item.is-active .vc-launcher-item__icon {
+  color: #c2ecdb;
+}
+
+.vc-launcher-item__icon {
+  display: inline-flex;
+  align-items: center;
+  color: rgba(190, 226, 213, 0.52);
+  flex: 0 0 auto;
+}
+
+.vc-launcher-item__label {
+  flex: 1 1 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc-launcher-item__badge {
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.10em;
+  text-transform: uppercase;
+  padding: 0.06rem 0.32rem;
+  border-radius: 999px;
+  background: rgba(56, 184, 153, 0.12);
+  color: #b8e6d6;
+  border: 1px solid rgba(56, 184, 153, 0.20);
+  flex: 0 0 auto;
+}
+
+/* System group */
+.vc-launcher-group.is-system .vc-launcher-item {
+  color: rgba(190, 226, 213, 0.60);
+}
+
+.vc-launcher-group.is-system .vc-launcher-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* Settings panel */
+.vc-launcher-settings {
+  padding: 0.8rem 1rem 1rem 1rem;
+  border-top: 1px solid rgba(190, 226, 213, 0.06);
+  flex-shrink: 0;
+}
+
+.vc-launcher-settings__title {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: rgba(190, 226, 213, 0.40);
+}
+
+.vc-launcher-settings__title--spaced {
+  margin-top: 0.9rem;
+}
+
+.vc-launcher-settings__row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.vc-launcher-settings__btn {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 36px;
+  padding: 0 0.6rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(190, 226, 213, 0.08);
+  color: rgba(235, 245, 241, 0.72);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.vc-launcher-settings__btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.vc-launcher-settings__btn.is-active {
+  background: linear-gradient(160deg, rgba(56, 184, 153, 0.22), rgba(56, 184, 153, 0.08));
+  border-color: rgba(56, 184, 153, 0.40);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 0 1px rgba(56, 184, 153, 0.12) inset;
+}
+
+.vc-launcher-settings__check {
+  margin-left: auto;
+  color: #c2ecdb;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+/* V4: workspace switcher list inside settings panel */
+.vc-launcher-settings__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.vc-launcher-settings__listitem {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  height: 36px;
+  padding: 0 0.7rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(190, 226, 213, 0.08);
+  color: rgba(235, 245, 241, 0.78);
+  font-size: 0.78rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: left;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.vc-launcher-settings__listitem:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: #ffffff;
+}
+
+.vc-launcher-settings__listitem.is-active {
+  background: linear-gradient(160deg, rgba(56, 184, 153, 0.22), rgba(56, 184, 153, 0.08));
+  border-color: rgba(56, 184, 153, 0.40);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+.vc-launcher-settings__listlabel {
+  flex: 1 1 auto;
+}
+
+.vc-launcher-settings__hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(190, 226, 213, 0.62);
+  padding: 0.4rem 0.2rem 0.2rem;
+}
+
+/* Footer */
+.vc-launcher-panel__footer {
+  border-top: 1px solid rgba(190, 226, 213, 0.08);
+  padding: 0.65rem 0.9rem 0.75rem 0.9rem;
+  background: rgba(0, 0, 0, 0.12);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.vc-launcher-user {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vc-launcher-user__avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #1f3a35, #0c1a17);
+  color: #ebf5f1;
+  font-size: 0.70rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(190, 226, 213, 0.12);
+  flex: 0 0 30px;
+}
+
+.vc-launcher-user__info { flex: 1 1 auto; min-width: 0; }
+
+.vc-launcher-user__name {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.vc-launcher-user__email {
+  margin: 0.08rem 0 0 0;
+  font-size: 0.68rem;
+  color: rgba(190, 226, 213, 0.50);
+}
+
+.vc-launcher-logout {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  height: 30px;
+  padding: 0 0.6rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(190, 226, 213, 0.06);
+  color: rgba(235, 245, 241, 0.60);
+  font-size: 0.74rem;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-launcher-logout:hover {
+  background: rgba(177, 67, 56, 0.10);
+  border-color: rgba(177, 67, 56, 0.28);
+  color: #f1b3a8;
+}
+
+/* ── Responsive adjustments ────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .vc-launcher-shell {
+    width: calc(100vw - 16px);
+    left: 8px;
+    top: calc(60px + 8px);
+  }
+  .vc-launcher-quick {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .vc-launcher-shell {
+    grid-template-columns: 56px 1fr;
+  }
+  .vc-launcher-rail__btn {
+    width: 40px;
+    height: 40px;
+  }
+  .vc-launcher-rail__brand {
+    width: 38px;
+    height: 38px;
+  }
+  .vc-launcher-rail__logo {
+    width: 26px;
+    height: 26px;
+  }
+}
+
+
+/* ── Drawer responsive ─────────────────────────────────────────────────── */
+
+@media (max-width: 480px) {
+  .vc-command-drawer {
+    width: calc(100vw - 24px);
+    left: 12px;
+    top: 12px;
+  }
+}
+
+
+@media (max-width: 1023px) {
+  .vc-command-topbar__inner { gap: 0.75rem; padding: 0 0.75rem; }
+  .vc-command-brand__sub { display: none; }
+}
+
+@media (max-width: 768px) {
+  .vc-command-nav__label { display: none; }
+  .vc-command-nav__item { padding: 0 0.55rem; }
+}
+
+/* =============================================================================
+   Dashboard polish (Phase 5)
+   - calmer visual hierarchy
+   - equal-height major cards
+   - structured queue/signal rows
+   - greeting + drawer-hint chips
+   ============================================================================= */
+
+/* --- Greeting strip --------------------------------------------------- */
+
+.vc-dashboard-greeting {
+  padding: 0.7rem 0.95rem;
+  border: 1px solid rgba(28, 25, 23, 0.05);
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0.3) 100%);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 1px 2px rgba(28, 25, 23, 0.04);
+}
+
+:root[data-theme='dark'] .vc-dashboard-greeting {
+  background: linear-gradient(180deg, rgba(20, 26, 24, 0.55) 0%, rgba(16, 22, 20, 0.35) 100%);
+  border-color: rgba(190, 226, 213, 0.08);
+}
+
+/* --- Equal-height major cards (Row 1: chart + contract health) --------- */
+
+.vc-dashboard-equal-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 408px;
+}
+
+.vc-dashboard-equal-card > :last-child {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (max-width: 1279px) {
+  .vc-dashboard-equal-card { min-height: 0; }
+}
+
+/* --- Signal row (right rail "Operational signals") --------------------- */
+
+.vc-dashboard-signal {
+  align-items: center;
+  padding: 0.65rem 0.78rem;
+  gap: 0.75rem;
+}
+
+.vc-dashboard-signal .vc-enterprise-label { display: none; }
+
+/* --- Queue row (right rail "Sắp hết hạn" + drawer queue list) ---------- */
+
+.vc-dashboard-queue-row {
+  align-items: center;
+  padding: 0.55rem 0.7rem;
+  gap: 0.6rem;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.vc-dashboard-queue-row:hover {
+  border-color: rgba(56, 184, 153, 0.32);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(248, 250, 249, 0.78));
+}
+
+:root[data-theme='dark'] .vc-dashboard-queue-row:hover {
+  background: linear-gradient(180deg, rgba(22, 30, 28, 0.85), rgba(16, 24, 22, 0.65));
+}
+
+/* --- Drawer hint strip (replaces suggested actions + activity feed) --- */
+
+.vc-dashboard-drawer-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.7rem;
+  border: 1px dashed rgba(28, 25, 23, 0.10);
+  border-radius: 0.65rem;
+  color: rgba(82, 73, 61, 0.78);
+  font-size: 0.72rem;
+  letter-spacing: 0.01em;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.vc-dashboard-drawer-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  height: 16px;
+  padding: 0 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  border-radius: 0.28rem;
+  background: rgba(28, 25, 23, 0.06);
+  color: rgba(28, 25, 23, 0.72);
+  border: 1px solid rgba(28, 25, 23, 0.08);
+}
+
+:root[data-theme='dark'] .vc-dashboard-drawer-hint {
+  border-color: rgba(190, 226, 213, 0.10);
+  color: rgba(190, 226, 213, 0.55);
+  background: rgba(20, 26, 24, 0.4);
+}
+
+:root[data-theme='dark'] .vc-dashboard-drawer-hint kbd {
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(190, 226, 213, 0.72);
+  border-color: rgba(190, 226, 213, 0.10);
+}
+
+/* ── Workflow Sheet (large task workspace) ─────────────────────────────── */
+
+.vc-workflow-root {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+}
+
+/* Backdrop starts below the topbar so the topbar/orb (z-30) remain
+   clickable. The topbar visually stays "above" the backdrop, dimmed. */
+.vc-workflow-backdrop {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(2, 6, 5, 0.42);
+  backdrop-filter: blur(6px) saturate(115%);
+  -webkit-backdrop-filter: blur(6px) saturate(115%);
+  pointer-events: auto;
+  animation: vc-workflow-fade 200ms ease-out;
+}
+
+@keyframes vc-workflow-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.vc-workflow-sheet {
+  position: absolute;
+  /* Workspace Frame: sits just below the 60px topbar with a 12px gap,
+     centered horizontally. Generous default + a per-kind min content
+     width (set via --workflow-min-width) keeps the embedded page from
+     being squeezed on narrow viewports. */
+  top: calc(60px + 16px) !important;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(92vw, 1200px) !important;
+  height: min(88vh, 900px) !important;
+  max-height: calc(100vh - 96px) !important;
+  display: flex;
+  flex-direction: column;
+  /* V3 browser-like frame: dark graphite outer chrome so the user can
+     visually distinguish workspace chrome (dark) from the embedded
+     page surface (light). */
+  background:
+    radial-gradient(120% 80% at 50% 0%,
+      rgba(56, 184, 153, 0.10) 0%,
+      transparent 55%),
+    linear-gradient(180deg, #1a1f1d 0%, #0e1311 100%);
+  border: 1px solid rgba(190, 226, 213, 0.18);
+  border-radius: 24px;
+  box-shadow:
+    0 60px 140px -32px rgba(0, 0, 0, 0.65),
+    0 24px 60px -16px rgba(0, 0, 0, 0.45),
+    0 0 0 0.5px rgba(56, 184, 153, 0.08),
+    0 0 100px -24px rgba(56, 184, 153, 0.18);
+  overflow: hidden;
+  animation: vc-workflow-in 240ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  pointer-events: auto;
+}
+
+/* Per-tone tints (kept; harmonized with dark chrome) */
+.vc-workflow-sheet--create .vc-workspace-chrome { box-shadow: inset 0 -1px 0 rgba(56, 184, 153, 0.18); }
+.vc-workflow-sheet--print   .vc-workspace-chrome { box-shadow: inset 0 -1px 0 rgba(217, 119, 6, 0.20); }
+.vc-workflow-sheet--dispatch .vc-workspace-chrome { box-shadow: inset 0 -1px 0 rgba(99, 102, 241, 0.20); }
+
+@keyframes vc-workflow-in {
+  from { opacity: 0; transform: translateX(-50%) scale(0.97) translateY(8px); }
+  to { opacity: 1; transform: translateX(-50%) scale(1) translateY(0); }
+}
+
+/* Header */
+.vc-workflow-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  border-bottom: 1px solid rgba(28, 25, 23, 0.08);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85) 0%, rgba(247, 248, 246, 0.65) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  flex-shrink: 0;
+}
+
+.vc-workflow-header__left {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-width: 0;
+}
+
+.vc-workflow-header__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(56, 184, 153, 0.18), rgba(56, 184, 153, 0.06));
+  border: 1px solid rgba(56, 184, 153, 0.30);
+  color: #0f6e58;
+  flex: 0 0 32px;
+}
+
+.vc-workflow-sheet--print .vc-workflow-header__icon {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.18), rgba(217, 119, 6, 0.06));
+  border-color: rgba(217, 119, 6, 0.30);
+  color: #b45309;
+}
+
+.vc-workflow-sheet--dispatch .vc-workflow-header__icon {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(99, 102, 241, 0.06));
+  border-color: rgba(99, 102, 241, 0.30);
+  color: #4338ca;
+}
+
+.vc-workflow-header__text {
+  min-width: 0;
+}
+
+.vc-workflow-header__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vc-workflow-header__title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #18181b;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+}
+
+.vc-workflow-header__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(56, 184, 153, 0.10);
+  color: #0f6e58;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  border: 1px solid rgba(56, 184, 153, 0.22);
+}
+
+.vc-workflow-header__subtitle {
+  margin: 0.18rem 0 0 0;
+  font-size: 0.78rem;
+  color: #52525b;
+  letter-spacing: 0.01em;
+}
+
+.vc-workflow-header__path {
+  margin: 0.2rem 0 0 0;
+  font-size: 0.70rem;
+  color: #71717a;
+}
+
+.vc-workflow-header__path code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(28, 25, 23, 0.05);
+  padding: 0.04rem 0.32rem;
+  border-radius: 4px;
+  border: 1px solid rgba(28, 25, 23, 0.08);
+  font-size: 0.68rem;
+}
+
+.vc-workflow-header__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.vc-workflow-header__fullpage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 28px;
+  padding: 0 0.6rem;
+  border-radius: 8px;
+  background: rgba(28, 25, 23, 0.04);
+  border: 1px solid rgba(28, 25, 23, 0.10);
+  color: #3f3f46;
+  font-size: 0.74rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-workflow-header__fullpage:hover {
+  background: rgba(28, 25, 23, 0.08);
+  color: #18181b;
+  border-color: rgba(28, 25, 23, 0.18);
+}
+
+.vc-workflow-header__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: transparent;
+  border: 1px solid rgba(28, 25, 23, 0.10);
+  color: #52525b;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-workflow-header__close:hover {
+  background: rgba(225, 29, 72, 0.08);
+  border-color: rgba(225, 29, 72, 0.30);
+  color: #be123c;
+}
+
+.vc-workflow-header__close:focus-visible {
+  outline: 2px solid rgba(56, 184, 153, 0.55);
+  outline-offset: 1px;
+}
+
+/* Body — scrollable page content (legacy, still used by old .vc-workflow-header) */
+.vc-workflow-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(28, 25, 23, 0.18) transparent;
+  background: var(--workflow-body-bg, transparent);
+}
+
+.vc-workflow-body::-webkit-scrollbar { width: 8px; }
+.vc-workflow-body::-webkit-scrollbar-thumb {
+  background: rgba(28, 25, 23, 0.18);
+  border-radius: 999px;
+}
+
+/* Workspace Frame inner container (legacy single-class frame).
+   - Enforces the per-kind min content width so embedded pages never get
+     squeezed below a safe readable layout.
+   - On narrow viewports, a horizontal scroll appears inside the body so
+     the page content stays intact instead of compressing.
+   - Min-width is set inline via --workflow-min-width on .vc-workflow-sheet. */
+.vc-workflow-frame {
+  width: 100%;
+  min-width: var(--workflow-min-width, 1024px);
+  max-width: none;
+  height: auto;
+  display: block;
+}
+
+/* =============================================================================
+   V3 BROWSER-LIKE WORKSPACE FRAME
+   The outer .vc-workflow-sheet is now a dark chrome; the inner
+   .vc-workspace-viewport is a light "browser content area" that visually
+   feels like a controlled inner browser/app frame. The page renders inside
+   .vc-workspace-frame-inner which respects min-width for safety.
+   ============================================================================= */
+
+.vc-workspace-chrome {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(180deg, rgba(28, 32, 30, 0.95) 0%, rgba(20, 24, 22, 0.95) 100%);
+  border-bottom: 1px solid rgba(190, 226, 213, 0.10);
+  color: rgba(232, 240, 236, 0.92);
+}
+
+.vc-workspace-chrome__left {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.vc-workspace-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.25);
+}
+.vc-workspace-dot--red    { background: #ff5f57; }
+.vc-workspace-dot--yellow { background: #febc2e; }
+.vc-workspace-dot--green  { background: #28c840; }
+
+.vc-workspace-chrome__center {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  justify-content: center;
+  min-width: 0;
+}
+
+.vc-workspace-chrome__icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(56, 184, 153, 0.22), rgba(56, 184, 153, 0.08));
+  border: 1px solid rgba(56, 184, 153, 0.40);
+  color: #34d399;
+  flex: 0 0 30px;
+}
+
+.vc-workflow-sheet--print   .vc-workspace-chrome__icon {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.22), rgba(217, 119, 6, 0.08));
+  border-color: rgba(217, 119, 6, 0.45);
+  color: #fbbf24;
+}
+.vc-workflow-sheet--dispatch .vc-workspace-chrome__icon {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.22), rgba(99, 102, 241, 0.08));
+  border-color: rgba(99, 102, 241, 0.45);
+  color: #a5b4fc;
+}
+
+.vc-workspace-chrome__text {
+  min-width: 0;
+  text-align: center;
+}
+
+.vc-workspace-chrome__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.vc-workspace-chrome__title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: rgba(245, 250, 247, 0.96);
+  letter-spacing: -0.005em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc-workspace-chrome__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(56, 184, 153, 0.16);
+  color: #6ee7b7;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  border: 1px solid rgba(56, 184, 153, 0.30);
+}
+
+.vc-workspace-chrome__path {
+  margin: 0.18rem 0 0 0;
+  font-size: 0.68rem;
+  color: rgba(232, 240, 236, 0.55);
+  text-align: center;
+}
+
+.vc-workspace-chrome__path code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.04rem 0.32rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.66rem;
+  color: rgba(232, 240, 236, 0.78);
+}
+
+.vc-workspace-chrome__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.vc-workspace-chrome__fullpage {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  height: 30px;
+  padding: 0 0.65rem;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(232, 240, 236, 0.85);
+  font-size: 0.74rem;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-workspace-chrome__fullpage:hover {
+  background: rgba(56, 184, 153, 0.18);
+  color: #ecfdf5;
+  border-color: rgba(56, 184, 153, 0.45);
+}
+
+.vc-workspace-chrome__close {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  color: rgba(232, 240, 236, 0.78);
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-workspace-chrome__close:hover {
+  background: rgba(225, 29, 72, 0.22);
+  border-color: rgba(225, 29, 72, 0.45);
+  color: #ffe4e6;
+}
+
+.vc-workspace-chrome__close:focus-visible {
+  outline: 2px solid rgba(56, 184, 153, 0.55);
+  outline-offset: 1px;
+}
+
+/* Sub-bar — only when subtitle is provided (optional workflow context) */
+.vc-workspace-subbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.55rem 1rem;
+  background: linear-gradient(180deg, rgba(20, 24, 22, 0.85) 0%, rgba(16, 20, 18, 0.95) 100%);
+  border-bottom: 1px solid rgba(190, 226, 213, 0.08);
+}
+
+.vc-workspace-subbar__text {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(232, 240, 236, 0.78);
+  letter-spacing: 0.01em;
+}
+
+.vc-workspace-subbar__hint {
+  margin: 0;
+  font-size: 0.68rem;
+  color: rgba(110, 231, 183, 0.65);
+  letter-spacing: 0.02em;
+}
+
+/* Viewport — the inner browser-like content area. Light surface with
+   subtle border so the user clearly sees: dark chrome (frame) > light
+   viewport (page area) > page content. */
+.vc-workspace-viewport {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 14px;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #ffffff 0%, #f6f7f5 100%);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.04) inset,
+    0 18px 40px -22px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.vc-workspace-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(28, 25, 23, 0.22) transparent;
+}
+
+.vc-workspace-body::-webkit-scrollbar { width: 9px; height: 9px; }
+.vc-workspace-body::-webkit-scrollbar-thumb {
+  background: rgba(28, 25, 23, 0.20);
+  border-radius: 999px;
+}
+.vc-workspace-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vc-workspace-frame-inner {
+  width: 100%;
+  min-width: var(--workflow-min-width, 1024px);
+  max-width: none;
+  height: auto;
+  display: block;
+}
+
+/* When the workflow body hosts a page, neutralize the page's own outer
+   padding/max-width so the page fills the sheet cleanly. The page still
+   renders its own <PageHeader> and forms inside. */
+.vc-workflow-body > div {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+  max-width: none !important;
+}
+
+/* When the page is in embedded mode, suppress the redundant outer
+   padding/max-width even further so the page can use the full workspace
+   frame width. The frame itself (vc-workflow-frame) supplies horizontal
+   padding via the page's embedded wrapper. */
+.vc-workflow-frame > .vc-page--embedded {
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  max-width: none !important;
+  overflow: visible !important;
+}
+
+/* Compact step-bar shown inside the workspace for create-contract.
+   Sits at the top of the embedded page area when the page's full
+   PageHeader is suppressed. */
+.vc-workspace-stepbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-bottom: 0.25rem;
+}
+
+@media (max-width: 1280px) {
+  /* On medium viewports: keep generous size, but reduce horizontal padding
+     and rely on internal horizontal scroll inside the workspace frame. */
+  .vc-workflow-sheet { width: min(94vw, 1120px) !important; height: min(88vh, 860px) !important; border-radius: 20px !important; }
+  .vc-workspace-viewport { margin: 10px; border-radius: 14px; }
+}
+
+@media (max-width: 1100px) {
+  .vc-workflow-sheet { width: min(96vw, 960px) !important; height: min(88vh, 780px) !important; border-radius: 18px !important; }
+  .vc-workspace-viewport { margin: 8px; border-radius: 12px; }
+  .vc-workspace-chrome { grid-template-columns: 88px 1fr auto; padding: 0.65rem 0.85rem; }
+}
+
+@media (max-width: 720px) {
+  .vc-workflow-sheet { top: calc(60px + 8px) !important; width: min(98vw, 480px) !important; height: min(88vh, 600px) !important; border-radius: 14px !important; }
+  .vc-workspace-viewport { margin: 6px; border-radius: 10px; }
+  .vc-workspace-chrome { grid-template-columns: 70px 1fr auto; padding: 0.55rem 0.7rem; gap: 0.5rem; }
+  .vc-workspace-chrome__title { font-size: 0.85rem; }
+  .vc-workspace-chrome__path { display: none; }
+  .vc-workspace-chrome__fullpage span { display: none; }
+  .vc-workspace-subbar { padding: 0.45rem 0.7rem; flex-wrap: wrap; }
+}
+
+
+/* ================================================================
+   ADAPTIVE WORKSPACE SHELL — CSS Variables & Classes
+   Desktop: MissionPanel 340px | WorkspaceCanvas
+   Tablet:  NavigationRail 72px | WorkspaceCanvas
+   Mobile:  WorkspaceCanvas full + Orb bottom-right
+   ================================================================ */
+
+/* Shell root — full viewport, no overflow */
+.vc-adaptive-shell {
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--vc-workspace-bg, #0c0d0e);
+}
+
+/* Shell body — flex row that holds panel + canvas */
+.vc-adaptive-shell__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  overflow: hidden;
+}
+
+/* ── Mission Panel (desktop, >= 1024px) ── */
+.vc-mission-panel {
+  width: var(--vc-workspace-panel-w, 300px);
+  min-width: var(--vc-workspace-panel-w, 300px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--vc-workspace-panel-bg, #0f1117);
+  border-right: 1px solid var(--vc-workspace-panel-border, rgba(255, 255, 255, 0.06));
+  overflow-y: hidden;
+  overflow-x: hidden;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
+}
+
+.vc-mission-panel[data-mission-panel="v3-compact"] {
+  padding: 12px 11px 10px;
+  gap: 10px;
+}
+
+/* Compact v3: hide scrollbar on desktop, only allow scroll on short screens */
+@media (max-height: 720px) {
+  .vc-mission-panel[data-mission-panel="v3-compact"] {
+    overflow-y: auto;
+  }
+}
+
+/* Subtle scrollbar in MissionPanel (only when forced scrollable) */
+.vc-mission-panel[data-mission-panel="v3-compact"]::-webkit-scrollbar {
+  width: 4px;
+}
+.vc-mission-panel[data-mission-panel="v3-compact"]::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vc-mission-panel[data-mission-panel="v3-compact"]::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 2px;
+}
+
+.vc-mission-panel__top {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--vc-workspace-panel-border, rgba(255, 255, 255, 0.06));
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__search {
+  margin-top: 10px;
+}
+
+.vc-mission-panel__search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 7px 10px 7px 34px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 150ms ease, background 150ms ease;
+  box-sizing: border-box;
+}
+
+.vc-mission-panel__search-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.vc-mission-panel__search-input:focus {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.vc-mission-panel__search-wrap {
+  position: relative;
+}
+
+.vc-mission-panel__search-icon {
+  position: absolute;
+  left: 9px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  width: 15px;
+  height: 15px;
+}
+
+.vc-mission-panel__section {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.vc-mission-panel__section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.3);
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+.vc-mission-panel__quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.vc-mission-panel__qa-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 10px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, transform 100ms ease;
+  text-align: left;
+  line-height: 1;
+}
+
+.vc-mission-panel__qa-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.vc-mission-panel__qa-btn:active {
+  transform: translateY(0);
+}
+
+.vc-mission-panel__qa-btn.is-active {
+  background: rgba(15, 143, 114, 0.2);
+  border-color: rgba(15, 143, 114, 0.4);
+  color: #38b899;
+}
+
+.vc-mission-panel__qa-btn svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__nav {
+  padding: 4px 8px;
+  flex: 1 1 auto;
+}
+
+.vc-mission-panel__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+}
+
+.vc-mission-panel__nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.vc-mission-panel__nav-item.is-active {
+  background: rgba(15, 143, 114, 0.18);
+  color: #38b899;
+}
+
+.vc-mission-panel__nav-item svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.vc-mission-panel__nav-item.is-active svg {
+  opacity: 1;
+}
+
+.vc-mission-panel__footer {
+  padding: 10px 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__status-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.vc-mission-panel__status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.vc-mission-panel__status-row + .vc-mission-panel__status-row {
+  margin-top: 5px;
+}
+
+.vc-mission-panel__status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38b899;
+  margin-right: 5px;
+  flex-shrink: 0;
+}
+
+/* ── Mission Panel v2: hero / status cards / chips / recent ── */
+[data-mission-panel="v2"] {
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgba(15, 143, 114, 0.10) 0%, transparent 60%),
+    radial-gradient(80% 40% at 100% 100%, rgba(120, 80, 220, 0.08) 0%, transparent 60%),
+    var(--vc-workspace-panel-bg, #0f1117);
+}
+
+.vc-mission-panel__hero {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__hero-orb {
+  width: 56px;
+  height: 56px;
+  flex-shrink: 0;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(15, 143, 114, 0.35) 0%, transparent 70%),
+    radial-gradient(circle at 70% 70%, rgba(120, 80, 220, 0.30) 0%, transparent 70%),
+    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.vc-mission-panel__hero-orb .vc-command-orb-new {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #0f8f72 0%, #38b899 100%);
+  box-shadow: 0 4px 14px rgba(15, 143, 114, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+.vc-mission-panel__hero-orb .vc-command-orb-new__logo {
+  width: 22px;
+  height: 22px;
+}
+
+.vc-mission-panel__hero-meta {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vc-mission-panel__hero-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.04em;
+  margin: 0 0 4px;
+  line-height: 1;
+}
+
+.vc-mission-panel__hero-sub {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.5);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1;
+}
+
+.vc-mission-panel__hero-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #38b899;
+  box-shadow: 0 0 8px rgba(56, 184, 153, 0.6);
+  display: inline-block;
+}
+
+.vc-mission-panel__search {
+  padding: 12px 14px 8px;
+  flex-shrink: 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.vc-mission-panel__search-kbd {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  padding: 2px 6px;
+  border-radius: 6px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+}
+
+.vc-mission-panel__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+  margin-bottom: 8px;
+}
+
+.vc-mission-panel__section-hint {
+  font-size: 10px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.04em;
+}
+
+.vc-mission-panel__section-hint-icon {
+  width: 12px;
+  height: 12px;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.vc-mission-panel__status-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+}
+
+.vc-mission-panel__status-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, transform 100ms ease;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+}
+
+.vc-mission-panel__status-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.vc-mission-panel__status-card.is-active {
+  background: rgba(15, 143, 114, 0.16);
+  border-color: rgba(15, 143, 114, 0.40);
+}
+
+.vc-mission-panel__status-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__status-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.vc-mission-panel__status-icon--violet {
+  background: rgba(120, 80, 220, 0.18);
+  color: #b39bff;
+}
+.vc-mission-panel__status-icon--amber {
+  background: rgba(220, 160, 60, 0.18);
+  color: #f0c070;
+}
+.vc-mission-panel__status-icon--emerald {
+  background: rgba(15, 143, 114, 0.20);
+  color: #5fd0b0;
+}
+
+.vc-mission-panel__status-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.vc-mission-panel__status-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.1;
+}
+
+.vc-mission-panel__status-label {
+  font-size: 11px;
+  color: var(--vc-text-secondary);
+  opacity: 0.85;
+  margin-top: 2px;
+  line-height: 1;
+}
+
+.vc-mission-panel__status-arrow {
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__qa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.vc-mission-panel__qa-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.02) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, transform 100ms ease;
+  text-align: left;
+  width: 100%;
+  color: inherit;
+  font: inherit;
+  min-height: 72px;
+}
+
+.vc-mission-panel__qa-card:hover {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.085) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border-color: rgba(255, 255, 255, 0.16);
+  transform: translateY(-1px);
+}
+
+.vc-mission-panel__qa-card.is-active {
+  background: rgba(15, 143, 114, 0.16);
+  border-color: rgba(15, 143, 114, 0.42);
+}
+
+.vc-mission-panel__qa-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+.vc-mission-panel__qa-icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+.vc-mission-panel__qa-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.2;
+}
+
+.vc-mission-panel__nav {
+  padding: 8px 14px 4px;
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__nav-group {
+  margin-bottom: 10px;
+}
+
+.vc-mission-panel__nav-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.28);
+  margin-bottom: 6px;
+  padding: 0 2px;
+}
+
+.vc-mission-panel__nav-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.vc-mission-panel__nav-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, color 150ms ease;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap;
+}
+
+.vc-mission-panel__nav-chip:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.vc-mission-panel__nav-chip.is-active {
+  background: rgba(15, 143, 114, 0.18);
+  border-color: rgba(15, 143, 114, 0.45);
+  color: #5fd0b0;
+}
+
+.vc-mission-panel__nav-chip-icon {
+  display: inline-flex;
+  align-items: center;
+}
+.vc-mission-panel__nav-chip-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+.vc-mission-panel__nav-chip-label {
+  line-height: 1;
+}
+
+.vc-mission-panel__recent {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vc-mission-panel__recent-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 12px;
+  text-align: left;
+  width: 100%;
+  font-family: inherit;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.vc-mission-panel__recent-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.vc-mission-panel__recent-bullet {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__recent-text {
+  line-height: 1.2;
+}
+
+.vc-mission-panel__footer-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--vc-text-secondary);
+  opacity: 0.85;
+}
+
+.vc-mission-panel__footer-label {
+  font-weight: 500;
+}
+
+.vc-mission-panel__footer-tag {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.28);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+/* ================================================================
+   MISSION PANEL v3 — COMPACT (5 sections only)
+   ================================================================ */
+[data-mission-panel="v3-compact"] .vc-mission-panel__hero {
+  padding: 4px 2px 6px;
+  border-bottom: none;
+  gap: 10px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__hero-orb {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__hero-orb .vc-command-orb-new {
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__hero-orb .vc-command-orb-new__logo {
+  width: 18px;
+  height: 18px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__hero-title {
+  font-size: 15px;
+  margin-bottom: 3px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__hero-sub {
+  font-size: 11px;
+}
+
+[data-mission-panel="v3-compact"] .vc-mission-panel__search {
+  padding: 0 2px 0;
+  border-bottom: none;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__search-input {
+  font-size: 12.5px;
+  padding: 8px 36px 8px 32px;
+  border-radius: 10px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__search-icon {
+  left: 9px;
+  width: 14px;
+  height: 14px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__search-kbd {
+  right: 8px;
+  font-size: 10px;
+  padding: 1px 5px;
+}
+
+/* Quick actions: 2x2 cards, compact */
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 10px;
+  min-height: 0;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  flex-direction: row;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-card.is-active {
+  background: rgba(15, 143, 114, 0.16);
+  border-color: rgba(15, 143, 114, 0.42);
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-icon {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-icon svg {
+  width: 13px;
+  height: 13px;
+}
+[data-mission-panel="v3-compact"] .vc-mission-panel__qa-label {
+  font-size: 11.5px;
+}
+
+/* Today status: stacked rows (compact, no card backgrounds) */
+.vc-mission-panel__status-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.vc-mission-panel__status-row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  transition: background 150ms ease;
+}
+
+.vc-mission-panel__status-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.vc-mission-panel__status-row.is-active {
+  background: rgba(15, 143, 114, 0.14);
+}
+
+.vc-mission-panel__status-row .vc-mission-panel__status-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+.vc-mission-panel__status-row .vc-mission-panel__status-icon svg {
+  width: 13px;
+  height: 13px;
+}
+.vc-mission-panel__status-row .vc-mission-panel__status-icon--violet {
+  background: rgba(120, 80, 220, 0.18);
+  color: #b39bff;
+}
+.vc-mission-panel__status-row .vc-mission-panel__status-icon--amber {
+  background: rgba(220, 160, 60, 0.18);
+  color: #f0c070;
+}
+.vc-mission-panel__status-row .vc-mission-panel__status-icon--emerald {
+  background: rgba(15, 143, 114, 0.20);
+  color: #5fd0b0;
+}
+
+.vc-mission-panel__status-row .vc-mission-panel__status-label {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.78);
+  flex: 1 1 auto;
+  line-height: 1;
+}
+
+.vc-mission-panel__status-row .vc-mission-panel__status-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.vc-mission-panel__status-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 9.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.vc-mission-panel__status-pill--live {
+  color: #5fd0b0;
+  background: rgba(15, 143, 114, 0.18);
+  border: 1px solid rgba(15, 143, 114, 0.35);
+}
+
+.vc-mission-panel__status-pill--tracking {
+  color: #f0c070;
+  background: rgba(220, 160, 60, 0.16);
+  border: 1px solid rgba(220, 160, 60, 0.32);
+}
+
+.vc-mission-panel__status-pill--pending {
+  color: rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.vc-mission-panel__status-row .vc-mission-panel__status-arrow {
+  width: 12px;
+  height: 12px;
+  color: rgba(255, 255, 255, 0.22);
+  flex-shrink: 0;
+}
+
+/* Primary nav: vertical list, 5-6 items only */
+[data-mission-panel="v3-compact"] .vc-mission-panel__nav {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  width: 100%;
+  font: inherit;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 12.5px;
+  font-weight: 500;
+  text-align: left;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.vc-mission-panel__nav-item:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.vc-mission-panel__nav-item.is-active {
+  background: rgba(15, 143, 114, 0.16);
+  color: #5fd0b0;
+}
+
+.vc-mission-panel__nav-icon {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+.vc-mission-panel__nav-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vc-mission-panel__nav-label {
+  line-height: 1;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* Count badge inside a nav item (rendered on the right). Hidden when no
+   meaningful number is available (null, 0, undefined). */
+.vc-mission-panel__nav-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.vc-mission-panel__nav-item.is-active .vc-mission-panel__nav-count {
+  color: #5fd0b0;
+  background: rgba(15, 143, 114, 0.18);
+  border-color: rgba(15, 143, 114, 0.32);
+}
+
+/* ================================================================
+   MISSION PANEL v5 — CLEAN
+   - Drop the "Hôm nay" status-stack (it duplicated primary nav)
+   - QA cards: no active state, slightly less prominent than nav
+   - Single navigation surface
+   ================================================================ */
+[data-mission-panel="v5-clean"] {
+  padding: 12px 11px 10px;
+  gap: 10px;
+}
+
+[data-mission-panel="v5-clean"] .vc-mission-panel__status-stack {
+  display: none !important;
+}
+
+/* QA cards: no active state, slightly muted by default */
+[data-mission-panel="v5-clean"] .vc-mission-panel__qa-card {
+  cursor: pointer;
+  opacity: 0.95;
+}
+[data-mission-panel="v5-clean"] .vc-mission-panel__qa-card.is-active {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.07);
+}
+
+/* Nav items in v5: keep active highlight, but slightly lighter than before */
+[data-mission-panel="v5-clean"] .vc-mission-panel__nav-item.is-active {
+  background: rgba(15, 143, 114, 0.14);
+  color: #5fd0b0;
+}
+
+/* Footer hint to open launcher */
+.vc-mission-panel__more {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  margin-top: auto;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  font: inherit;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11.5px;
+  font-weight: 500;
+  width: 100%;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-mission-panel__more:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.85);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.vc-mission-panel__more svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ================================================================
+   WORKSPACE FRAME — light card around page content
+   ================================================================ */
+.vc-workspace-frame {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background:
+    linear-gradient(180deg, rgba(15, 143, 114, 0.025) 0%, transparent 6%),
+    var(--vc-workspace-frame-bg, #faf9f7);
+  color: #2b2a26;
+  border-radius: 0;
+  position: relative;
+}
+
+@media (min-width: 1280px) {
+  .vc-workspace-frame {
+    margin: 14px;
+    height: calc(100% - 28px);
+    width: calc(100% - 28px);
+    border-radius: 14px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.30), 0 1px 0 rgba(255, 255, 255, 0.05) inset;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    overflow: hidden;
+  }
+}
+
+.vc-workspace-frame__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 18px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  flex-shrink: 0;
+  min-height: 44px;
+  gap: 12px;
+}
+
+.vc-workspace-frame__crumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  min-width: 0;
+}
+
+.vc-workspace-frame__crumb-group {
+  color: rgba(0, 0, 0, 0.45);
+  font-weight: 500;
+}
+
+.vc-workspace-frame__crumb-sep {
+  color: rgba(0, 0, 0, 0.25);
+  font-weight: 400;
+}
+
+.vc-workspace-frame__crumb-label {
+  color: rgba(0, 0, 0, 0.85);
+  font-weight: 600;
+}
+
+.vc-workspace-frame__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.vc-workspace-frame__badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 3px 8px;
+  border-radius: 999px;
+}
+
+.vc-workspace-frame__badge--accent {
+  color: #0f8f72;
+  background: rgba(15, 143, 114, 0.10);
+  border-color: rgba(15, 143, 114, 0.22);
+}
+
+.vc-workspace-frame__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: none;
+  border: 1px solid transparent;
+  cursor: pointer;
+  color: rgba(0, 0, 0, 0.55);
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.vc-workspace-frame__btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: rgba(0, 0, 0, 0.85);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.vc-workspace-frame__btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.vc-workspace-frame__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 18px 22px 28px;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
+}
+
+.vc-workspace-frame__body::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.vc-workspace-frame__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.vc-workspace-frame__body::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.16);
+  border-radius: 4px;
+}
+.vc-workspace-frame__body::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.28);
+}
+
+.vc-workspace-frame__dev-badge {
+  position: absolute;
+  top: 12px;
+  right: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: rgba(0, 0, 0, 0.4);
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* ── Navigation Rail (tablet, 768px – 1023px) ── */
+.vc-nav-rail {
+  width: var(--vc-workspace-rail-w, 72px);
+  min-width: var(--vc-workspace-rail-w, 72px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--vc-workspace-panel-bg, #0f1117);
+  border-right: 1px solid var(--vc-workspace-panel-border, rgba(255, 255, 255, 0.06));
+  padding: 10px 0 8px;
+  gap: 4px;
+  flex-shrink: 0;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.vc-nav-rail__orb {
+  margin-bottom: 6px;
+}
+
+.vc-nav-rail__divider {
+  width: 36px;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 4px 0;
+  flex-shrink: 0;
+}
+
+.vc-nav-rail__btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.5);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+  position: relative;
+}
+
+.vc-nav-rail__btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.vc-nav-rail__btn.is-active {
+  background: rgba(15, 143, 114, 0.2);
+  color: #38b899;
+}
+
+.vc-nav-rail__btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.vc-nav-rail__spacer {
+  flex: 1 1 auto;
+}
+
+/* ── Workspace Canvas (viewport chính) ── */
+.vc-workspace-canvas {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: var(--vc-enterprise-bg, #0c0d0e);
+  overflow: hidden;
+}
+
+.vc-workspace-canvas__topbar {
+  height: 56px;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background: #fff;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 5;
+}
+
+.vc-workspace-canvas__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #78716c;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.vc-workspace-canvas__breadcrumb-group {
+  font-weight: 500;
+}
+
+.vc-workspace-canvas__breadcrumb-sep {
+  color: #a8a29e;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.vc-workspace-canvas__breadcrumb-label {
+  color: #18181b;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vc-workspace-canvas__content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.vc-workspace-canvas__dev-badge {
+  height: 26px;
+  min-height: 26px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 20px;
+  background: rgba(255, 244, 230, 0.82);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.18);
+  font-size: 11px;
+  font-weight: 500;
+  color: #d97706;
+  flex-shrink: 0;
+}
+
+:root[data-theme='dark'] .vc-workspace-canvas__dev-badge {
+  background: rgba(48, 30, 6, 0.55);
+  border-bottom-color: rgba(251, 191, 36, 0.16);
+  color: #fbbf24;
+}
+
+/* ── Command Orb ── */
+.vc-command-orb-new {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 30%, #1a2a25, #0f1f1a);
+  border: 1.5px solid rgba(56, 184, 153, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 180ms ease, border-color 180ms ease;
+  position: relative;
+  flex-shrink: 0;
+  box-shadow:
+    0 2px 12px rgba(0, 0, 0, 0.4),
+    0 0 14px rgba(56, 184, 153, 0.20),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.vc-command-orb-new::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 184, 153, 0.18) 0%, transparent 65%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+  z-index: -1;
+}
+
+.vc-command-orb-new:hover {
+  transform: scale(1.08);
+  border-color: rgba(56, 184, 153, 0.75);
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.5),
+    0 0 26px rgba(56, 184, 153, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.vc-command-orb-new:hover::after {
+  opacity: 1;
+}
+
+.vc-command-orb-new.is-open {
+  transform: scale(1.10);
+  border-color: rgba(56, 184, 153, 0.9);
+  box-shadow:
+    0 6px 28px rgba(0, 0, 0, 0.55),
+    0 0 38px rgba(56, 184, 153, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.vc-command-orb-new.is-open::after {
+  opacity: 1;
+}
+
+.vc-command-orb-new__logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 50%;
+}
+
+/* Orb compact (mobile) */
+.vc-command-orb-new--compact {
+  width: 52px;
+  height: 52px;
+}
+
+.vc-command-orb-new--compact .vc-command-orb-new__logo {
+  width: 34px;
+  height: 34px;
+}
+
+/* ── Command Launcher Overlay ── */
+.vc-launcher-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+}
+
+.vc-launcher-overlay__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  cursor: pointer;
+}
+
+.vc-launcher-overlay__panel {
+  position: relative;
+  z-index: 1;
+  width: 640px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 160px);
+  background: #141618;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: vc-launcher-in 200ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes vc-launcher-in {
+  from { opacity: 0; transform: scale(0.95) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.vc-launcher-overlay__search {
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+.vc-launcher-overlay__search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px 10px 38px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms ease;
+  box-sizing: border-box;
+}
+
+.vc-launcher-overlay__search-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.vc-launcher-overlay__search-input:focus {
+  border-color: rgba(56, 184, 153, 0.5);
+}
+
+.vc-launcher-overlay__search-wrap {
+  position: relative;
+}
+
+.vc-launcher-overlay__search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+}
+
+.vc-launcher-overlay__search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 6px;
+  color: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  padding: 1px 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  transition: background 100ms ease;
+}
+
+.vc-launcher-overlay__search-clear:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.vc-launcher-overlay__kbd {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: inherit;
+}
+
+.vc-launcher-overlay__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 10px 14px 14px;
+  min-height: 0;
+}
+
+.vc-launcher-overlay__section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255, 255, 255, 0.28);
+  margin-bottom: 5px;
+  padding: 0 4px;
+}
+
+.vc-launcher-overlay__quick-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.vc-launcher-overlay__qa-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 11px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, border-color 120ms ease, transform 80ms ease;
+  text-align: left;
+}
+
+.vc-launcher-overlay__qa-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.vc-launcher-overlay__qa-btn:active {
+  transform: translateY(0);
+}
+
+.vc-launcher-overlay__qa-btn.is-active {
+  background: rgba(15, 143, 114, 0.18);
+  border-color: rgba(15, 143, 114, 0.35);
+  color: #38b899;
+}
+
+.vc-launcher-overlay__qa-btn svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  opacity: 0.75;
+}
+
+.vc-launcher-overlay__qa-btn.is-active svg {
+  opacity: 1;
+}
+
+.vc-launcher-overlay__nav-group {
+  margin-bottom: 10px;
+}
+
+.vc-launcher-overlay__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 8px;
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+}
+
+.vc-launcher-overlay__nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.vc-launcher-overlay__nav-item.is-active {
+  background: rgba(15, 143, 114, 0.15);
+  color: #38b899;
+}
+
+.vc-launcher-overlay__nav-item svg {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+.vc-launcher-overlay__nav-item.is-active svg {
+  opacity: 1;
+}
+
+.vc-launcher-overlay__empty {
+  padding: 20px 8px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 13px;
+}
+
+.vc-launcher-overlay__footer {
+  padding: 10px 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.vc-launcher-overlay__user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--vc-text-secondary);
+  opacity: 0.85;
+}
+
+.vc-launcher-overlay__user-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(56, 184, 153, 0.25);
+  border: 1px solid rgba(56, 184, 153, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #38b899;
+}
+
+.vc-launcher-overlay__logout {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: var(--vc-text-secondary);
+  opacity: 0.85;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 120ms ease, color 120ms ease;
+}
+
+.vc-launcher-overlay__logout:hover {
+  background: rgba(177, 67, 56, 0.15);
+  border-color: rgba(177, 67, 56, 0.3);
+  color: rgba(248, 113, 113, 0.9);
+}
+
+.vc-launcher-overlay__logout svg {
+  width: 13px;
+  height: 13px;
+}
+
+/* ── Mobile Command Sheet (bottom sheet) ── */
+.vc-mobile-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  background: #141618;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.6);
+  padding-bottom: env(safe-area-inset-bottom, 0);
+  animation: vc-sheet-up 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@keyframes vc-sheet-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+
+.vc-mobile-sheet__handle {
+  width: 36px;
+  height: 4px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 10px auto 0;
+  flex-shrink: 0;
+}
+
+.vc-mobile-sheet__search {
+  padding: 12px 16px 10px;
+  flex-shrink: 0;
+}
+
+.vc-mobile-sheet__search-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 10px 14px 10px 38px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.vc-mobile-sheet__search-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.vc-mobile-sheet__search-wrap {
+  position: relative;
+}
+
+.vc-mobile-sheet__search-icon {
+  position: absolute;
+  left: 11px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgba(255, 255, 255, 0.35);
+  pointer-events: none;
+  width: 16px;
+  height: 16px;
+}
+
+.vc-mobile-sheet__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 4px 16px 16px;
+}
+
+.vc-mobile-sheet__quick-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.vc-mobile-sheet__qa-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 10px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease;
+  text-align: center;
+}
+
+.vc-mobile-sheet__qa-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.vc-mobile-sheet__qa-btn.is-active {
+  background: rgba(15, 143, 114, 0.18);
+  border-color: rgba(15, 143, 114, 0.35);
+  color: #38b899;
+}
+
+.vc-mobile-sheet__qa-btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vc-mobile-sheet__nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 120ms ease;
+  text-align: left;
+  width: 100%;
+  background: none;
+  border: none;
+}
+
+.vc-mobile-sheet__nav-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.vc-mobile-sheet__nav-item.is-active {
+  background: rgba(15, 143, 114, 0.15);
+  color: #38b899;
+}
+
+.vc-mobile-sheet__nav-item svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  opacity: 0.65;
+}
+
+/* Mobile FAB orb */
+.vc-mobile-orb-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 20px;
+  z-index: 9998;
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 30%, #1a2a25, #0f1f1a);
+  border: 2px solid rgba(56, 184, 153, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5), 0 0 24px rgba(56, 184, 153, 0.2);
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.vc-mobile-orb-fab:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(0, 0, 0, 0.6), 0 0 36px rgba(56, 184, 153, 0.3);
+}
+
+.vc-mobile-orb-fab.is-open {
+  transform: scale(1.1);
+  box-shadow: 0 6px 32px rgba(0, 0, 0, 0.65), 0 0 40px rgba(56, 184, 153, 0.35);
+}
+
+.vc-mobile-orb-fab__logo {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+/* ── Responsive: Tablet (768px – 1023px) ── */
+@media (max-width: 1023px) {
+  .vc-mission-panel {
+    display: none !important;
+  }
+
+  .vc-workspace-frame__header {
+    padding: 8px 16px;
+    min-height: 42px;
+  }
+
+  .vc-workspace-frame__body {
+    padding: 16px 18px 24px;
+  }
+}
+
+/* ── Responsive: Desktop guard (>= 1024px) ──
+   Belt-and-suspenders: even if React re-renders during a resize transition,
+   the rail must never appear on desktop. The rail is for tablet only. */
+@media (min-width: 1024px) {
+  .vc-nav-rail {
+    display: none !important;
+  }
+}
+
+/* ── Responsive: Mobile (< 768px) ── */
+@media (max-width: 767px) {
+  .vc-nav-rail {
+    display: none !important;
+  }
+
+  .vc-mission-panel {
+    display: none !important;
+  }
+
+  .vc-workspace-frame__header {
+    padding: 8px 14px;
+    min-height: 40px;
+  }
+
+  .vc-workspace-frame__body {
+    padding: 14px 14px 20px;
+  }
+
+  .vc-workspace-frame__crumb {
+    font-size: 12px;
+  }
+
+  .vc-workspace-frame__badge {
+    display: none;
+  }
+
+  .vc-workspace-canvas__topbar {
+    padding: 0 14px;
+  }
+
+  .vc-workspace-canvas__dev-badge {
+    padding: 0 14px;
+  }
+
+  .vc-mobile-orb-fab {
+    bottom: 20px;
+    right: 16px;
+  }
+}
+
+/* ── Page content inside workspace canvas ── */
+.vc-workspace-canvas .vc-page {
+  /* Ensure pages with their own bg don't bleed through */
+  background: var(--vc-enterprise-bg, #faf9f7);
+}
+
+/* =================================================================
+   COMPACT COMMAND RAIL + CONTEXT FLYOUT (v6)
+   Replaces the long MissionPanel sidebar. Rail is icon-only, 72px
+   wide. Clicking a group opens a ContextFlyout overlay next to the
+   rail. The flyout never contains the page itself — it only offers
+   menu commands. The page always renders in WorkspaceCanvas.
+   ================================================================= */
+/* ── Command Rail & Flyout — VCPMC Dark Green Professional Palette ─── */
+/* Override existing command-rail + context-flyout section tokens */
+:root {
+  /* Rail */
+  --vc-rail-bg:          #071411;
+  --vc-rail-bg-soft:    #0B1B18;
+  --vc-rail-border:      rgba(255, 255, 255, 0.06);
+
+  /* Flyout */
+  --vc-flyout-bg:        rgba(14, 22, 20, 0.97);
+  --vc-flyout-border:    rgba(255, 255, 255, 0.08);
+
+  /* Accent — teal/emerald green */
+  --vc-accent:           #16A085;
+  --vc-accent-strong:    #10B981;
+  --vc-active-bg:        rgba(15, 61, 53, 0.6);
+  --vc-active-icon:      #D1FAE5;
+  --vc-active-border:    rgba(22, 160, 133, 0.45);
+
+  /* Text */
+  --vc-text-primary:     #F4F7F5;
+  --vc-text-secondary:   #9AA6A0;
+  --vc-icon-muted:       #8A9A95;
+  --vc-icon-hover:       #C8D8D3;
+
+  /* Chrome / tooltips */
+  --vc-tooltip-bg:       #0D2018;
+  --vc-tooltip-border:   rgba(255, 255, 255, 0.09);
+
+  /* Layout */
+  --vc-command-rail-w: 72px;
+  --vc-command-rail-bg: var(--vc-rail-bg);
+  --vc-flyout-w: 320px;
+  --vc-workspace-bg:     #0A100E;
+  --vc-workspace-canvas-bg: #FAF8F2;
+}
+
+/* Hide the legacy long sidebar on all viewports. The MissionPanel
+   file is kept on disk as fallback, but the runtime never renders it
+   from AdaptiveWorkspaceShell anymore. */
+.vc-mission-panel {
+  display: none !important;
+}
+
+/* Shell body: rail + canvas only. The flyout is overlay, not a grid
+   column. */
+.vc-adaptive-shell__body {
+  display: flex;
+  flex-direction: row;
+  min-height: 0;
+  height: 100%;
+  width: 100%;
+  background: var(--vc-workspace-bg);
+}
+
+/* ── Compact Command Rail ─────────────────────────────────────── */
+.vc-command-rail {
+  width: var(--vc-command-rail-w, 72px);
+  min-width: var(--vc-command-rail-w, 72px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--vc-command-rail-bg, var(--vc-rail-bg));
+  border-right: 1px solid var(--vc-rail-border);
+  padding: 10px 0 12px;
+  gap: 4px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 30;
+}
+
+.vc-command-rail__orb {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(22, 160, 133, 0.25), rgba(22, 160, 133, 0.08));
+  border: 1px solid rgba(22, 160, 133, 0.38);
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 4px;
+  transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+}
+.vc-command-rail__orb:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 4px rgba(22, 160, 133, 0.1);
+  border-color: rgba(22, 160, 133, 0.55);
+}
+.vc-command-rail__orb-logo {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+.vc-command-rail__divider {
+  width: 28px;
+  height: 1px;
+  background: var(--vc-rail-border);
+  margin: 4px 0 6px;
+}
+
+.vc-command-rail__btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--vc-icon-muted);
+  cursor: pointer;
+  padding: 0;
+  margin: 1px 0;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease, transform 120ms ease;
+}
+.vc-command-rail__btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--vc-icon-hover);
+}
+.vc-command-rail__btn.is-active {
+  color: var(--vc-active-icon);
+  background: var(--vc-active-bg);
+  border-color: var(--vc-active-border);
+}
+.vc-command-rail__btn.is-open {
+  color: rgba(255, 255, 255, 0.92);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+.vc-command-rail__btn.is-active.is-open {
+  color: var(--vc-active-icon);
+  background: rgba(15, 61, 53, 0.7);
+  border-color: var(--vc-active-border);
+}
+.vc-command-rail__btn svg {
+  width: 18px;
+  height: 18px;
+}
+
+.vc-command-rail__btn-tooltip {
+  position: absolute;
+  left: calc(100% + 10px);
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  white-space: nowrap;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--vc-text-primary);
+  background: var(--vc-tooltip-bg);
+  border: 1px solid var(--vc-tooltip-border);
+  padding: 4px 8px;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease, transform 120ms ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  z-index: 5;
+}
+.vc-command-rail__btn:hover .vc-command-rail__btn-tooltip,
+.vc-command-rail__btn:focus-visible .vc-command-rail__btn-tooltip {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.vc-command-rail__spacer {
+  flex: 1 1 auto;
+}
+
+/* ── Context Flyout — Apple-style popover ───────────────────────── */
+/* Key: height:auto + max-height cap (NO bottom:8px which forces full height).
+   The flyout is overlay-only, positioned at an anchor-derived top. */
+.vc-context-flyout__scrim {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 40;
+  pointer-events: auto;
+}
+
+.vc-context-flyout {
+  position: fixed;
+  /* top is set inline via JS computeFlyoutTop() */
+  bottom: auto;
+  left: calc(var(--vc-command-rail-w, 72px) + 6px);
+  /* Popover sizing */
+  width: var(--vc-flyout-w, 320px);
+  max-width: calc(100vw - var(--vc-command-rail-w, 72px) - 12px);
+
+  /* Apple popover look — dark teal glass */
+  height: auto;
+  max-height: min(520px, calc(100vh - 96px));
+  overflow-y: auto;
+  background: var(--vc-flyout-bg, rgba(14, 22, 20, 0.97));
+  border: 1px solid var(--vc-flyout-border, rgba(255, 255, 255, 0.08));
+  border-radius: 18px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.48), 0 0 0 0.5px rgba(255,255,255,0.04);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  z-index: 45;
+  overflow-x: hidden;
+  animation: vc-flyout-in 150ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes vc-flyout-in {
+  from { opacity: 0; transform: translateX(-6px) scale(0.98); }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+
+.vc-context-flyout__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--vc-flyout-border);
+}
+.vc-context-flyout__header-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 160, 133, 0.18);
+  color: #16A085;
+  flex-shrink: 0;
+}
+.vc-context-flyout__header-icon svg { width: 16px; height: 16px; }
+.vc-context-flyout__header-text { flex: 1 1 auto; min-width: 0; }
+.vc-context-flyout__header-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--vc-text-primary);
+  line-height: 1.1;
+  margin: 0;
+}
+.vc-context-flyout__header-sub {
+  font-size: 10.5px;
+  color: var(--vc-text-secondary);
+  margin: 2px 0 0;
+}
+
+/* X close button */
+.vc-context-flyout__close {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--vc-text-secondary);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+.vc-context-flyout__close:hover {
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--vc-text-primary);
+}
+.vc-context-flyout__close:focus-visible {
+  outline: 2px solid var(--vc-accent);
+  outline-offset: 1px;
+}
+.vc-context-flyout__close svg { width: 12px; height: 12px; }
+
+/* Search mini */
+.vc-context-flyout__search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 7px 10px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+.vc-context-flyout__search-icon {
+  position: absolute;
+  left: 19px;
+  width: 13px;
+  height: 13px;
+  color: var(--vc-text-secondary);
+  pointer-events: none;
+  opacity: 0.6;
+}
+.vc-context-flyout__search-input {
+  width: 100%;
+  height: 34px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--vc-text-primary);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 0 30px 0 30px;
+  outline: none;
+  transition: border-color 150ms ease, background 150ms ease;
+  caret-color: var(--vc-accent);
+}
+.vc-context-flyout__search-input::placeholder { color: var(--vc-text-secondary); opacity: 0.7; }
+.vc-context-flyout__search-input:focus {
+  border-color: var(--vc-accent);
+  background: rgba(22, 160, 133, 0.06);
+}
+.vc-context-flyout__search-clear {
+  position: absolute;
+  right: 16px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: var(--vc-text-secondary);
+  cursor: pointer;
+  padding: 0;
+  transition: background 120ms ease, color 120ms ease;
+}
+.vc-context-flyout__search-clear:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--vc-text-primary);
+}
+.vc-context-flyout__search-clear svg { width: 10px; height: 10px; }
+
+/* Command list */
+.vc-context-flyout__list {
+  list-style: none;
+  margin: 0;
+  padding: 5px 7px 3px;
+}
+.vc-context-flyout__list::-webkit-scrollbar { width: 4px; }
+.vc-context-flyout__list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 3px;
+}
+
+.vc-context-flyout__empty {
+  padding: 16px 12px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.38);
+  text-align: center;
+}
+
+/* Command item */
+.vc-context-flyout__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 9px;
+  border-radius: 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background 110ms ease, border-color 110ms ease, color 110ms ease;
+}
+.vc-context-flyout__item:hover,
+.vc-context-flyout__item:focus-visible {
+  background: rgba(255, 255, 255, 0.055);
+  border-color: rgba(255, 255, 255, 0.07);
+  color: #ffffff;
+  outline: none;
+}
+.vc-context-flyout__item:active {
+  background: rgba(22, 160, 133, 0.12);
+}
+
+.vc-context-flyout__item-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.62);
+  flex-shrink: 0;
+  transition: background 110ms ease, color 110ms ease;
+}
+.vc-context-flyout__item-icon svg { width: 14px; height: 14px; }
+.vc-context-flyout__item:hover .vc-context-flyout__item-icon {
+  background: rgba(22, 160, 133, 0.14);
+  color: var(--vc-accent);
+}
+
+.vc-context-flyout__item-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.vc-context-flyout__item-label {
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.vc-context-flyout__item-desc {
+  font-size: 10.5px;
+  color: var(--vc-text-secondary);
+  opacity: 0.85;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Keyboard shortcut badge */
+.vc-context-flyout__item-shortcut {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 5.5px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+  line-height: 1.4;
+}
+
+.vc-context-flyout__item-arrow {
+  width: 12px;
+  height: 12px;
+  color: rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* Footer: launches the full CommandLauncher — flows as last list item */
+.vc-context-flyout__footer {
+  padding: 4px 7px 7px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+.vc-context-flyout__item--launcher {
+  color: rgba(255, 255, 255, 0.58);
+}
+.vc-context-flyout__item--launcher:hover,
+.vc-context-flyout__item--launcher:focus-visible {
+  color: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+/* ── Tablet: tighten rail, keep flyout overlay ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  :root {
+    --vc-command-rail-w: 64px;
+    --vc-flyout-w: 320px;
+  }
+  .vc-command-rail__btn {
+    width: 40px;
+    height: 40px;
+  }
+  .vc-context-flyout {
+    left: calc(var(--vc-command-rail-w, 64px) + 6px);
+    max-width: calc(100vw - var(--vc-command-rail-w, 64px) - 12px);
+  }
+}
+
+/* ── Mobile (<768px): rail hidden, flyout becomes full-width sheet ── */
+@media (max-width: 767px) {
+  .vc-command-rail { display: none !important; }
+  .vc-context-flyout {
+    left: 8px;
+    right: 8px;
+    width: auto;
+    top: 8px;
+    bottom: auto;
+    max-height: calc(100vh - 96px);
+  }
+}
+
+

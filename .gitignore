@@ -1,0 +1,206 @@
+# =========================================
+# VCPMC Root .gitignore
+# =========================================
+# Files that should never be committed.
+# =========================================
+
+# --- Secrets ---
+.env
+.env.*
+!.env.production.example
+!.env.example
+
+# --- Local dev / temp scripts (not project files) ---
+maker.py
+mk.py
+q.py
+test.py
+test.txt
+test_import.py
+check_schema.py
+check_user.py
+write.bat
+debug_modal.py
+debug_page_state.py
+scan_ph.py
+scan_placeholders.py
+test_portal_runtime.py
+verify_fix2.py
+_worker_test.json
+prefill_results.json
+docx_scan_output.txt
+out.log
+err.log
+activate.ps1
+backend/local-8000.err
+backend/local-8000.out
+
+# --- Runtime logs & QA artifacts ---
+*.runtime.out.log
+*.runtime.err.log
+backend-phase1-runtime.out.log
+backend-phase1-runtime.err.log
+probe2.json
+probe_calc.json
+qa_evidence.log
+debug-bb17f6.log
+debug-c968d0.log
+
+# --- QA / debug scripts ---
+scripts_qa_dashboard.py
+scripts_qa_dashboard/
+verify_orb.py
+verify_launcher.py
+screenshot_qa.py
+git_commit.ps1
+
+# --- Non-essential plans & docs ---
+AUDIT_APP_REPORT.md
+MAGICPATTERN_UI_BRIEF.md
+KARAOKE_CONTRACT_EXPORT_PREVIEW_MIGRATION_PLAN.md
+KARAOKE_LEGACY_DELETE_PLAN.md
+VCPMC_PHASE_E_CONTRACT_MONEY_SUMMARY_PLAN.md
+VCPMC_TABLE_DESIGN_PLAN.md
+
+# --- Dev tools (local only) ---
+agent-tools/
+
+# --- Dev launcher log files (created by scripts/dev-all.ps1) ---
+_devall_test.out.log
+_devall_test2.out.log
+_devall_test.err.log
+_backend_dev.out.log
+_backend_dev.err.log
+_frontend_dev.out.log
+_frontend_dev.err.log
+_vite_direct.out.log
+_vite_direct.err.log
+
+# --- Docker production config (use named files only) ---
+# Commit docker-compose.prod.yml and Dockerfile.app
+# Do NOT commit docker-compose.yml (default) or local overrides
+docker-compose.yml
+docker-compose.override.yml
+
+# --- Frontend node_modules + build ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist_bak_*/
+frontend/.vite/
+frontend/coverage/
+.vite/
+
+# --- Backend build / venv ---
+.venv/
+venv/
+backend/__pycache__/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/htmlcov/
+backend/*.egg-info/
+backend/dist/
+backend/build/
+
+# --- Python / venv ---
+__pycache__/
+*.py[cod]
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.db
+*.sqlite
+*.sql
+*.dump
+*.bak
+
+# --- OS ---
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# --- IDE ---
+.idea/
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+
+# --- Node.js (root level) ---
+# Keep root package-lock.json so builds are reproducible
+!package-lock.json
+npm-debug.log*
+
+# --- Git internals (sub-project repos) ---
+backend/.git/
+frontend/.git/
+**/.git/
+**/.git.bak/
+**/.git.bak/**
+frontend_git/
+
+# --- Project scripts ---
+# Keep only scripts required to install, run, build, package, or smoke-test the app.
+scripts/*
+!scripts/dev-all.ps1
+!scripts/ensure-venv.ps1
+!scripts/start-backend.ps1
+!scripts/start-backend-prod.ps1
+!scripts/check-port-8000.ps1
+!scripts/package-qr-extension.ps1
+!scripts/test-backend.ps1
+scripts/__pycache__/
+scripts/*.bak
+
+# --- Local dev tools and test artifacts ---
+tools/
+frontend/scripts/
+
+# --- QA screenshots and local screenshots ---
+.final-*.png
+screenshots/
+screenshots_qa/
+screenshots_thumbs/
+screenshots_qa_dashboard/
+
+# --- Frontend dist backup snapshots ---
+frontend/dist_old_*/
+frontend/dist_bak_*/
+frontend/dist-old/
+frontend/dist-locked-*/
+
+# --- Cursor debug logs ---
+.cursor/
+.cursor/debug-*.log
+
+# --- Browser / edge profile (large, local) ---
+edge-profile/
+
+# --- MagicPattern generated/reference project ---
+# The current application source lives in frontend/. Keep generated or copied
+# MagicPattern workspaces out of Git; review guidance is committed at root.
+magic-pattern/
+
+# --- Design reference ZIP extracts (not app source) ---
+_design-imports/
+
+# --- Browser extension (source only; build output ignored) ---
+browser-extension/*.rar
+browser-extension/*.zip
+browser-extension/*/dist/
+browser-extension/*/build/
+browser-extension/*/node_modules/
+
+# --- Archives ---
+*.zip
+*.7z
+*.rar
+
+# --- DB backups ---
+db-backups/
+
+# --- Storage preview docs (may contain real data) ---
+storage/preview/*.docx

@@ -1,0 +1,42 @@
+{
+  "manifest_version": 3,
+  "name": "VCPMC QR Portal Assistant",
+  "short_name": "QR Assistant",
+  "version": "2.2",
+  "description": "Ho tro dien thong tin GCN vao QR Portal. Khong tu bam Luu.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1:8000/*",
+    "http://localhost:8000/*",
+    "http://192.168.0.206:8000/*",
+    "http://192.168.0.206:5173/*",
+    "http://14.241.251.220:7879/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://127.0.0.1:8000/*",
+        "http://localhost:8000/*",
+        "http://192.168.0.206:8000/*",
+        "http://192.168.0.206:5173/*"
+      ],
+      "js": ["content-app-bridge.js"],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "http://14.241.251.220:7879/*"
+      ],
+      "js": ["content-portal-fill.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
