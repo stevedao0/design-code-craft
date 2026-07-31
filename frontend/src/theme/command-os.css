@@ -3531,3 +3531,9 @@ Loaded AFTER command-os.css so these win.
   }
   .vcpmc-rail__top { display: none; }
 }
+.vcpmc-rail__item.is-active::before {
+  left: -13px !important;
+  width: 3px !important;
+  height: 26px !important;
+  border-radius: 0 3px 3px 0 !important;
+}
