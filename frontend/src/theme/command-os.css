@@ -3539,30 +3539,108 @@ Loaded AFTER command-os.css so these win.
 }
 
 /* =============================================================
-   TOPBAR LAYOUT v2 — breadcrumb (left) · system tray (right)
-   The inline search hint is removed: the Command Orb (⌘K) is the
-   single entry point for commands. The right side is a fixed-width
-   Windows-11 style tray so the clock never shifts the layout.
+   TOPBAR LAYOUT v3 — clean left/right split, no centre clutter
+   Breadcrumb on the left, a single compact system tray on the
+   right. The brand wordmark is removed from the ribbon because
+   the Command Orb in the rail already owns the VCPMC mark.
    ============================================================= */
 .vcpmc-ribbon__inner {
   display: grid !important;
   grid-template-columns: minmax(0, 1fr) auto !important;
   align-items: center;
-  gap: 16px;
+  gap: 16px !important;
 }
 .vcpmc-ribbon__hint { display: none !important; }
-.vcpmc-ribbon__right { flex: 0 0 auto; gap: 10px; justify-self: end; }
+
+/* Left zone: back + breadcrumb only */
+.vcpmc-ribbon__brand-zone {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.vcpmc-ribbon__wordmark,
+.vcpmc-ribbon__wordmark-main,
+.vcpmc-ribbon__wordmark-sub { display: none !important; }
+.vcpmc-ribbon__back {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 10px;
+  border: 1px solid var(--nav-frame-line);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--nav-on-frame-strong);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 140ms ease, transform 140ms ease, opacity 140ms ease;
+}
+.vcpmc-ribbon__back:hover:not(:disabled) { background: rgba(255, 255, 255, 0.20); transform: translateX(-1px); }
+.vcpmc-ribbon__back:disabled { opacity: 0.35; cursor: not-allowed; }
+.vcpmc-ribbon__back-icon { width: 17px; height: 17px; }
+.vcpmc-ribbon__breadcrumb { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.vcpmc-ribbon__crumb {
+  background: none;
+  border: 0;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.72);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 140ms ease, background 140ms ease;
+}
+.vcpmc-ribbon__crumb:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.14); }
+.vcpmc-ribbon__group { font-size: 12.5px; color: rgba(255, 255, 255, 0.66); white-space: nowrap; }
+.vcpmc-ribbon__label {
+  font-size: 13px;
+  font-weight: 650;
+  color: #FFFFFF;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.vcpmc-ribbon__sep { color: rgba(255, 255, 255, 0.40); flex-shrink: 0; }
+
+/* Right zone: single Windows-11 style system tray */
+.vcpmc-ribbon__right { flex: 0 0 auto; justify-self: end; min-width: 0; }
 
 .vcpmc-tray {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   height: 40px;
-  padding: 0 6px 0 12px;
+  padding: 2px 6px 2px 8px;
   border-radius: 12px;
   border: 1px solid var(--nav-frame-line);
   background: rgba(255, 255, 255, 0.10);
 }
+
+/* Calculator is now inside the tray */
+.vcpmc-tray__action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.10);
+  color: #FFFFFF;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 140ms ease, border-color 140ms ease;
+  white-space: nowrap;
+}
+.vcpmc-tray__action:hover { background: rgba(255, 255, 255, 0.22); border-color: rgba(255, 255, 255, 0.24); }
+.vcpmc-tray__action-icon { width: 15px; height: 15px; flex-shrink: 0; }
+.vcpmc-tray__action-label { line-height: 1; }
+
 .vcpmc-tray__clock {
   display: inline-flex;
   flex-direction: column;
@@ -3587,13 +3665,40 @@ Loaded AFTER command-os.css so these win.
   width: 1px;
   height: 22px;
   background: var(--nav-frame-line);
+  margin: 0 2px;
 }
-.vcpmc-tray .vcpmc-ribbon__avatar { width: 30px; height: 30px; font-size: 11px; }
+.vcpmc-tray .vcpmc-ribbon__avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 11px;
+  background: #FFFFFF;
+  color: var(--nav-frame-1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  .vcpmc-tray__action-label { display: none; }
+  .vcpmc-tray__action { width: 32px; padding: 0; justify-content: center; }
+}
 
 @media (max-width: 640px) {
+  .vcpmc-ribbon__inner { padding-inline: 12px; gap: 12px !important; }
+  .vcpmc-ribbon__group { display: none; }
+  .vcpmc-ribbon__breadcrumb .vcpmc-ribbon__sep { display: none; }
+  .vcpmc-ribbon__label { font-size: 12.5px; }
   .vcpmc-tray__clock { display: none; }
   .vcpmc-tray__divider { display: none; }
   .vcpmc-tray { padding: 0 5px; height: 38px; }
+}
+
+@media (max-width: 360px) {
+  .vcpmc-ribbon__inner { padding-inline: 10px; gap: 10px !important; }
+  .vcpmc-ribbon__back { width: 32px; height: 32px; flex: 0 0 32px; }
 }
 
 /* =============================================================
