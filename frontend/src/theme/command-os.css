@@ -3721,3 +3721,34 @@ body::after {
 @media print {
   body::after { display: none; }
 }
+
+/* =============================================================
+   TOPBAR v4 — tray pinned to the true right corner + orb logo fix
+   .vcpmc-ribbon is a flex row; its grid child must stretch to the
+   full width, otherwise the grid shrinks to content and the tray
+   floats next to the breadcrumb instead of sitting in the corner.
+   ============================================================= */
+.vcpmc-ribbon__inner {
+  flex: 1 1 auto !important;
+  width: 100% !important;
+  min-width: 0;
+  padding-inline: 16px 14px !important;
+}
+.vcpmc-ribbon__right {
+  justify-self: end !important;
+  margin-left: auto;
+}
+
+/* Orb: the official VCPMC mark is a wide logo — keep its aspect
+   ratio inside the white square instead of squashing it. */
+.vcpmc-orb {
+  background: #FFFFFF !important;
+  padding: 5px !important;
+  overflow: hidden;
+}
+.vcpmc-orb__logo {
+  width: 100% !important;
+  height: auto !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+}
