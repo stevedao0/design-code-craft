@@ -3537,3 +3537,82 @@ Loaded AFTER command-os.css so these win.
   height: 26px !important;
   border-radius: 0 3px 3px 0 !important;
 }
+
+/* =============================================================
+   TOPBAR LAYOUT v2 — breadcrumb (left) · system tray (right)
+   The inline search hint is removed: the Command Orb (⌘K) is the
+   single entry point for commands. The right side is a fixed-width
+   Windows-11 style tray so the clock never shifts the layout.
+   ============================================================= */
+.vcpmc-ribbon__inner {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center;
+  gap: 16px;
+}
+.vcpmc-ribbon__hint { display: none !important; }
+.vcpmc-ribbon__right { flex: 0 0 auto; gap: 10px; justify-self: end; }
+
+.vcpmc-tray {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 40px;
+  padding: 0 6px 0 12px;
+  border-radius: 12px;
+  border: 1px solid var(--nav-frame-line);
+  background: rgba(255, 255, 255, 0.10);
+}
+.vcpmc-tray__clock {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: center;
+  line-height: 1.15;
+  width: 74px;              /* fixed: clock never reflows the topbar */
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+.vcpmc-tray__time {
+  font-size: 13px;
+  font-weight: 700;
+  color: #FFFFFF;
+  letter-spacing: 0.01em;
+}
+.vcpmc-tray__date {
+  font-size: 10.5px;
+  color: rgba(255, 255, 255, 0.66);
+}
+.vcpmc-tray__divider {
+  width: 1px;
+  height: 22px;
+  background: var(--nav-frame-line);
+}
+.vcpmc-tray .vcpmc-ribbon__avatar { width: 30px; height: 30px; font-size: 11px; }
+
+@media (max-width: 640px) {
+  .vcpmc-tray__clock { display: none; }
+  .vcpmc-tray__divider { display: none; }
+  .vcpmc-tray { padding: 0 5px; height: 38px; }
+}
+
+/* =============================================================
+   NIGHT LIGHT — warm, low-glare veil across the whole app.
+   A single non-interactive multiply layer warms every surface
+   (including third-party white panels) without touching tokens.
+   ============================================================= */
+:root {
+  --nightlight-tint: rgba(255, 214, 158, 0.16);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  pointer-events: none;
+  background: var(--nightlight-tint);
+  mix-blend-mode: multiply;
+}
+@media print {
+  body::after { display: none; }
+}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Calculator as CalculatorIcon, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, Calculator as CalculatorIcon, ChevronRight } from 'lucide-react';
 import { RouteKey } from '../../data/routes';
 import { useAuth } from '../../lib/auth';
 import { useNavHistory } from '../../lib/navHistory';
