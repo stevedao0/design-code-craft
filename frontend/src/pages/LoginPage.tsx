@@ -93,9 +93,26 @@ export function LoginPage() {
             </p>
           </div>
 
-          <p className="text-white/60 text-[11.5px] tracking-wide">
-            © {new Date().getFullYear()} VCPMC · vcpmc.org
-          </p>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[11.5px] tracking-wide">
+            <span className="text-white/60">© {new Date().getFullYear()} VCPMC</span>
+            <a
+              href="https://www.vcpmc.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/85 hover:text-white underline underline-offset-4 decoration-white/40 hover:decoration-white transition-colors"
+            >
+              vcpmc.org
+            </a>
+            <a
+              href="https://www.facebook.com/profile.php?id=100064603609628"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-white/85 hover:text-white underline underline-offset-4 decoration-white/40 hover:decoration-white transition-colors"
+            >
+              Facebook
+            </a>
+          </div>
+
         </div>
       </div>
 
