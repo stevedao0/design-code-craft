@@ -136,10 +136,11 @@ export function LoginPage() {
               Quyền tác giả Âm nhạc Việt Nam
             </span>
           </div>
-          <h2 className="mt-4 text-[24px] font-semibold tracking-tight text-[#22301A]">Đăng nhập hệ thống</h2>
-          <p className="mt-1.5 text-[#6b6661] text-[13.5px]">
-            Quản lý hợp đồng và giấy chứng nhận
+          <h2 className="mt-4 text-[24px] font-semibold tracking-tight text-[#22301A]">VCPMC Licensing Department</h2>
+          <p className="mt-1.5 text-[#5E6B4E] text-[13.5px]">
+            Đăng nhập hệ thống quản lý hợp đồng và cấp phép
           </p>
+
         </div>
 
         <div className="relative">
