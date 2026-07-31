@@ -65,6 +65,10 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher, onOpenCalcu
       <div className="vcpmc-ribbon__inner">
         {/* LEFT: back + clickable breadcrumb. The wordmark lives on the rail. */}
         <div className="vcpmc-ribbon__brand-zone">
+          <span className="vcpmc-ribbon__wordmark">
+            <span className="vcpmc-ribbon__wordmark-main">VCPMC</span>
+            <span className="vcpmc-ribbon__wordmark-sub">Licensing Department</span>
+          </span>
           <button
             type="button"
             onClick={goBack}
