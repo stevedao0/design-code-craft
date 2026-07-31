@@ -3364,3 +3364,170 @@ Loaded AFTER command-os.css so these win.
 @media (max-width: 640px) {
   .vcpmc-public-shell__hint { display: none; }
 }
+
+/* =============================================================
+   NAV UNIFICATION — sidebar + topbar as ONE brand frame
+   The rail (left) and the ribbon (top) share the exact same deep
+   brand-green surface, the same thickness (--nav-size) and the same
+   border language, forming a continuous "L" around the workspace.
+   The Command Orb sits in the square corner cell where they meet.
+   ============================================================= */
+:root {
+  --nav-frame-1: #2F4A02;
+  --nav-frame-2: #3F6202;
+  --nav-frame-3: #4A7202;
+  --nav-frame-line: rgba(255, 255, 255, 0.12);
+  --nav-on-frame: rgba(255, 255, 255, 0.78);
+  --nav-on-frame-strong: #FFFFFF;
+  --nav-corner-radius: 14px;
+}
+
+/* ── Shared surface ─────────────────────────────────────────── */
+.vcpmc-rail {
+  background: linear-gradient(180deg, var(--nav-frame-1) 0%, var(--nav-frame-2) 48%, var(--nav-frame-3) 100%) !important;
+  border-right: 1px solid var(--nav-frame-line) !important;
+  box-shadow: none;
+  padding: 0 0 12px !important;
+  gap: 8px !important;
+}
+.vcpmc-ribbon {
+  height: var(--nav-size) !important;
+  flex: 0 0 var(--nav-size) !important;
+  background: linear-gradient(90deg, var(--nav-frame-1) 0%, var(--nav-frame-2) 46%, var(--nav-frame-3) 100%) !important;
+  border-bottom: 1px solid var(--nav-frame-line) !important;
+  backdrop-filter: none !important;
+}
+.vcpmc-ribbon::after { display: none; }
+.vcpmc-ribbon__inner {
+  height: var(--nav-size);
+  padding-inline: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 400px) auto;
+}
+
+/* ── Brand corner: the 72×72 square where rail meets ribbon ─── */
+.vcpmc-rail__top {
+  height: var(--nav-size) !important;
+  width: 100%;
+  flex: 0 0 var(--nav-size);
+  border-bottom: 1px solid var(--nav-frame-line);
+  background: rgba(0, 0, 0, 0.14);
+  margin-bottom: 4px;
+}
+.vcpmc-rail__nav { margin-top: 0; padding-top: 8px; border-top: 0 !important; }
+.vcpmc-rail__bottom { border-top-color: var(--nav-frame-line) !important; padding-top: 8px; }
+
+/* ── Orb: same square geometry as every rail item ───────────── */
+.vcpmc-orb {
+  width: 46px !important;
+  height: 46px !important;
+  border-radius: var(--nav-corner-radius) !important;
+  background: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.85) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.10),
+    0 10px 20px -12px rgba(0, 0, 0, 0.65) !important;
+}
+.vcpmc-orb:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.20),
+    0 12px 22px -12px rgba(0, 0, 0, 0.7) !important;
+}
+.vcpmc-orb.is-open,
+.vcpmc-orb:focus-visible {
+  box-shadow:
+    0 0 0 4px rgba(255, 255, 255, 0.32),
+    0 12px 22px -12px rgba(0, 0, 0, 0.7) !important;
+}
+.vcpmc-orb__logo { width: 34px; height: 34px; }
+.vcpmc-rail__item { border-radius: var(--nav-corner-radius); }
+
+/* ── Ribbon controls on the green surface ───────────────────── */
+.vcpmc-ribbon__wordmark {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  padding-right: 14px;
+  margin-right: 2px;
+  border-right: 1px solid var(--nav-frame-line);
+  min-width: 0;
+}
+.vcpmc-ribbon__wordmark-main {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--nav-on-frame-strong);
+  white-space: nowrap;
+}
+.vcpmc-ribbon__wordmark-sub {
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.62);
+  white-space: nowrap;
+}
+.vcpmc-ribbon__back {
+  border: 1px solid var(--nav-frame-line);
+  background: rgba(255, 255, 255, 0.10);
+  color: var(--nav-on-frame-strong);
+  border-radius: 10px;
+}
+.vcpmc-ribbon__back:hover:not(:disabled) { background: rgba(255, 255, 255, 0.20); }
+.vcpmc-ribbon__crumb { color: rgba(255, 255, 255, 0.72); }
+.vcpmc-ribbon__crumb:hover { color: #FFFFFF; background: rgba(255, 255, 255, 0.14); }
+.vcpmc-ribbon__group { color: rgba(255, 255, 255, 0.66); }
+.vcpmc-ribbon__label { color: #FFFFFF; }
+.vcpmc-ribbon__sep { color: rgba(255, 255, 255, 0.40); }
+.vcpmc-ribbon__hint {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--nav-frame-line);
+  color: rgba(255, 255, 255, 0.82);
+  border-radius: 10px;
+  height: 38px;
+}
+.vcpmc-ribbon__hint:hover {
+  background: rgba(255, 255, 255, 0.20);
+  border-color: rgba(255, 255, 255, 0.34);
+  box-shadow: none;
+}
+.vcpmc-ribbon__hint-icon { color: rgba(255, 255, 255, 0.82); }
+.vcpmc-ribbon__hint-kbd {
+  color: rgba(255, 255, 255, 0.80);
+  background: rgba(0, 0, 0, 0.20);
+  border-color: var(--nav-frame-line);
+}
+.vcpmc-ribbon__date {
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid var(--nav-frame-line);
+  color: rgba(255, 255, 255, 0.72);
+}
+.vcpmc-ribbon__date-wd { color: rgba(255, 255, 255, 0.66); }
+.vcpmc-ribbon__date-dm { color: #FFFFFF; }
+.vcpmc-ribbon__avatar {
+  background: #FFFFFF;
+  color: var(--nav-frame-1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+.vcpmc-header-action {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  color: #FFFFFF;
+  border-radius: 10px;
+}
+.vcpmc-header-action:hover { background: rgba(255, 255, 255, 0.24); }
+.vcpmc-header-action:focus-visible { outline-color: #FFFFFF; }
+
+@media (max-width: 1100px) {
+  .vcpmc-ribbon__wordmark-sub { display: none; }
+}
+@media (max-width: 900px) {
+  .vcpmc-ribbon__wordmark { display: none; }
+}
+@media (max-width: 768px) {
+  /* Mobile: the rail docks to the bottom — keep the same frame colour. */
+  .vcpmc-rail {
+    background: linear-gradient(90deg, var(--nav-frame-1) 0%, var(--nav-frame-3) 100%) !important;
+    padding: 6px 0 calc(6px + env(safe-area-inset-bottom)) !important;
+  }
+  .vcpmc-rail__top { display: none; }
+}
