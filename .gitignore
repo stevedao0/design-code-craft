@@ -204,3 +204,6 @@ db-backups/
 
 # --- Storage preview docs (may contain real data) ---
 storage/preview/*.docx
+
+# --- Browser profile cache (local only) ---
+storage/portal_browser_profile/
