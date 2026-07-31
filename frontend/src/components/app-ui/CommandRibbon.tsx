@@ -68,12 +68,8 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLaun
   return (
     <header className="vcpmc-ribbon" aria-label="Command ribbon">
       <div className="vcpmc-ribbon__inner">
-        {/* LEFT: back + clickable breadcrumb. The wordmark lives on the rail. */}
+        {/* LEFT: back + breadcrumb only. The brand mark lives in the Orb. */}
         <div className="vcpmc-ribbon__brand-zone">
-          <span className="vcpmc-ribbon__wordmark">
-            <span className="vcpmc-ribbon__wordmark-main">VCPMC</span>
-            <span className="vcpmc-ribbon__wordmark-sub">Licensing Department</span>
-          </span>
           <button
             type="button"
             onClick={goBack}
@@ -85,14 +81,6 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLaun
             <ArrowLeft className="vcpmc-ribbon__back-icon" aria-hidden />
           </button>
           <nav className="vcpmc-ribbon__breadcrumb" aria-label="Vị trí hiện tại">
-            <button
-              type="button"
-              className="vcpmc-ribbon__crumb"
-              onClick={() => onNavigate('dashboard')}
-            >
-              VCPMC
-            </button>
-            <ChevronRight className="vcpmc-ribbon__sep" aria-hidden />
             {meta.groupRoute && meta.groupRoute !== current ? (
               <button
                 type="button"
@@ -109,21 +97,21 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLaun
           </nav>
         </div>
 
-        {/* RIGHT: system tray — Bảng tính · đồng hồ · avatar */}
+        {/* RIGHT: compact system tray — calculator · clock · avatar */}
         <div className="vcpmc-ribbon__right">
-          {onOpenCalculator && (
-            <button
-              type="button"
-              onClick={onOpenCalculator}
-              className="vcpmc-header-action"
-              aria-label="Tính tiền bản quyền"
-              title="Tính tiền bản quyền"
-            >
-              <CalculatorIcon className="vcpmc-header-action__icon" aria-hidden />
-              <span className="vcpmc-header-action__label">Bảng tính</span>
-            </button>
-          )}
           <div className="vcpmc-tray">
+            {onOpenCalculator && (
+              <button
+                type="button"
+                onClick={onOpenCalculator}
+                className="vcpmc-tray__action"
+                aria-label="Tính tiền bản quyền"
+                title="Tính tiền bản quyền"
+              >
+                <CalculatorIcon className="vcpmc-tray__action-icon" aria-hidden />
+                <span className="vcpmc-tray__action-label">Bảng tính</span>
+              </button>
+            )}
             <span className="vcpmc-tray__clock" title={`${time} · ${fullDate}`}>
               <span className="vcpmc-tray__time">{time}</span>
               <span className="vcpmc-tray__date">{fullDate}</span>
@@ -134,7 +122,6 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLaun
             </span>
           </div>
         </div>
-
       </div>
     </header>
   );
