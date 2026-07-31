@@ -247,9 +247,29 @@ export function LoginPage() {
           </form>
         </div>
 
-        <div className="mt-8 text-center text-xs text-[#6E7A5E]">
+        <div className="mt-8 text-center text-xs text-[#5E6B4E]">
           <p>Đăng nhập bằng tài khoản hiện có trong hệ thống.</p>
+          <div className="mt-3 flex items-center justify-center gap-4">
+            <a
+              href="https://www.vcpmc.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#4A7202] hover:text-[#37560A] underline underline-offset-4 decoration-[#76B400]/40 hover:decoration-[#4A7202] transition-colors"
+            >
+              vcpmc.org
+            </a>
+            <span aria-hidden className="h-3 w-px bg-[#DCE8CC]" />
+            <a
+              href="https://www.facebook.com/profile.php?id=100064603609628"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#4A7202] hover:text-[#37560A] underline underline-offset-4 decoration-[#76B400]/40 hover:decoration-[#4A7202] transition-colors"
+            >
+              Facebook VCPMC
+            </a>
+          </div>
         </div>
+
         </div>
       </div>
 
