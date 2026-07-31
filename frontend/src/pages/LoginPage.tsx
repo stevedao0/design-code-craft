@@ -74,9 +74,10 @@ export function LoginPage() {
               <img src={vcpmcLogo} alt="VCPMC" className="h-full w-full object-cover" />
             </div>
             <div className="leading-tight">
-              <p className="text-white text-[13px] font-bold tracking-[0.18em] uppercase">VCPMC</p>
+              <p className="text-white text-[13px] font-bold tracking-[0.18em] uppercase">VCPMC Licensing Department</p>
               <p className="text-white/75 text-[11px]">Trung tâm Bảo vệ quyền tác giả âm nhạc Việt Nam</p>
             </div>
+
           </div>
 
           <div className="max-w-xl">
