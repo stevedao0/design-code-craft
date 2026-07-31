@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowLeft, Calculator as CalculatorIcon, ChevronRight, Search } from 'lucide-react';
+import { ArrowLeft, Calculator as CalculatorIcon, ChevronRight } from 'lucide-react';
 import { RouteKey } from '../../data/routes';
 import { useAuth } from '../../lib/auth';
 import { useNavHistory } from '../../lib/navHistory';
@@ -45,13 +45,17 @@ const ROUTE_LABELS: Partial<Record<RouteKey, RibbonMeta>> = {
  *  - Inline command hint (center, opens launcher)
  *  - Date + user avatar (right)
  */
-export function CommandRibbon({ current, onNavigate, onOpenLauncher, onOpenCalculator }: CommandRibbonProps) {
+export function CommandRibbon({ current, onNavigate, onOpenLauncher: _onOpenLauncher, onOpenCalculator }: CommandRibbonProps) {
   const { currentUser } = useAuth();
   const { canGoBack, goBack } = useNavHistory();
   const meta: RibbonMeta = ROUTE_LABELS[current] ?? { group: 'VCPMC', label: 'Trung tâm điều hành' };
-  const now = new Date();
-  const weekday = new Intl.DateTimeFormat('vi-VN', { weekday: 'short' }).format(now);
-  const dayMonth = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit' }).format(now);
+  const [now, setNow] = React.useState(() => new Date());
+  React.useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const time = new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit', hour12: false }).format(now);
+  const fullDate = new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(now);
   const initials = React.useMemo(() => {
     const e = currentUser?.email || '';
     const name = e.split('@')[0];
@@ -59,6 +63,7 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher, onOpenCalcu
     const parts = name.split(/[._-]/);
     return (parts[0]?.[0] ?? 'V').toUpperCase() + (parts[1]?.[0] ?? '').toUpperCase();
   }, [currentUser?.email]);
+
 
   return (
     <header className="vcpmc-ribbon" aria-label="Command ribbon">
@@ -104,20 +109,7 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher, onOpenCalcu
           </nav>
         </div>
 
-        {/* CENTER: command hint */}
-        <button
-          type="button"
-          onClick={onOpenLauncher}
-          className="vcpmc-ribbon__hint"
-          aria-label="Mở command launcher"
-          title="Mở command launcher (Ctrl + K)"
-        >
-          <Search className="vcpmc-ribbon__hint-icon" aria-hidden />
-          <span className="vcpmc-ribbon__hint-text">Tìm trang, hành động...</span>
-          <kbd className="vcpmc-ribbon__hint-kbd">⌘K</kbd>
-        </button>
-
-        {/* RIGHT: calculator action + date + avatar */}
+        {/* RIGHT: system tray — Bảng tính · đồng hồ · avatar */}
         <div className="vcpmc-ribbon__right">
           {onOpenCalculator && (
             <button
@@ -131,14 +123,18 @@ export function CommandRibbon({ current, onNavigate, onOpenLauncher, onOpenCalcu
               <span className="vcpmc-header-action__label">Bảng tính</span>
             </button>
           )}
-          <span className="vcpmc-ribbon__date" aria-label={`Hôm nay ${weekday} ${dayMonth}`}>
-            <span className="vcpmc-ribbon__date-wd">{weekday}</span>
-            <span className="vcpmc-ribbon__date-dm">{dayMonth}</span>
-          </span>
-          <span className="vcpmc-ribbon__avatar" title={currentUser?.email || ''}>
-            {initials}
-          </span>
+          <div className="vcpmc-tray">
+            <span className="vcpmc-tray__clock" title={`${time} · ${fullDate}`}>
+              <span className="vcpmc-tray__time">{time}</span>
+              <span className="vcpmc-tray__date">{fullDate}</span>
+            </span>
+            <span className="vcpmc-tray__divider" aria-hidden />
+            <span className="vcpmc-ribbon__avatar" title={currentUser?.email || ''}>
+              {initials}
+            </span>
+          </div>
         </div>
+
       </div>
     </header>
   );
