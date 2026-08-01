@@ -22,7 +22,7 @@ from ..models.contracts import ContractRecordRow
 from ..models.certificates import CertificateRecordRow
 from ..models.user import UserRow
 from ..services.report_excel_exporter import export_period_xlsx as build_period_excel
-from ..services.revenue_resolver import get_before_vat_revenue
+from ..services.revenue_resolver import get_before_vat_revenue, get_signed_actual
 from ..services.kpi_employee_portfolio import get_employee_kpi_portfolio
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -439,10 +439,15 @@ def get_reports_summary(
         sign = row.ngay_lap_hop_dong
 
         # Revenue by year (based on signing date)
+        # Business semantics: "Branch revenue" / "Doanh thu chi nhánh" / "Doanh thu KPI năm nay"
+        # represent the total payment contractually due (royalty_amount_after_vat).
+        # Use KPI_SIGNED chain (after_vat > before_vat > so_tien_value) — matches
+        # the kpi_field._signed_actual baseline used by KPI employee portfolio
+        # and the resolver.py top-of-file "Authoritative" contract.
         sign_year = getattr(row, "contract_year", None) or (sign.year if sign else None)
         if sign_year and sign_year in revenue_by_year:
             revenue_by_year[sign_year]["count"] += 1
-            _val = get_before_vat_revenue(row)
+            _val = get_signed_actual(row)
             if _val > 0:
                 revenue_by_year[sign_year]["total"] += _val
 
@@ -453,7 +458,7 @@ def get_reports_summary(
             if sign:
                 m = sign.month
                 monthly[m]["count"] += 1
-                _val = get_before_vat_revenue(row)
+                _val = get_signed_actual(row)
                 if _val > 0:
                     monthly[m]["total"] += _val
 
