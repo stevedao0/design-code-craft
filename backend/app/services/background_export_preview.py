@@ -218,6 +218,10 @@ def render_background_docx_preview(
     basic_ctx = _build_basic_context(row, executor_user=executor_user)
     render_ctx = _build_render_context(row)
 
+    from app.renderers.background_contract_renderer import _resolve_money_values
+    money_values = _resolve_money_values(row)
+    render_ctx["money"] = money_values
+
     # Generate output filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     if output_dir is None:
@@ -234,6 +238,7 @@ def render_background_docx_preview(
         output_path=output_path,
         context=basic_ctx,
         render_ctx=render_ctx,
+        money=money_values,
     )
 
     # Build response

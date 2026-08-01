@@ -41,6 +41,49 @@ W_NS = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 NS = {"w": W_NS}
 
 
+def _resolve_money_values(row: Any) -> dict:
+    """Resolve royalty money values from a contract row.
+
+    Priority:
+    1. Model fields royalty_amount_before_vat / vat_amount / royalty_amount_after_vat
+    2. Legacy DB columns amount_before_vat / amount_after_vat (vat_amount = after - before)
+
+    Returns dict with keys: before_vat, vat_amount, after_vat (all int or None).
+    """
+    def _get(field: str) -> int | None:
+        val = getattr(row, field, None)
+        if val is None:
+            return None
+        try:
+            return int(val)
+        except (TypeError, ValueError):
+            return None
+
+    before_vat = _get("royalty_amount_before_vat")
+    after_vat = _get("royalty_amount_after_vat")
+    vat_amount = _get("vat_amount")
+
+    if before_vat is None:
+        before_vat = _get("amount_before_vat")
+    if after_vat is None:
+        after_vat = _get("amount_after_vat")
+    if vat_amount is None and before_vat is not None and after_vat is not None:
+        vat_amount = after_vat - before_vat
+
+    return {
+        "before_vat": before_vat,
+        "vat_amount": vat_amount,
+        "after_vat": after_vat,
+    }
+
+
+def _format_money_vnd(amount: int | None) -> str:
+    """Format integer as Vietnamese VND with dot separators."""
+    if amount is None:
+        return ""
+    return f"{int(amount):,}".replace(",", ".")
+
+
 def _norm_anchor(value: str) -> str:
     """Normalize anchor text for matching."""
     return re.sub(r"[^0-9A-Za-z]+", "", str(value or "").strip()).upper()
@@ -351,19 +394,115 @@ def _insert_music_usage_table_at_anchor(
     return True, warnings
 
 
+def _insert_royalty_text_at_anchor(
+    *,
+    docx_path: Path,
+    money: dict,
+    anchor_text: str,
+) -> tuple[bool, list[str]]:
+    """Replace a money placeholder anchor with 3 lines of formatted text.
+
+    Lines produced:
+      Tiền bản quyền trước thuế: <before_vat> VNĐ
+      Thuế GTGT 8%: <vat> VNĐ
+      Tổng cộng sau thuế: <after_vat> VNĐ
+    """
+    warnings: list[str] = []
+    before_vat = money.get("before_vat")
+    vat_amount = money.get("vat_amount")
+    after_vat = money.get("after_vat")
+
+    if before_vat is None and after_vat is None:
+        warnings.append("No money values available; royalty block not inserted.")
+        return False, warnings
+
+    try:
+        with zipfile.ZipFile(docx_path, "r") as zin:
+            xml_bytes = zin.read("word/document.xml")
+            other_items = [
+                (item, zin.read(item.filename))
+                for item in zin.infolist()
+                if item.filename != "word/document.xml"
+            ]
+    except Exception as e:
+        warnings.append(f"Failed to read DOCX: {e}")
+        return False, warnings
+
+    parser = etree.XMLParser(recover=True, huge_tree=True)
+    root = etree.fromstring(xml_bytes, parser=parser)
+
+    anchor_p = _find_anchor_paragraph(root, anchor_text)
+    if anchor_p is None:
+        warnings.append(f"Royalty anchor '{anchor_text}' not found")
+        return False, warnings
+
+    parent = anchor_p.getparent()
+    if parent is None:
+        return False, warnings
+    idx = parent.index(anchor_p)
+
+    w = f"{{{W_NS}}}"
+
+    def _apply_run_style(rpr: etree._Element) -> None:
+        rfonts = etree.SubElement(rpr, f"{w}rFonts")
+        rfonts.set(f"{w}ascii", "Times New Roman")
+        rfonts.set(f"{w}hAnsi", "Times New Roman")
+        rfonts.set(f"{w}cs", "Times New Roman")
+        sz = etree.SubElement(rpr, f"{w}sz")
+        sz.set(f"{w}val", "26")
+        szcs = etree.SubElement(rpr, f"{w}szCs")
+        szcs.set(f"{w}val", "26")
+
+    def _make_p(text: str) -> etree._Element:
+        p = etree.Element(f"{w}p")
+        ppr = etree.SubElement(p, f"{w}pPr")
+        spacing = etree.SubElement(ppr, f"{w}spacing")
+        spacing.set(f"{w}before", "0")
+        spacing.set(f"{w}after", "0")
+        spacing.set(f"{w}line", "300")
+        spacing.set(f"{w}lineRule", "auto")
+        r = etree.SubElement(p, f"{w}r")
+        rpr = etree.SubElement(r, f"{w}rPr")
+        _apply_run_style(rpr)
+        t = etree.SubElement(r, f"{w}t")
+        t.set("{http://www.w3.org/XML/1998/namespace}space", "preserve")
+        t.text = _decode_mojibake_text(text)
+        return p
+
+    lines = [
+        f"Tiền bản quyền trước thuế: {_format_money_vnd(before_vat)} VNĐ",
+        f"Thuế GTGT 8%: {_format_money_vnd(vat_amount)} VNĐ",
+        f"Tổng cộng sau thuế: {_format_money_vnd(after_vat)} VNĐ",
+    ]
+
+    for i, line in enumerate(lines):
+        parent.insert(idx + i, _make_p(line))
+    parent.remove(anchor_p)
+
+    out_xml = etree.tostring(root, encoding="utf-8", xml_declaration=True)
+    with zipfile.ZipFile(docx_path, "w") as zout:
+        zout.writestr("word/document.xml", out_xml)
+        for item, data in other_items:
+            zout.writestr(item.filename, data)
+
+    logger.info(f"[BACKGROUND_RENDERER] Inserted royalty block at '{anchor_text}'")
+    return True, warnings
+
+
 def render_background_contract(
     *,
     template_path: Path,
     output_path: Path,
     context: dict,
     render_ctx: dict | None = None,
+    money: dict | None = None,
 ) -> dict:
     """Unified renderer for all Background contract DOCX templates.
 
     This function:
     1. Renders text placeholders using docxtpl
     2. If template has {{khu_vuc_su_dung_nhac}}: inserts music usage table
-    3. {{tien_ban_quyen}} is always PRESERVED (never rendered)
+    3. If template has {{bang_tinh_tien_ban_quyen}} or {{tien_ban_quyen}}: inserts royalty text block
     4. Validates output DOCX
 
     Args:
@@ -371,15 +510,10 @@ def render_background_contract(
         output_path: Path for the rendered DOCX output.
         context: Context for text placeholder rendering.
         render_ctx: Context for block insertion (music_usage_areas, etc).
+        money: Dict with before_vat/vat_amount/after_vat for royalty text block.
 
     Returns:
-        Dict with render status:
-            - ok: bool
-            - docx_path: Path to rendered file
-            - music_table_inserted: bool
-            - tien_ban_quyen_preserved: bool (always True)
-            - validation_passed: bool
-            - warnings: list of warning strings
+        Dict with render status.
     """
     from app.renderers.text_renderer import render_docx_text
 
@@ -393,14 +527,18 @@ def render_background_contract(
     # Check if template has music usage placeholder
     has_music_placeholder = _docx_has_placeholder(template_path, "{{khu_vuc_su_dung_nhac}}")
 
-    # Check if template has tien_ban_quyen placeholder (should be preserved)
+    # Check royalty placeholders
+    has_bang_tinh = _docx_has_placeholder(template_path, "{{bang_tinh_tien_ban_quyen}}")
     has_tien_placeholder = _docx_has_placeholder(template_path, "{{tien_ban_quyen}}")
 
+    if has_bang_tinh and money is None:
+        money = render_ctx.get("money") if render_ctx else None
+
+    # Pass sentinel so docxtpl does not delete the anchor (we will replace it post-render).
+    if has_bang_tinh:
+        full_ctx["bang_tinh_tien_ban_quyen"] = "__ROYALTY_TABLE__"
     if has_tien_placeholder:
-        # Ensure tien_ban_quyen is NOT in context (preserve it)
-        if "tien_ban_quyen" in full_ctx:
-            del full_ctx["tien_ban_quyen"]
-        logger.info("[BACKGROUND_RENDERER] {{tien_ban_quyen}} found - will be preserved")
+        full_ctx["tien_ban_quyen"] = "__ROYALTY_BLOCK__"
 
     if not has_music_placeholder:
         logger.info(
@@ -426,7 +564,7 @@ def render_background_contract(
             "ok": False,
             "docx_path": str(output_path),
             "music_table_inserted": False,
-            "tien_ban_quyen_preserved": has_tien_placeholder,
+            "royalty_block_inserted": False,
             "validation_passed": False,
             "warnings": warnings + [f"Text render failed: {e}"],
         }
@@ -446,18 +584,34 @@ def render_background_contract(
         music_table_inserted = success
         warnings.extend(insert_warnings)
 
-    # Step 3: Validate output DOCX
+    # Step 3: Insert royalty text block if template has the placeholder
+    royalty_block_inserted = False
+    royalty_anchor = None
+    if has_bang_tinh:
+        royalty_anchor = "__ROYALTY_TABLE__"
+    elif has_tien_placeholder:
+        royalty_anchor = "__ROYALTY_BLOCK__"
+
+    if royalty_anchor and money:
+        success, insert_warnings = _insert_royalty_text_at_anchor(
+            docx_path=output_path,
+            money=money,
+            anchor_text=royalty_anchor,
+        )
+        royalty_block_inserted = success
+        warnings.extend(insert_warnings)
+
+    # Step 4: Validate output DOCX
     is_valid, error_msg = validate_docx_can_open(output_path)
     if not is_valid:
         logger.error(f"[BACKGROUND_RENDERER] Validation failed: {error_msg}")
-        # Save debug copy
         debug_path = validate_and_save_debug_copy(output_path)
         return {
             "ok": False,
             "docx_path": str(output_path),
             "docx_debug_copy": str(debug_path) if debug_path else None,
             "music_table_inserted": music_table_inserted,
-            "tien_ban_quyen_preserved": has_tien_placeholder,
+            "royalty_block_inserted": royalty_block_inserted,
             "validation_passed": False,
             "warnings": warnings + [
                 f"VALIDATION FAILED: {error_msg}",
@@ -471,7 +625,7 @@ def render_background_contract(
         "ok": True,
         "docx_path": str(output_path),
         "music_table_inserted": music_table_inserted,
-        "tien_ban_quyen_preserved": has_tien_placeholder,
+        "royalty_block_inserted": royalty_block_inserted,
         "validation_passed": True,
         "warnings": warnings,
     }
