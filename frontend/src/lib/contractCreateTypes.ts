@@ -101,9 +101,9 @@ export const AREA_BASED_DOMAINS: BackgroundDomainCode[] = [
 ];
 
 /** Domains that have placeholder-only form (not yet implemented) */
-export const PLACEHOLDER_ONLY_DOMAINS: BackgroundDomainCode[] = [
-  'KHACH_SAN',
-];
+// KHACH_SAN moved out: now uses manual fee (Nhập tay) consistently with
+// CAFE / NHA_HANG. Phase Next will add a real Khu vui choi-style formula.
+export const PLACEHOLDER_ONLY_DOMAINS: BackgroundDomainCode[] = [];
 
 // =============================================================================
 // COMMON CONTRACT INFO (shared across all Background domains)

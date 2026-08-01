@@ -354,6 +354,14 @@ export function CreateContractPage({
   const isAreaBasedDomainFlag = isAreaBasedDomain(draft.domain.domainCode);
   const isPlaceholderOnlyDomainFlag = isPlaceholderOnlyDomain(draft.domain.domainCode);
   const isImplementedDomain = isFullyImplementedDomain(draft.domain.domainCode);
+  // Area-based (non-Karaoke) domains currently use manual fee entry.
+  // They have NO backend formula yet — only Karaoke + KVC are fully
+  // implemented. The banner makes this explicit so users do not assume
+  // the app auto-computes the price.
+  const isManualFeeDomain =
+    isAreaBasedDomainFlag &&
+    !isKaraokeDomain &&
+    draft.domain.domainCode !== 'KHU_VUI_CHOI';
   const domainFamily = getDomainFamilyFromDomainCode(draft.domain.domainCode);
   const filteredModules = useMemo(
     () => getModulesByDomainFamily(domainFamily),
@@ -2847,6 +2855,15 @@ export function CreateContractPage({
                   <h4 className="text-xs font-semibold uppercase tracking-[0.1em] text-zinc-500 mb-3">
                     Thông tin tiền tham khảo
                   </h4>
+                  {isManualFeeDomain && (
+                    <div
+                      role="note"
+                      className="mb-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-[12.5px] text-amber-900"
+                    >
+                      <span className="font-semibold">Lĩnh vực này đang dùng nhập tiền thủ công, chưa có công thức tự động.</span>{' '}
+                      Hệ thống không tự tính tiền bản quyền cho "{draft.domain.domainDisplayName}". Bạn nhập tiền trước thuế, hệ thống tự cộng Thuế GTGT 8% và tiền sau thuế.
+                    </div>
+                  )}
                   <SimpleRoyaltyInput
                     initialData={{
                       royaltyAmountBeforeVat: draft.areaBased.royaltyAmountBeforeVat || 0,
