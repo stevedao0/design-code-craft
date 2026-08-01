@@ -120,55 +120,6 @@ def compute_karaoke_amounts_with_urban_support(
     vat_amount = int(canonical.get("thue_gtgt", 0))
     amount_after_vat = amount_after_support + vat_amount
 
-    # #region agent log (debug-mode instrumentation, Phase 2C)
-    _LOG_PATH = r"F:\APPs\debug-cdd422.log"
-    _INV_ROOMS = 15
-    _INV_AREA = "DEN_20"
-    if (
-        int(total_rooms) == _INV_ROOMS
-        and str(area_group).upper() == _INV_AREA
-        and int(total_box) == 0
-    ):
-        try:
-            import json as _json_log
-            from datetime import datetime as _dt_log
-            _entry = {
-                "sessionId": "cdd422",
-                "id": "log_phase2c_urban_invariant",
-                "timestamp": int(_dt_log.utcnow().timestamp() * 1000),
-                "location": "app/calculations/karaoke/support.py:compute_karaoke_amounts_with_urban_support",
-                "message": "phase-2c canonical urban-support invariant",
-                "runId": "phase2c",
-                "hypothesisId": "ALL",
-                "data": {
-                    "rooms": total_rooms,
-                    "area": area_group,
-                    "support_percent": urban_support_percent,
-                    "vat_percent": vat_percent,
-                    "raw_subtotal": raw_subtotal,
-                    "amount_after_support": amount_after_support,
-                    "vat_amount": vat_amount,
-                    "amount_after_vat": amount_after_vat,
-                    "matches_audit_100": (
-                        urban_support_percent == 100
-                        and amount_after_support == 46_678_500
-                        and vat_amount == 3_734_280
-                        and amount_after_vat == 50_412_780
-                    ),
-                    "matches_audit_50": (
-                        urban_support_percent == 50
-                        and amount_after_support == 23_339_250
-                        and vat_amount == 1_867_140
-                        and amount_after_vat == 25_206_390
-                    ),
-                },
-            }
-            with open(_LOG_PATH, "a", encoding="utf-8") as _fh:
-                _fh.write(_json_log.dumps(_entry, ensure_ascii=False) + "\n")
-        except Exception:
-            pass
-    # #endregion agent log
-
     # Translate canonical tier shape to the legacy "tiers" list shape.
     tier_labels = {
         "bac_1": "Từ 1 đến 4 phòng",
