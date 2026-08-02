@@ -179,8 +179,10 @@ export function ContractEditPage({
       // Term
       ...(formData.ngay_bat_dau !== undefined && { ngay_bat_dau: formData.ngay_bat_dau }),
       ...(formData.ngay_ket_thuc !== undefined && { ngay_ket_thuc: formData.ngay_ket_thuc }),
-      // Phase 2 simplified royalty fields (canonical)
-      ...(formData.royalty_amount_before_vat !== undefined && { royalty_amount_before_vat: formData.royalty_amount_before_vat }),
+      // Phase 2 simplified royalty fields (canonical).
+// Send 0 explicitly (don't treat 0 as falsy/missing) — the contract owner
+// intentionally entering 0 must be persisted, not silently coerced to old value.
+...(formData.royalty_amount_before_vat !== undefined && { royalty_amount_before_vat: formData.royalty_amount_before_vat }),
       ...(formData.vat_rate !== undefined && { vat_rate: formData.vat_rate }),
       ...(formData.vat_amount !== undefined && { vat_amount: formData.vat_amount }),
       ...(formData.royalty_amount_after_vat !== undefined && { royalty_amount_after_vat: formData.royalty_amount_after_vat }),
@@ -580,25 +582,29 @@ export function ContractEditPage({
               ]}
             />
           </FieldGrid>
-          {formData.royalty_amount_before_vat != null && (
-            <div className="rounded-lg bg-zinc-50 p-3 text-sm">
-              <p className="text-zinc-700">
-                Tổng tiền (truoc GTGT): <strong>{(formData.royalty_amount_before_vat ?? 0).toLocaleString('vi-VN')} VND</strong>
-              </p>
-              {formData.vat_amount != null && (
-                <p className="text-zinc-600 text-xs">
-                  Tien thue GTGT ({formData.vat_rate ?? 0}%):{' '}
-                  {(formData.vat_amount ?? 0).toLocaleString('vi-VN')} VND
+          {formData.royalty_amount_before_vat != null && (() => {
+            // Derive vat and total from before_vat + vat_rate so the preview
+            // reflects the user's input, not stale DB values for vat/after.
+            const derivedBefore = formData.royalty_amount_before_vat ?? 0;
+            const derivedRate = formData.vat_rate ?? 0;
+            const derivedVat = Math.round(derivedBefore * derivedRate / 100);
+            const derivedAfter = derivedBefore + derivedVat;
+            return (
+              <div className="rounded-lg bg-zinc-50 p-3 text-sm">
+                <p className="text-zinc-700">
+                  Tổng tiền (truoc GTGT): <strong>{derivedBefore.toLocaleString('vi-VN')} VND</strong>
                 </p>
-              )}
-              {(formData.royalty_amount_after_vat != null) && (
+                <p className="text-zinc-600 text-xs">
+                  Tien thue GTGT ({derivedRate}%):{' '}
+                  {derivedVat.toLocaleString('vi-VN')} VND
+                </p>
                 <p className="font-semibold text-zinc-900">
                   Tong cong:{' '}
-                  {(formData.royalty_amount_after_vat ?? 0).toLocaleString('vi-VN')} VND
+                  {derivedAfter.toLocaleString('vi-VN')} VND
                 </p>
-              )}
-            </div>
-          )}
+              </div>
+            );
+          })()}
         </div>
       </FormSection>
 

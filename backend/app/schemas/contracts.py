@@ -148,6 +148,12 @@ class ContractDetailResponse(BaseModel):
     status: str
     raw: dict[str, Any]
     music_usage_areas: list[MusicUsageArea] = []
+    # Phase 2 simplified royalty fields (canonical)
+    royalty_amount_before_vat: int | None = None
+    vat_rate: float | None = None
+    vat_amount: int | None = None
+    royalty_amount_after_vat: int | None = None
+    royalty_amount_in_words: str | None = None
 
 
 class DryRunCreateContractRequest(BaseModel):

@@ -1062,6 +1062,8 @@ def _sync_money_fields_on_read(row) -> None:
     Does NOT write to DB. Only corrects the Python object for serialization.
     - If Phase 2 before_vat is null but legacy exists, backfill Phase 2 from legacy.
     - Then derive vat_amount and after_vat from before_vat + vat_rate.
+    - Recomputes even when before_vat is 0, so reads after a zero-edit return
+      vat_amount=0 and royalty_amount_after_vat=0 (not stale old values).
     """
     before_vat: int | float | None = getattr(row, "royalty_amount_before_vat", None)
     vat_rate_val: float | None = getattr(row, "vat_rate", None)
@@ -1078,7 +1080,8 @@ def _sync_money_fields_on_read(row) -> None:
             setattr(row, "vat_rate", legacy_vat_rate)
             vat_rate_val = legacy_vat_rate
 
-    if before_vat is not None and before_vat > 0:
+    # Recompute whenever before_vat is set (including 0) so reads reflect saved values.
+    if before_vat is not None:
         vat_rate_val = vat_rate_val or 0.0
         new_vat_amount = int(round(before_vat * vat_rate_val / 100.0))
         new_after_vat = int(round(before_vat + new_vat_amount))
@@ -1128,8 +1131,11 @@ def _sync_money_fields_on_update(row, payload_dict: dict, updated_fields: list[s
             updated_fields.append("vat_rate")
             vat_rate_val = legacy_vat_rate
 
-    # Derive Phase 2 values from authoritative before-vat + vat-rate
-    if before_vat is not None and before_vat > 0:
+    # Derive Phase 2 values from authoritative before-vat + vat-rate.
+    # Recompute whenever before_vat is set (including 0) so zero-edits are persisted
+    # to legacy and phase2 fields. Old behavior (before_vat > 0) skipped sync for 0,
+    # which left vat_amount / royalty_amount_after_vat / legacy fields at stale values.
+    if before_vat is not None:
         vat_rate_val = vat_rate_val or 0.0
         new_vat_amount = int(round(before_vat * vat_rate_val / 100.0))
         new_after_vat = int(round(before_vat + new_vat_amount))
@@ -3973,6 +3979,14 @@ def get_contract_detail(
             "linh_vuc": row.linh_vuc,
         },
         music_usage_areas=music_usage_areas_list,
+        # Phase 2 simplified royalty fields (canonical)
+        # Exposed at top level so edit page can read authoritative values
+        # without falling back to stale legacy columns when before_vat=0.
+        royalty_amount_before_vat=int(row.royalty_amount_before_vat) if row.royalty_amount_before_vat is not None else None,
+        vat_rate=float(row.vat_rate) if row.vat_rate is not None else None,
+        vat_amount=int(row.vat_amount) if row.vat_amount is not None else None,
+        royalty_amount_after_vat=int(row.royalty_amount_after_vat) if row.royalty_amount_after_vat is not None else None,
+        royalty_amount_in_words=str(row.royalty_amount_in_words) if row.royalty_amount_in_words else None,
     )
 
 
