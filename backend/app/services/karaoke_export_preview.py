@@ -79,8 +79,13 @@ def _build_basic_context(row: ContractRecordRow) -> dict:
     ctx["TEN_BANG_HIEU"] = str(row.ten_bang_hieu or "")
 
     ctx["ma_so_thue"] = str(row.don_vi_mst or "")
-    ctx["dia_chi"] = str(row.dia_chi_su_dung or "")
-    ctx["dia_chi_kinh_doanh"] = str(row.dia_chi_su_dung or "")  # Địa chỉ kinh doanh
+    # Address fields — use new structured fields (post-2025 merger), fallback to legacy.
+    # Bên B (party B / địa chỉ công ty) = legal address.
+    # Địa điểm sử dụng âm nhạc = usage address.
+    legal_full = str(row.legal_full_address or row.don_vi_dia_chi or "")
+    usage_full = str(row.usage_full_address or row.dia_chi_su_dung or "")
+    ctx["dia_chi"] = legal_full                          # Bên B = pháp lý
+    ctx["dia_chi_kinh_doanh"] = usage_full             # Địa chỉ kinh doanh
     ctx["so_dien_thoai"] = str(row.don_vi_dien_thoai or "")
     ctx["email"] = str(row.don_vi_email or "")
 
