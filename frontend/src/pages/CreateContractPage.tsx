@@ -369,13 +369,20 @@ export function CreateContractPage({
   );
   const canCreateContract =
     !isCreateLoading &&
-    // Karaoke: require confirmed totals AND a positive total room count
-    // before create. Without this guard, contracts can be created with
-    // royaltyAmountAfterVat=0 and tong_so_phong=0, which corrupts the
-    // DOCX render (area_group falls back to DEN_20).
+    // Karaoke: require either confirmed totals from the calculation table
+    // (royaltyAmountAfterVat > 0) OR direct manual amount entry
+    // (royaltyAmountBeforeVat > 0). Both flows are valid.
+    // Also require a positive room/box count appropriate to the karaoke type:
+    //   PHONG → totalRooms > 0
+    //   BOX    → totalBoxes > 0
+    // Manual entry via SimpleRoyaltyInput already writes to draft.areaBased,
+    // so checking royaltyAmountBeforeVat > 0 is sufficient.
     (!isKaraokeDomain ||
-      ((draft.areaBased.royaltyAmountAfterVat ?? 0) > 0 &&
-        (draft.karaoke.totalRooms ?? 0) > 0));
+      (((draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 ||
+        (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0) &&
+        (draft.karaoke.karaokeType === 'BOX'
+          ? (draft.karaoke.totalBoxes ?? 0) > 0
+          : (draft.karaoke.totalRooms ?? 0) > 0)));
   const createdContractId =
     typeof createResult?.contract_id === 'number'
       ? createResult.contract_id
@@ -1410,12 +1417,27 @@ export function CreateContractPage({
       return;
     }
     if (!canCreateContract) {
-      // Specific messages for Karaoke — never allow create with 0 money
-      // or 0 rooms.
-      if (isKaraokeDomain && (draft.areaBased.royaltyAmountAfterVat ?? 0) <= 0) {
-        setCreateError('Vui lòng tính tiền và bấm "Chốt 3 số tiền" trước khi tạo hợp đồng.');
-      } else if (isKaraokeDomain && (draft.karaoke.totalRooms ?? 0) <= 0) {
-        setCreateError('Vui lòng nhập tổng số phòng trong bộ tính trước khi tạo hợp đồng.');
+      // Money guard: allow either manual entry (royaltyAmountBeforeVat > 0) or
+      // calculation result (royaltyAmountAfterVat > 0). Neither alone is enough.
+      const hasMoney =
+        (draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 ||
+        (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0;
+      const isBoxType = draft.karaoke.karaokeType === 'BOX';
+      const hasRooms =
+        isBoxType
+          ? (draft.karaoke.totalBoxes ?? 0) > 0
+          : (draft.karaoke.totalRooms ?? 0) > 0;
+
+      if (isKaraokeDomain && !hasMoney) {
+        setCreateError(
+          'Vui lòng nhập tiền bản quyền thủ công hoặc sử dụng bảng tính Karaoke trước khi tạo hợp đồng.',
+        );
+      } else if (isKaraokeDomain && !hasRooms) {
+        setCreateError(
+          isBoxType
+            ? 'Vui lòng nhập số box trong thông tin Karaoke trước khi tạo hợp đồng.'
+            : 'Vui lòng nhập tổng số phòng trong thông tin Karaoke trước khi tạo hợp đồng.',
+        );
       } else {
         setCreateError('Vui lòng điền đầy đủ thông tin hợp đồng trước khi tạo.');
       }
