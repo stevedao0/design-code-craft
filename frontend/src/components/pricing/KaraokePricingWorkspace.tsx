@@ -135,12 +135,19 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts }: Props) {
     window.setTimeout(() => setToast(null), 1800);
   };
 
+  const URBAN_MODE_NOTE =
+    'Karaoke tính theo số phòng nên hai cách áp dụng đô thị (Cách 1 — sau khi cộng tiền bậc, Cách 2 — trước khi chia bậc) cho cùng kết quả; bảng này dùng Cách 1.';
+
   const handleCopyTable = async () => {
-    const ok = await copyRichAndPlain(snapshotToHTMLTable(snapshot), snapshotToPlainText(snapshot));
+    const ok = await copyRichAndPlain(
+      `${snapshotToHTMLTable(snapshot)}<p>${URBAN_MODE_NOTE}</p>`,
+      `${snapshotToPlainText(snapshot)}\n${URBAN_MODE_NOTE}`,
+    );
     flash(ok ? 'Đã copy bảng vào clipboard' : 'Copy thất bại — trình duyệt chặn quyền');
   };
   const handleCopySummary = async () => {
-    const ok = await copyRichAndPlain(`<pre>${snapshotSummaryText(snapshot)}</pre>`, snapshotSummaryText(snapshot));
+    const summary = `${snapshotSummaryText(snapshot)}\n${URBAN_MODE_NOTE}`;
+    const ok = await copyRichAndPlain(`<pre>${summary}</pre>`, summary);
     flash(ok ? 'Đã copy tóm tắt' : 'Copy thất bại');
   };
 
