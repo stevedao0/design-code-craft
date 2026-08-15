@@ -372,16 +372,38 @@ function LocationCard({
                         <td className="px-3 py-2 text-right font-mono font-semibold">{formatVND(row.amount)}</td>
                       </tr>
                     ))}
-                    <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
-                      <td className="px-3 py-2" colSpan={4}>Base theo diện tích (chưa × hệ số đô thị)</td>
-                      <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.baseAnnualRoyaltyByArea)}</td>
-                    </tr>
-                    <tr style={{ fontWeight: 600 }}>
-                      <td className="px-3 py-2" colSpan={4}>
-                        Sau hệ số đô thị ×{snapshot.urbanCoefficient}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
-                    </tr>
+                    {snapshot.urbanMode === 'BEFORE_TIERING' ? (
+                      <>
+                        <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
+                          <td className="px-3 py-2" colSpan={4}>
+                            Diện tích gốc {snapshot.areaM2.toLocaleString('vi-VN')} m² × hệ số đô thị{' '}
+                            {Math.round(snapshot.urbanCoefficient * 100)}% ={' '}
+                            {snapshot.effectiveAreaM2.toLocaleString('vi-VN')} m² (diện tích tính phí)
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">—</td>
+                        </tr>
+                        <tr style={{ fontWeight: 600 }}>
+                          <td className="px-3 py-2" colSpan={4}>
+                            Cộng tiền bậc trên diện tích tính phí (đô thị đã áp trước khi chia bậc)
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
+                          <td className="px-3 py-2" colSpan={4}>Base theo diện tích (chưa × hệ số đô thị)</td>
+                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.baseAnnualRoyaltyByArea)}</td>
+                        </tr>
+                        <tr style={{ fontWeight: 600 }}>
+                          <td className="px-3 py-2" colSpan={4}>
+                            Sau hệ số đô thị ×{snapshot.urbanCoefficient}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
+                        </tr>
+                      </>
+                    )}
+
                     <tr style={{ fontWeight: 600 }}>
                       <td className="px-3 py-2" colSpan={4}>
                         Cho {snapshot.durationMonths} tháng (×{snapshot.durationMonths}/{12})
