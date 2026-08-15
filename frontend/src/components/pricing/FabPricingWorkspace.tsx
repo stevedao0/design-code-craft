@@ -71,6 +71,7 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
     initialLocations.length > 0 ? initialLocations : [makeLocation()]
   );
   const [vatPct, setVatPct] = useState<number>(initialVatRate);
+  const [urbanMode, setUrbanMode] = useState<UrbanApplicationMode>(DEFAULT_URBAN_APPLICATION_MODE);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set([locations[0]?.id]));
   const [toast, setToast] = useState<string | null>(null);
 
@@ -108,8 +109,10 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         vatRate: vatPct / 100,
       })),
       vatRate: vatPct / 100,
+      urbanMode,
     });
-  }, [locations, vatPct]);
+  }, [locations, vatPct, urbanMode]);
+
 
   const flash = (msg: string) => {
     setToast(msg);
