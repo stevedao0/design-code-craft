@@ -218,6 +218,12 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts }: Props) {
             <br />
             Mức hỗ trợ thu là tỷ lệ thu áp dụng; 100% là thu đủ, 50% là thu 50%. GTGT tính trên số sau hỗ trợ.
           </div>
+          <div
+            className="mt-3 rounded-[8px] px-3 py-2 text-[11.5px]"
+            style={{ background: '#FFFBEB', color: '#92400E', border: '1px solid #FDE68A' }}
+          >
+            {URBAN_MODE_NOTE}
+          </div>
         </div>
 
         {/* Pricing table — Word-like (Times New Roman 11pt, Word-compatible borders) */}
