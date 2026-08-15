@@ -158,6 +158,9 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         </button>
       </div>
 
+      {/* Urban application mode */}
+      <UrbanModeSelector value={urbanMode} onChange={setUrbanMode} />
+
       {/* Location cards */}
       <div className="flex flex-col gap-3">
         {locations.map((loc, idx) => (
