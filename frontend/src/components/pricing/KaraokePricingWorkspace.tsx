@@ -135,12 +135,19 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts }: Props) {
     window.setTimeout(() => setToast(null), 1800);
   };
 
+  const URBAN_MODE_NOTE =
+    'Karaoke tính theo số phòng nên hai cách áp dụng đô thị (Cách 1 — sau khi cộng tiền bậc, Cách 2 — trước khi chia bậc) cho cùng kết quả; bảng này dùng Cách 1.';
+
   const handleCopyTable = async () => {
-    const ok = await copyRichAndPlain(snapshotToHTMLTable(snapshot), snapshotToPlainText(snapshot));
+    const ok = await copyRichAndPlain(
+      `${snapshotToHTMLTable(snapshot)}<p>${URBAN_MODE_NOTE}</p>`,
+      `${snapshotToPlainText(snapshot)}\n${URBAN_MODE_NOTE}`,
+    );
     flash(ok ? 'Đã copy bảng vào clipboard' : 'Copy thất bại — trình duyệt chặn quyền');
   };
   const handleCopySummary = async () => {
-    const ok = await copyRichAndPlain(`<pre>${snapshotSummaryText(snapshot)}</pre>`, snapshotSummaryText(snapshot));
+    const summary = `${snapshotSummaryText(snapshot)}\n${URBAN_MODE_NOTE}`;
+    const ok = await copyRichAndPlain(`<pre>${summary}</pre>`, summary);
     flash(ok ? 'Đã copy tóm tắt' : 'Copy thất bại');
   };
 
@@ -210,6 +217,12 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts }: Props) {
             <b>Nghị định 17/2023/NĐ-CP</b>.
             <br />
             Mức hỗ trợ thu là tỷ lệ thu áp dụng; 100% là thu đủ, 50% là thu 50%. GTGT tính trên số sau hỗ trợ.
+          </div>
+          <div
+            className="mt-3 rounded-[8px] px-3 py-2 text-[11.5px]"
+            style={{ background: '#FFFBEB', color: '#92400E', border: '1px solid #FDE68A' }}
+          >
+            {URBAN_MODE_NOTE}
           </div>
         </div>
 

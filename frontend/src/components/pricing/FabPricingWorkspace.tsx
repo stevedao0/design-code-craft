@@ -25,6 +25,10 @@ import {
   FAB_AREA_TIER,
   buildFabAreaPricing,
   formatVND,
+  URBAN_MODE_OPTIONS,
+  DEFAULT_URBAN_APPLICATION_MODE,
+  urbanModeLabel,
+  type UrbanApplicationMode,
   type FabPricingSnapshot,
   type FabLocationSnapshot,
   DEFAULT_VAT_RATE,
@@ -32,6 +36,8 @@ import {
 } from '../../lib/pricingSnapshot';
 import type { FabLocationInput, FabUrbanClass } from '../../lib/contractCreateTypes';
 import { numberToVietnameseWords } from '../../lib/numberToVietnameseWords';
+import { UrbanModeSelector } from './UrbanModeSelector';
+
 
 type Props = {
   initialLocations?: FabLocationInput[];
@@ -66,6 +72,7 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
     initialLocations.length > 0 ? initialLocations : [makeLocation()]
   );
   const [vatPct, setVatPct] = useState<number>(initialVatRate);
+  const [urbanMode, setUrbanMode] = useState<UrbanApplicationMode>(DEFAULT_URBAN_APPLICATION_MODE);
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set([locations[0]?.id]));
   const [toast, setToast] = useState<string | null>(null);
 
@@ -103,8 +110,10 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         vatRate: vatPct / 100,
       })),
       vatRate: vatPct / 100,
+      urbanMode,
     });
-  }, [locations, vatPct]);
+  }, [locations, vatPct, urbanMode]);
+
 
   const flash = (msg: string) => {
     setToast(msg);
@@ -150,6 +159,9 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         </button>
       </div>
 
+      {/* Urban application mode */}
+      <UrbanModeSelector value={urbanMode} onChange={setUrbanMode} />
+
       {/* Location cards */}
       <div className="flex flex-col gap-3">
         {locations.map((loc, idx) => (
@@ -174,6 +186,13 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         <div className="px-4 py-4 space-y-3" style={{ background: '#fff' }}>
           <SummaryRow label="Số khu vực" value={`${locations.length}`} />
           <SummaryRow label="Tổng diện tích" value={`${snapshot.totalAreaM2.toLocaleString('vi-VN')} m²`} />
+          <SummaryRow label="Cách áp dụng đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
+          {snapshot.urbanMode === 'BEFORE_TIERING' && (
+            <SummaryRow
+              label="Tổng diện tích tính phí"
+              value={`${snapshot.locations.reduce((s, l) => s + l.effectiveAreaM2, 0).toLocaleString('vi-VN')} m²`}
+            />
+          )}
           <div className="border-t border-zinc-200 pt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-semibold" style={{ color: '#4A7202' }}>Tiền bản quyền trước thuế GTGT</span>
@@ -372,16 +391,38 @@ function LocationCard({
                         <td className="px-3 py-2 text-right font-mono font-semibold">{formatVND(row.amount)}</td>
                       </tr>
                     ))}
-                    <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
-                      <td className="px-3 py-2" colSpan={4}>Base theo diện tích (chưa × hệ số đô thị)</td>
-                      <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.baseAnnualRoyaltyByArea)}</td>
-                    </tr>
-                    <tr style={{ fontWeight: 600 }}>
-                      <td className="px-3 py-2" colSpan={4}>
-                        Sau hệ số đô thị ×{snapshot.urbanCoefficient}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
-                    </tr>
+                    {snapshot.urbanMode === 'BEFORE_TIERING' ? (
+                      <>
+                        <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
+                          <td className="px-3 py-2" colSpan={4}>
+                            Diện tích gốc {snapshot.areaM2.toLocaleString('vi-VN')} m² × hệ số đô thị{' '}
+                            {Math.round(snapshot.urbanCoefficient * 100)}% ={' '}
+                            {snapshot.effectiveAreaM2.toLocaleString('vi-VN')} m² (diện tích tính phí)
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">—</td>
+                        </tr>
+                        <tr style={{ fontWeight: 600 }}>
+                          <td className="px-3 py-2" colSpan={4}>
+                            Cộng tiền bậc trên diện tích tính phí (đô thị đã áp trước khi chia bậc)
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <>
+                        <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
+                          <td className="px-3 py-2" colSpan={4}>Base theo diện tích (chưa × hệ số đô thị)</td>
+                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.baseAnnualRoyaltyByArea)}</td>
+                        </tr>
+                        <tr style={{ fontWeight: 600 }}>
+                          <td className="px-3 py-2" colSpan={4}>
+                            Sau hệ số đô thị ×{snapshot.urbanCoefficient}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
+                        </tr>
+                      </>
+                    )}
+
                     <tr style={{ fontWeight: 600 }}>
                       <td className="px-3 py-2" colSpan={4}>
                         Cho {snapshot.durationMonths} tháng (×{snapshot.durationMonths}/{12})
