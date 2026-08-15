@@ -654,8 +654,12 @@ export function RoyaltyCalculatorPage() {
 
                 {/* Waterfall */}
                 <div className="mt-5 space-y-2.5 text-[13px]">
+                  <WRow label="Cách áp dụng đô thị" value={urbanModeLabel(urbanMode)} />
                   <WRow label="Tổng cộng định mức" value={formatVND(totals.rawSubTotal)} />
-                  <WRow label="Tổng sau đô thị" value={formatVND(totals.afterUrban)} />
+                  <WRow
+                    label={urbanMode === 'BEFORE_TIERING' ? 'Tổng (đô thị áp trước khi chia bậc)' : 'Tổng sau đô thị'}
+                    value={formatVND(totals.afterUrban)}
+                  />
                   {supportPct > 0 && (
                     <WRow
                       label={`Hỗ trợ (-${(supportPct * 100).toFixed(0)}%)`}
