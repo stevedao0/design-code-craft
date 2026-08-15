@@ -275,13 +275,19 @@ function buildLocationTierBreakdown(areaM2: number): FabAreaTierRow[] {
 export function buildFabAreaPricing(opts: BuildFabAreaPricingOpts): FabPricingSnapshot {
   const vatRate = Number.isFinite(opts.vatRate) ? Number(opts.vatRate) : DEFAULT_VAT_RATE;
   const vatMultiplier = vatRate; // 0.08
+  const urbanMode: UrbanApplicationMode = opts.urbanMode ?? DEFAULT_URBAN_APPLICATION_MODE;
 
   const locationSnapshots: FabLocationSnapshot[] = opts.locations.map((loc) => {
     const urbanCoeff = FAB_URBAN_MAP[loc.urbanClass] ?? 1.0;
     const durationMonths = Math.max(1, Math.floor(loc.durationMonths ?? 12));
-    const breakdown = buildLocationTierBreakdown(loc.areaM2);
+    const effectiveAreaM2 = effectiveAreaForMode(loc.areaM2, urbanCoeff, urbanMode);
+    const breakdown = buildLocationTierBreakdown(effectiveAreaM2);
     const baseAnnualRoyaltyByArea = breakdown.reduce((s, r) => s + r.amount, 0);
-    const annualRoyaltyAfterUrban = Math.round(baseAnnualRoyaltyByArea * urbanCoeff);
+    // Cách 2: hệ số đô thị đã nằm trong diện tích hiệu dụng → không nhân lại.
+    const annualRoyaltyAfterUrban =
+      urbanMode === 'BEFORE_TIERING'
+        ? baseAnnualRoyaltyByArea
+        : Math.round(baseAnnualRoyaltyByArea * urbanCoeff);
     const royaltyBeforeVat = Math.round(annualRoyaltyAfterUrban * durationMonths / 12);
     const vatAmount = Math.round(royaltyBeforeVat * vatMultiplier);
     const totalAfterVat = royaltyBeforeVat + vatAmount;
@@ -290,9 +296,11 @@ export function buildFabAreaPricing(opts: BuildFabAreaPricingOpts): FabPricingSn
       id: loc.id,
       name: loc.name,
       areaM2: loc.areaM2,
+      effectiveAreaM2,
       durationMonths,
       urbanClass: loc.urbanClass,
       urbanCoefficient: urbanCoeff,
+      urbanMode,
       areaPricingBreakdown: breakdown,
       baseAnnualRoyaltyByArea,
       annualRoyaltyAfterUrban,
@@ -311,6 +319,7 @@ export function buildFabAreaPricing(opts: BuildFabAreaPricingOpts): FabPricingSn
     totalAreaM2: opts.locations.reduce((s, l) => s + l.areaM2, 0),
     totalRoyaltyBeforeVat,
     vatRate,
+    urbanMode,
     totalVatAmount,
     totalAfterVat,
     amountInWords: totalAfterVat > 0 ? numberToVietnameseWords(totalAfterVat) : undefined,
