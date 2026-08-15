@@ -286,20 +286,16 @@ export function CreateContractPage({
     () => getModulesByDomainFamily(domainFamily),
     [domainFamily]
   );
+  // Karaoke: room/box count is informational only. The Tạo hợp đồng
+  // button is enabled by valid money values alone — both manual entry
+  // (SimpleRoyaltyInput) and the "Chốt 3 số tiền" flow populate
+  // draft.areaBased.{royaltyAmountBeforeVat, vatAmount, royaltyAmountAfterVat}.
+  const hasRoyaltyMoney =
+    (draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 &&
+    (draft.areaBased.vatAmount ?? 0) >= 0 &&
+    (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0;
   const canCreateContract =
-    !isCreateLoading &&
-    // Karaoke: accept either manual entry or "Chốt 3 số tiền".
-    // Both flows write to draft.areaBased.*money fields. Manual entry does
-    // not require the user to run the calculator. The room/box count is
-    // type-aware (PHONG → totalRooms, BOX → totalBoxes) but does NOT block
-    // contract creation when manual money is already valid.
-    (!isKaraokeDomain ||
-      ((draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 &&
-        (draft.areaBased.vatAmount ?? 0) >= 0 &&
-        (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0 &&
-        (draft.karaoke.karaokeType === 'BOX'
-          ? (draft.karaoke.totalBoxes ?? 0) > 0
-          : (draft.karaoke.totalRooms ?? 0) > 0)));
+    !isCreateLoading && (!isKaraokeDomain || hasRoyaltyMoney);
   const createdContractId =
     typeof createResult?.contract_id === 'number'
       ? createResult.contract_id
@@ -1285,26 +1281,11 @@ export function CreateContractPage({
       return;
     }
     if (!canCreateContract) {
-      // Money guard: allow either manual entry (royaltyAmountBeforeVat > 0) or
-      // calculation result (royaltyAmountAfterVat > 0). Neither alone is enough.
-      const hasMoney =
-        (draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 ||
-        (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0;
-      const isBoxType = draft.karaoke.karaokeType === 'BOX';
-      const hasRooms =
-        isBoxType
-          ? (draft.karaoke.totalBoxes ?? 0) > 0
-          : (draft.karaoke.totalRooms ?? 0) > 0;
-
-      if (isKaraokeDomain && !hasMoney) {
+      // For Karaoke, canCreateContract is false only when money is missing.
+      // Room/box count is informational and does NOT block submission.
+      if (isKaraokeDomain) {
         setCreateError(
           'Vui lòng nhập tiền bản quyền trước thuế hoặc dùng bảng tính tiền bản quyền.',
-        );
-      } else if (isKaraokeDomain && !hasRooms) {
-        setCreateError(
-          isBoxType
-            ? 'Vui lòng nhập số box trong thông tin Karaoke trước khi tạo hợp đồng.'
-            : 'Vui lòng nhập tổng số phòng trong thông tin Karaoke trước khi tạo hợp đồng.',
         );
       } else {
         setCreateError('Vui lòng điền đầy đủ thông tin hợp đồng trước khi tạo.');
@@ -2494,19 +2475,9 @@ export function CreateContractPage({
                             },
                           }));
                         }}
-                        onOpenQuote={() => {
-                          /* Inline preview now handled inside the workspace
-                           * itself (KaraokePricingWorkspace renders its own
-                           * panel under the "Xem bảng tính" button). We no
-                           * longer open the global modal from here, to keep
-                           * the preview near the user's attention area and
-                           * avoid jumping to the top of the page. */
-                        }}
                       />
                     </div>
                   )}
-
-                  {/* SimpleRoyaltyInput: manual amount entry for all karaoke contracts */}
                   <SimpleRoyaltyInput
                     initialData={{
                       royaltyAmountBeforeVat: draft.areaBased.royaltyAmountBeforeVat || 0,
