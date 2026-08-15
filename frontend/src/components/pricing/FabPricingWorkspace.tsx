@@ -25,6 +25,10 @@ import {
   FAB_AREA_TIER,
   buildFabAreaPricing,
   formatVND,
+  URBAN_MODE_OPTIONS,
+  DEFAULT_URBAN_APPLICATION_MODE,
+  urbanModeLabel,
+  type UrbanApplicationMode,
   type FabPricingSnapshot,
   type FabLocationSnapshot,
   DEFAULT_VAT_RATE,
@@ -32,6 +36,7 @@ import {
 } from '../../lib/pricingSnapshot';
 import type { FabLocationInput, FabUrbanClass } from '../../lib/contractCreateTypes';
 import { numberToVietnameseWords } from '../../lib/numberToVietnameseWords';
+
 
 type Props = {
   initialLocations?: FabLocationInput[];
