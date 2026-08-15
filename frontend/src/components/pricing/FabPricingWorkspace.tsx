@@ -36,6 +36,7 @@ import {
 } from '../../lib/pricingSnapshot';
 import type { FabLocationInput, FabUrbanClass } from '../../lib/contractCreateTypes';
 import { numberToVietnameseWords } from '../../lib/numberToVietnameseWords';
+import { UrbanModeSelector } from './UrbanModeSelector';
 
 
 type Props = {
@@ -185,6 +186,13 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         <div className="px-4 py-4 space-y-3" style={{ background: '#fff' }}>
           <SummaryRow label="Số khu vực" value={`${locations.length}`} />
           <SummaryRow label="Tổng diện tích" value={`${snapshot.totalAreaM2.toLocaleString('vi-VN')} m²`} />
+          <SummaryRow label="Cách áp dụng đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
+          {snapshot.urbanMode === 'BEFORE_TIERING' && (
+            <SummaryRow
+              label="Tổng diện tích tính phí"
+              value={`${snapshot.locations.reduce((s, l) => s + l.effectiveAreaM2, 0).toLocaleString('vi-VN')} m²`}
+            />
+          )}
           <div className="border-t border-zinc-200 pt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-semibold" style={{ color: '#4A7202' }}>Tiền bản quyền trước thuế GTGT</span>
