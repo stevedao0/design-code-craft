@@ -20,6 +20,12 @@ import {
   FIELDS, FieldDef, FieldResult, formatVND, formatCoef,
 } from '../lib/royaltyCalc';
 import { numberToVietnameseWords } from '../lib/numberToVietnameseWords';
+import {
+  DEFAULT_URBAN_APPLICATION_MODE,
+  urbanModeLabel,
+  type UrbanApplicationMode,
+} from '../lib/pricingSnapshot';
+import { UrbanModeSelector } from '../components/pricing/UrbanModeSelector';
 import { exportRoyaltyQuoteDocx } from '../lib/exportRoyaltyQuoteDocx';
 import {
   buildCalculationSnapshot,
@@ -100,6 +106,8 @@ export function RoyaltyCalculatorPage() {
   const [supportPct, setSupportPct] = useState<number>(0);
   const [vatPct, setVatPct] = useState<number>(DEFAULT_VAT);
   const [contractMonths, setContractMonths] = useState<number>(12);
+  // Cách áp dụng hệ số đô thị — Cách 1 là mặc định (giữ nguyên hành vi cũ).
+  const [urbanMode, setUrbanMode] = useState<UrbanApplicationMode>(DEFAULT_URBAN_APPLICATION_MODE);
 
   // ── Multi-instance state ──────────────────────────────────────────────────────
   // selectedItems: ordered list of usage instances. Each instance has its own
@@ -206,10 +214,41 @@ export function RoyaltyCalculatorPage() {
     selectedItems.map((item) => {
       const field = FIELDS.find((f) => f.id === item.fieldId)!;
       const vals = inputsByInstance[item.instanceId] || {};
-      const result = field.compute(vals, baseSalary);
-      return { item, field, vals, result };
+
+      // Cách 2 chỉ tạo khác biệt với lĩnh vực tính theo bậc diện tích (m²).
+      // Karaoke/khách sạn tính tuyến tính theo phòng nên giữ nguyên Cách 1.
+      const isAreaTiered = field.unit === 'm²' && !field.urbanExempt;
+      const applyUrbanBefore =
+        urbanMode === 'BEFORE_TIERING' && isAreaTiered && (vals.area ?? 0) > 0;
+
+      const rawArea = Number(vals.area ?? 0) || 0;
+      const effectiveArea = applyUrbanBefore ? rawArea * item.urbanFactor : rawArea;
+      const computeVals = applyUrbanBefore ? { ...vals, area: effectiveArea } : vals;
+      const result = field.compute(computeVals, baseSalary);
+
+      // Khi đô thị đã áp vào đầu vào thì không nhân lại ở bước cộng tiền.
+      const effectiveUrbanFactor = applyUrbanBefore ? 1 : item.urbanFactor;
+      const exportItem = applyUrbanBefore
+        ? {
+            ...item,
+            urbanFactor: 1,
+            urbanLabel: `${item.urbanLabel} · Cách 2 (đã áp trước khi chia bậc)`,
+          }
+        : item;
+
+      return {
+        item,
+        exportItem,
+        field,
+        vals,
+        result,
+        applyUrbanBefore,
+        rawArea,
+        effectiveArea,
+        effectiveUrbanFactor,
+      };
     }),
-    [selectedItems, inputsByInstance, baseSalary]
+    [selectedItems, inputsByInstance, baseSalary, urbanMode]
   );
 
   // Show instance if user added it AND it has at least one filled input.
@@ -233,7 +272,7 @@ export function RoyaltyCalculatorPage() {
     let totalBeforeVat = 0;
     for (const p of perInstance) {
       const ex = p.result.urbanExempt;
-      totalBeforeVat += ex ? p.result.subTotal : p.result.subTotal * p.item.urbanFactor;
+      totalBeforeVat += ex ? p.result.subTotal : p.result.subTotal * p.effectiveUrbanFactor;
     }
     const vat = totalBeforeVat * vatPct;
     const afterSupport = totalBeforeVat; // support applied in pricing snapshot only; here just base royalty
@@ -255,7 +294,7 @@ export function RoyaltyCalculatorPage() {
         // Global urban kept for backward compat / default reference; not used for per-instance calc
         urbanLabel, urbanFactor,
         supportPct, vatPct,
-        perField: activeInstances.map(({ item, field, vals, result }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result }) => ({
           fieldId: field.id,
           vals,
           result,
@@ -284,7 +323,7 @@ export function RoyaltyCalculatorPage() {
         baseSalary,
         vatPct,
         supportPct,
-        perField: activeInstances.map(({ item, field, vals, result }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result }) => ({
           item,
           fieldId: field.id,
           vals,
@@ -309,7 +348,7 @@ export function RoyaltyCalculatorPage() {
 
   // Nguồn dữ liệu cho hộp thoại xuất Excel — bố cục bảng tính hợp đồng.
   const excelSource = useMemo(() => ({
-    instances: activeInstances.map(({ item, field, vals, result }) => ({
+    instances: activeInstances.map(({ exportItem: item, field, vals, result }) => ({
       instanceId: item.instanceId,
       field,
       result,
