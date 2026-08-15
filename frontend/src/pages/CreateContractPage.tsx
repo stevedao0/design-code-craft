@@ -20,9 +20,6 @@ import { Select } from '../components/app-ui/Select';
 import { Button } from '../components/app-ui/Button';
 import { ContractNumberPreview } from '../components/app-ui/ContractNumberPreview';
 import { StepIndicator } from '../components/app-ui/StepIndicator';
-import { WordLikeRoyaltyTable, formatVnd } from '../components/contract/WordLikeRoyaltyTable';
-import type { RoyaltyTableData } from '../components/contract/WordLikeRoyaltyTable';
-import { buildKaraokeRoyaltyTableData } from '../lib/calculations/karaokeRoyaltyRowModel';
 import { MusicUsageAreaSection } from '../components/contract/MusicUsageAreaSection';
 import { SimpleRoyaltyInput } from '../components/contract/SimpleRoyaltyInput';
 import { ContractTemplateSearch } from '../components/contract/ContractTemplateSearch';
@@ -35,7 +32,6 @@ import { VcpmcMoneyTable } from '../components/app-ui/data-table/VcpmcMoneyTable
 import type { DataTableColumn, DataTableSummaryRow } from '../components/app-ui/data-table';
 import { useEmployeeOptions } from '../hooks/useEmployeeOptions';
 import type { PrefillSourceResponse } from '../lib/contractsClient';
-import { buildKaraokeRoyaltyRows, type KaraokeBackendRow } from '../lib/calculations/karaokeRoyaltyRowModel';
 import {
   AREA_USAGE_KIND_OPTIONS,
   AVAILABLE_CALCULATION_MODULES,
@@ -151,68 +147,6 @@ const getRoomSectionPresetValue = (key: string) =>
 const getRoomSectionKeyFromPreset = (value: string) =>
   ROOM_SECTION_PRESETS.find((preset) => preset.value === value)?.key ?? '';
 
-/**
- * Map calculation line result to RoyaltyTableData for WordLikeRoyaltyTable
- */
-function mapCalculationLineToRoyaltyTable(
-  line: {
-    label: string;
-    calculationModule: string;
-    input: Record<string, unknown>;
-    result: {
-      termMonths: number;
-      subtotalBeforeGtgt: number;
-      gtgtAmount: number;
-      totalAmount: number;
-      effectiveTotalAmount?: number;
-      detailRows: Array<{ label: string; value: number; formula?: string; coefficient?: number }>;
-    };
-  },
-  options?: { totalSubjectText?: string; supportYear?: string }
-): RoyaltyTableData {
-  const input = line.input as Record<string, unknown>;
-  const result = line.result;
-
-  // Build fee lines from detail rows
-  const feeLines = result.detailRows.map((row) => ({
-    label: row.label,
-    baseAmount: input.baseSalary as number || (row.coefficient ? (row.value / (row.coefficient * (input.totalRooms as number || 1))) : row.value),
-    coefficient: row.coefficient,
-    unitLabel: 'phòng/năm',
-    quantity: input.totalRooms as number || 0,
-    amount: row.value,
-  }));
-
-  // Calculate support
-  const supportRate = (input.annualSupportPercent as number) || 0;
-  const subtotalBeforeSupport = feeLines.reduce((sum, f) => sum + f.amount, 0);
-  const supportAmount = (supportRate / 100) * subtotalBeforeSupport;
-  const subtotalAfterSupport = subtotalBeforeSupport - supportAmount;
-
-  // Get GTGT rate and calculate
-  const gtgtRate = (input.gtgtPercent as number) || 8;
-  const gtgtAmount = Math.round((subtotalAfterSupport * gtgtRate) / 100);
-
-  return {
-    subjectLabel: 'phòng Karaoke',
-    subjectQuantityText: options?.totalSubjectText || `${input.totalRooms || 0} phòng`,
-    formulaText: '(Số tiền bản quyền chi trả (tính theo năm) = Mức lương cơ sở x Hệ số điều chỉnh)',
-    lines: feeLines,
-    summary: {
-      subtotalBeforeSupport,
-      supportRate: supportRate > 0 ? supportRate : undefined,
-      supportAmount: supportAmount > 0 ? supportAmount : undefined,
-      subtotalAfterSupport,
-      vatRate: gtgtRate,
-      vatAmount: result.gtgtAmount || gtgtAmount,
-      totalAmount: result.totalAmount,
-      supportYear: options?.supportYear || '2026',
-    },
-    baseSalary: input.baseSalary as number,
-    legalNoteYear: options?.supportYear || '2026',
-  };
-}
-
 export function CreateContractPage({
   onNavigate,
   onOpenCreatedContract,
@@ -260,21 +194,6 @@ export function CreateContractPage({
   const pricingButtonRef = useRef<HTMLButtonElement>(null);
   const [quoteDialogSnapshot, setQuoteDialogSnapshot] = useState<PricingSnapshot | null>(null);
 
-  // ── Karaoke preview (debounced backend dry-run snapshot) ─────────────
-  // The CreateContractPage owns no royalty math — it pulls rows from the
-  // backend dry-run with a 450ms debounce whenever karaoke inputs change.
-  const [karaokePreviewRows, setKaraokePreviewRows] = useState<KaraokeBackendRow[] | null>(null);
-  const [karaokePreviewPending, setKaraokePreviewPending] = useState(false);
-  const [karaokePreviewError, setKaraokePreviewError] = useState<string | null>(null);
-  const [karaokePreviewTotals, setKaraokePreviewTotals] = useState<{
-    amountBeforeGtgt: number;
-    gtgtAmount: number;
-    totalAmount: number;
-    vatPercent: number;
-    rawSubtotal: number;
-  } | null>(null);
-  const karaokePreviewTimer = useRef<number | null>(null);
-  const karaokePreviewSeq = useRef(0);
   const mapDraftAreaGroupToSnapshot = (g: string | undefined): KaraokeAreaGroup => {
     if (g === 'DEN_20') return 'DEN_20';
     if (g === 'GT_30') return 'GT_30';
@@ -369,17 +288,15 @@ export function CreateContractPage({
   );
   const canCreateContract =
     !isCreateLoading &&
-    // Karaoke: require either confirmed totals from the calculation table
-    // (royaltyAmountAfterVat > 0) OR direct manual amount entry
-    // (royaltyAmountBeforeVat > 0). Both flows are valid.
-    // Also require a positive room/box count appropriate to the karaoke type:
-    //   PHONG → totalRooms > 0
-    //   BOX    → totalBoxes > 0
-    // Manual entry via SimpleRoyaltyInput already writes to draft.areaBased,
-    // so checking royaltyAmountBeforeVat > 0 is sufficient.
+    // Karaoke: accept either manual entry or "Chốt 3 số tiền".
+    // Both flows write to draft.areaBased.*money fields. Manual entry does
+    // not require the user to run the calculator. The room/box count is
+    // type-aware (PHONG → totalRooms, BOX → totalBoxes) but does NOT block
+    // contract creation when manual money is already valid.
     (!isKaraokeDomain ||
-      (((draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 ||
-        (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0) &&
+      ((draft.areaBased.royaltyAmountBeforeVat ?? 0) > 0 &&
+        (draft.areaBased.vatAmount ?? 0) >= 0 &&
+        (draft.areaBased.royaltyAmountAfterVat ?? 0) > 0 &&
         (draft.karaoke.karaokeType === 'BOX'
           ? (draft.karaoke.totalBoxes ?? 0) > 0
           : (draft.karaoke.totalRooms ?? 0) > 0)));
@@ -1078,64 +995,15 @@ export function CreateContractPage({
   };
 
   // =========================================================================
-  // KARAOKE LIVE PREVIEW (backend is the single source of truth)
-  // Debounced dry-run whenever the karaoke inputs change, so the contract
-  // layout table below the form always mirrors the backend calculation.
+  // KARAOKE CALCULATION HANDLER (manual "Tính tiền bản quyền" button only)
   // =========================================================================
-  const karaokeCalcSignature = useMemo(
-    () =>
-      JSON.stringify({
-        domain: draft.domain.domainCode,
-        karaokeType: draft.karaoke.karaokeType,
-        areaGroup: draft.karaoke.areaGroup,
-        totalRooms: draft.karaoke.totalRooms,
-        totalBoxes: draft.karaoke.totalBoxes,
-        baseSalary: draft.karaoke.baseSalary,
-        support: draft.karaoke.annualSupportPercent,
-        gtgt: draft.karaoke.gtgtPercent,
-        from: draft.term.effectiveFrom,
-        to: draft.term.effectiveTo,
-      }),
-    [draft.domain.domainCode, draft.karaoke, draft.term.effectiveFrom, draft.term.effectiveTo]
-  );
-
-  useEffect(() => {
-    if (!isKaraokeDomain) {
-      setCalcResult(null);
-      return;
-    }
-    const units = (draft.karaoke.totalRooms || 0) + (draft.karaoke.totalBoxes || 0);
-    if (units <= 0 || !(draft.karaoke.baseSalary > 0)) {
-      setCalcResult(null);
-      return;
-    }
-    const token = localStorage.getItem(TOKEN_KEY);
-    if (!token) return;
-
-    let cancelled = false;
-    const timer = window.setTimeout(async () => {
-      try {
-        const result = await calculateKaraokeDryRun(token, mapDraftToKaraokeCalcInput(draft));
-        if (!cancelled) setCalcResult(result);
-      } catch {
-        if (!cancelled) setCalcResult(null);
-      }
-    }, 450);
-
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [karaokeCalcSignature, isKaraokeDomain]);
-
-  /** Contract-layout rows for the preview — derived ONLY from backend result. */
-  const karaokePreviewTable = useMemo<RoyaltyTableData | null>(() => {
-    if (!isKaraokeDomain || !calcResult) return null;
-    return buildKaraokeRoyaltyTableData(calcResult, {
-      supportYear: (draft.term.effectiveFrom || '').slice(0, 4) || undefined,
-    });
-  }, [isKaraokeDomain, calcResult, draft.term.effectiveFrom]);
+  // Note: the previous auto debounced dry-run setCalcResult effect has been
+  // removed. Now `calcResult` is only set when the user explicitly clicks
+  // "Tính tiền bản quyền" (which calls handleKaraokeCalc). The contract
+  // preview table and the KaraokePreviewTable are no longer rendered; user
+  // input flows into draft.areaBased either via SimpleRoyaltyInput (manual)
+  // or via "Chốt 3 số tiền" in the workspace.
+  // =========================================================================
 
   // =========================================================================
   // CALCULATION LINES HANDLERS
@@ -1430,7 +1298,7 @@ export function CreateContractPage({
 
       if (isKaraokeDomain && !hasMoney) {
         setCreateError(
-          'Vui lòng nhập tiền bản quyền thủ công hoặc sử dụng bảng tính Karaoke trước khi tạo hợp đồng.',
+          'Vui lòng nhập tiền bản quyền trước thuế hoặc dùng bảng tính tiền bản quyền.',
         );
       } else if (isKaraokeDomain && !hasRooms) {
         setCreateError(
@@ -1644,151 +1512,15 @@ export function CreateContractPage({
   };
 
   // =========================================================================
-  // KARAOKE PREVIEW — debounced backend dry-run snapshot
+  // KARAOKE: no auto dry-run preview here.
   // =========================================================================
-  // The UI never recomputes money. It sends the current karaoke inputs to
-  // the backend with a 450ms debounce and renders the rows the backend
-  // returns. Backend errors and missing inputs are surfaced as separate
-  // UI states (empty / pending / error) — they never crash the page.
-  useEffect(() => {
-    const isKaraoke = isKaraokeDomain;
-    if (!isKaraoke) {
-      setKaraokePreviewRows(null);
-      setKaraokePreviewError(null);
-      setKaraokePreviewPending(false);
-      return;
-    }
-
-    const totalRooms = Number(draft.karaoke?.totalRooms ?? 0);
-    const totalBoxes = Number(draft.karaoke?.totalBoxes ?? 0);
-    const baseSalary = Number(draft.areaBased?.baseSalary ?? 0);
-    const vatPct = Number(draft.areaBased?.vatRate ?? 0);
-    // ty_le_thu (collection rate) drives amount_before_gtgt in the backend.
-    // Default to 100 (= full collection) when user leaves the field blank;
-    // 0 would zero out the entire pipeline.
-    const tyLeThu = Number(draft.karaoke?.annualSupportPercent ?? 100);
-    const months = Number(draft.karaoke?.durationMonths ?? draft.contract?.durationMonths ?? 12);
-    const areaGroup = mapDraftAreaGroupToSnapshot(draft.karaoke.areaGroup as string);
-
-    if ((totalRooms + totalBoxes) <= 0 || baseSalary <= 0) {
-      setKaraokePreviewRows(null);
-      setKaraokePreviewError(null);
-      setKaraokePreviewPending(false);
-      return;
-    }
-
-    if (karaokePreviewTimer.current != null) {
-      window.clearTimeout(karaokePreviewTimer.current);
-    }
-    setKaraokePreviewPending(true);
-    const seq = ++karaokePreviewSeq.current;
-    karaokePreviewTimer.current = window.setTimeout(async () => {
-      try {
-        const token = (() => {
-          try { return localStorage.getItem(TOKEN_KEY) || ''; } catch { return ''; }
-        })();
-        const resp = await fetch('/api/background/karaoke/calculate-dry-run', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          },
-          body: JSON.stringify({
-            karaoke_type: areaGroup === 'BOX' ? 'BOX' : 'PHONG',
-            area_group: areaGroup,
-            tong_so_phong: totalRooms,
-            tong_so_box: totalBoxes,
-            muc_luong_co_so: baseSalary,
-            ty_le_ho_tro: tyLeThu,
-            ty_le_ho_tro_bac_1: 0,
-            ty_le_ho_tro_bac_2: 0,
-            ty_le_ho_tro_bac_3: 0,
-            gtgt_percent: vatPct,
-            start_date: draft.contract?.startDate || null,
-            end_date: draft.contract?.endDate || null,
-            room_sections: Array.isArray(draft.areaBased?.musicUsageAreas)
-              ? draft.areaBased.musicUsageAreas
-              : [],
-            pricing_render_mode: 'table',
-          }),
-        });
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        if (seq !== karaokePreviewSeq.current) return; // stale
-        const calc = data?.calculation;
-        const tiers = Array.isArray(calc?.tiers) ? calc.tiers : [];
-        const rows: KaraokeBackendRow[] = tiers
-          .filter((t: any) => Number(t?.rooms) > 0 && Number(t?.amount) > 0)
-          .map((t: any) => ({
-            label: String(t?.name ?? ''),
-            rooms: Number(t?.rooms ?? 0),
-            coef: Number(t?.coefficient ?? 0),
-            amount: Number(t?.amount ?? 0),
-          }));
-        // Stash the totals so the table can show "Cộng / Thuế GTGT / Tổng thanh toán"
-        // — read straight from the backend snapshot, no UI recompute.
-        const totals = {
-          amountBeforeGtgt: Number(calc?.amount_before_gtgt ?? 0),
-          gtgtAmount: Number(calc?.gtgt_amount ?? 0),
-          totalAmount: Number(calc?.total_amount ?? 0),
-          vatPercent: Number(calc?.gtgt_percent ?? vatPct ?? 0),
-          rawSubtotal: Number(calc?.subtotal_before_support ?? 0),
-        };
-        setKaraokePreviewTotals(totals);
-        setKaraokePreviewRows(rows);
-        setKaraokePreviewError(null);
-        // Sync draft money fields so the DOCX export uses the exact backend
-        // snapshot totals. This is a copy, not a recompute — the source of
-        // truth stays in the backend response.
-        if (totals.amountBeforeGtgt > 0) {
-          updateDraft((current) => ({
-            ...current,
-            areaBased: {
-              ...current.areaBased,
-              royaltyAmountBeforeVat: totals.amountBeforeGtgt,
-              vatAmount: totals.gtgtAmount,
-              royaltyAmountAfterVat: totals.totalAmount,
-              royaltyAmountInWords:
-                current.areaBased.royaltyAmountInWords || '',
-            },
-            karaoke: {
-              ...current.karaoke,
-              totalRooms: totalRooms,
-            },
-          }));
-        }
-      } catch (err: unknown) {
-        if (seq !== karaokePreviewSeq.current) return;
-        setKaraokePreviewError(err instanceof Error ? err.message : 'Lỗi dry-run');
-        setKaraokePreviewRows(null);
-        setKaraokePreviewTotals(null);
-      } finally {
-        if (seq === karaokePreviewSeq.current) {
-          setKaraokePreviewPending(false);
-        }
-      }
-    }, 450);
-
-    return () => {
-      if (karaokePreviewTimer.current != null) {
-        window.clearTimeout(karaokePreviewTimer.current);
-        karaokePreviewTimer.current = null;
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    isKaraokeDomain,
-    draft.karaoke?.totalRooms,
-    draft.karaoke?.totalBoxes,
-    draft.karaoke?.areaGroup,
-    draft.areaBased?.baseSalary,
-    draft.areaBased?.vatRate,
-    draft.karaoke?.annualSupportPercent,
-    draft.karaoke?.durationMonths,
-    draft.contract?.startDate,
-    draft.contract?.endDate,
-    draft.areaBased?.musicUsageAreas,
-  ]);
+  // The previous auto debounced dry-run effect that called
+  // /api/background/karaoke/calculate-dry-run and updated draft.areaBased
+  // has been removed. Money now flows into draft.areaBased via exactly two
+  // user-driven paths:
+  //   1. SimpleRoyaltyInput (manual entry)
+  //   2. KaraokePricingWorkspace.onConfirmAmounts ("Chốt 3 số tiền")
+  // =========================================================================
 
   // =========================================================================
   // RENDER
@@ -2774,32 +2506,6 @@ export function CreateContractPage({
                     </div>
                   )}
 
-                  {/* Contract-layout preview — rows come from the backend
-                      calculation (dry-run), identical row model as DOCX. */}
-                  {karaokePreviewTable && (
-                    <div
-                      className="mb-4 rounded-[12px] overflow-hidden"
-                      style={{ border: '1px solid #E7EDE1', background: '#FFFFFF' }}
-                    >
-                      <div
-                        className="flex flex-wrap items-center justify-between gap-2 px-3 py-2"
-                        style={{ background: '#F4F1EA', borderBottom: '1px solid #E7EDE1' }}
-                      >
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#4A7202]">
-                          Bảng tính tiền bản quyền (theo bố cục hợp đồng)
-                        </p>
-                        <span className="text-[11px] text-zinc-500">
-                          Số liệu lấy từ kết quả tính của hệ thống
-                        </span>
-                      </div>
-                      <div className="overflow-x-auto p-3">
-                        <div className="min-w-[560px]">
-                          <WordLikeRoyaltyTable data={karaokePreviewTable} />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* SimpleRoyaltyInput: manual amount entry for all karaoke contracts */}
                   <SimpleRoyaltyInput
                     initialData={{
@@ -2824,32 +2530,8 @@ export function CreateContractPage({
                     }}
                   />
 
-                  {/* Karaoke preview table — backend dry-run snapshot, no UI recompute */}
-                  <div className="mt-4">
-                    {karaokePreviewError && (
-                      <div className="rounded-md border border-rose-300 bg-rose-50 px-3 py-2 text-[12px] text-rose-800">
-                        Không tải được bảng preview karaoke: {karaokePreviewError}
-                      </div>
-                    )}
-                    {!karaokePreviewError && karaokePreviewPending && (
-                      <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-[12px] text-zinc-600">
-                        Đang tính bảng karaoke…
-                      </div>
-                    )}
-                    {!karaokePreviewError && !karaokePreviewPending && karaokePreviewRows && (
-                      <KaraokePreviewTable
-                        rows={karaokePreviewRows}
-                        totals={karaokePreviewTotals}
-                        baseSalary={draft.areaBased.baseSalary}
-                        totalRooms={draft.karaoke.totalRooms}
-                      />
-                    )}
-                    {!karaokePreviewError && !karaokePreviewPending && !karaokePreviewRows && (
-                      <div className="rounded-md border border-dashed border-zinc-200 bg-zinc-50 px-3 py-2 text-[12px] text-zinc-500">
-                        Nhập số phòng / MLCS để xem bảng tính karaoke.
-                      </div>
-                    )}
-                  </div>
+                  {/* Karaoke preview table removed — see WordLikeRoyaltyTable JSX
+                      deletion below. */}
                 </div>
               </div>
             ) : isAreaBasedDomainFlag ? (
@@ -3319,107 +3001,3 @@ function CreateContractMoneySummaryTable({
     />
   );
 }
-
-
-// =============================================================================
-// KaraokePreviewTable — read-only preview of karaoke backend dry-run rows.
-// Uses karaokeRoyaltyRowModel to filter out empty/zero rows. Never
-// recomputes money in the UI.
-// =============================================================================
-function KaraokePreviewTable({
-  rows,
-  totals,
-  baseSalary,
-  totalRooms,
-}: {
-  rows: KaraokeBackendRow[];
-  totals: {
-    amountBeforeGtgt: number;
-    gtgtAmount: number;
-    totalAmount: number;
-    vatPercent: number;
-    rawSubtotal: number;
-  } | null;
-  baseSalary?: number;
-  totalRooms?: number;
-}) {
-  const uiRows = buildKaraokeRoyaltyRows(rows);
-  const fmtVnd = (n: number) => `${Math.round(Number(n) || 0).toLocaleString('vi-VN')} đ`;
-  if (uiRows.length === 0) {
-    return (
-      <div className="rounded-md border border-dashed border-zinc-200 bg-zinc-50 px-3 py-2 text-[12px] text-zinc-500">
-        Chưa có dòng tính phí nào từ backend.
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-md border border-zinc-200 bg-white">
-      <div className="px-3 py-2 border-b border-zinc-200 bg-zinc-50">
-        <h5 className="text-[12px] font-semibold text-zinc-700">
-          Bảng tính tiền bản quyền (Karaoke — Nghị định 17/2023/NĐ-CP)
-        </h5>
-        {totalRooms && baseSalary ? (
-          <p className="text-[11px] text-zinc-500 mt-0.5">
-            Tổng {totalRooms} phòng · MLCS {fmtVnd(baseSalary)}
-          </p>
-        ) : null}
-      </div>
-      <div className="overflow-x-auto" style={{ WebkitOverflowScrolling: 'touch' }}>
-        <table className="w-full border-collapse text-[12px]" style={{ minWidth: 640 }}>
-          <thead>
-            <tr className="bg-zinc-100">
-              <th className="border border-zinc-300 px-2 py-1 text-left">Bậc tính</th>
-              <th className="border border-zinc-300 px-2 py-1 text-right">Số phòng</th>
-              <th className="border border-zinc-300 px-2 py-1 text-right">Hệ số</th>
-              <th className="border border-zinc-300 px-2 py-1 text-right whitespace-nowrap">Thành tiền</th>
-            </tr>
-          </thead>
-          <tbody>
-            {uiRows.map((r) => (
-              <tr key={r.index}>
-                <td className="border border-zinc-200 px-2 py-1">{r.label}</td>
-                <td className="border border-zinc-200 px-2 py-1 text-right">{r.rooms}</td>
-                <td className="border border-zinc-200 px-2 py-1 text-right">
-                  {Number.isFinite(r.coef) ? r.coef.toFixed(2).replace('.', ',') : '—'}
-                </td>
-                <td className="border border-zinc-200 px-2 py-1 text-right whitespace-nowrap tabular-nums">
-                  {r.amountDisplay}
-                </td>
-              </tr>
-            ))}
-            {totals && (
-              <>
-                <tr className="bg-zinc-50">
-                  <td colSpan={3} className="border border-zinc-200 px-2 py-1 text-right font-semibold">
-                    Cộng tiền bản quyền
-                  </td>
-                  <td className="border border-zinc-200 px-2 py-1 text-right whitespace-nowrap tabular-nums font-semibold">
-                    {fmtVnd(totals.amountBeforeGtgt)}
-                  </td>
-                </tr>
-                <tr className="bg-zinc-50">
-                  <td colSpan={3} className="border border-zinc-200 px-2 py-1 text-right">
-                    Thuế GTGT {Number.isFinite(totals.vatPercent) ? totals.vatPercent : ''}%
-                  </td>
-                  <td className="border border-zinc-200 px-2 py-1 text-right whitespace-nowrap tabular-nums">
-                    {fmtVnd(totals.gtgtAmount)}
-                  </td>
-                </tr>
-                <tr className="bg-[#0F172A] text-white">
-                  <td colSpan={3} className="border border-zinc-700 px-2 py-1 text-right font-semibold">
-                    Tổng thanh toán
-                  </td>
-                  <td className="border border-zinc-700 px-2 py-1 text-right whitespace-nowrap tabular-nums font-bold">
-                    {fmtVnd(totals.totalAmount)}
-                  </td>
-                </tr>
-              </>
-            )}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
-
-

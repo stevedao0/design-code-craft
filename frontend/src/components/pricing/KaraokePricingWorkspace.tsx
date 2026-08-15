@@ -17,8 +17,8 @@
  * "Chốt 3 số tiền" syncs: Cộng, Thuế GTGT, Tổng giá trị
  * into draft.areaBased fields. NO tier rows, NO DOCX table fill.
  */
-import React, { useMemo, useRef, useState } from 'react';
-import { CopyIcon, PrinterIcon, RotateCcwIcon, CalculatorIcon } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { CopyIcon, RotateCcwIcon, CalculatorIcon } from 'lucide-react';
 import {
   BASE_SALARY_LEGAL_NOTE,
   DEFAULT_BASE_SALARY,
@@ -35,7 +35,6 @@ import {
   type KaraokeAreaGroup,
   type PricingSnapshot,
 } from '../../lib/pricingSnapshot';
-import { KaraokeQuotePreview } from './KaraokeQuotePreview';
 
 const NAVY = '#4A7202';
 const CREAM = '#F6FAF1';
@@ -56,10 +55,6 @@ type Props = {
   context: KaraokeWorkspaceContext;
   /** Called when user confirms amounts (copy/use for reference) */
   onConfirmAmounts?: (snapshot: PricingSnapshot) => void;
-  /** Optional secondary callback — workspace now renders the preview inline,
-   * so this is purely for external tracking (e.g., analytics). It must NOT
-   * trigger a global modal. */
-  onOpenQuote?: (snapshot: PricingSnapshot) => void;
 };
 
 // ─── Table column widths (must total ~100%) ────────────────────────────────
@@ -109,7 +104,7 @@ const cellItalic: CellStyle = {
   fontSize: '11pt', fontStyle: 'italic', verticalAlign: 'middle',
 };
 
-export function KaraokePricingWorkspace({ context, onConfirmAmounts, onOpenQuote }: Props) {
+export function KaraokePricingWorkspace({ context, onConfirmAmounts }: Props) {
   const [rooms, setRooms] = useState<number>(context.totalRooms ?? 0);
   const [areaGroup, setAreaGroup] = useState<KaraokeAreaGroup>(context.areaGroup ?? 'FROM_20_TO_30');
   const [months, setMonths] = useState<number>(context.months ?? 12);
@@ -117,11 +112,6 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts, onOpenQuote
   const [baseSalary, setBaseSalary] = useState<number>(context.baseSalary ?? DEFAULT_BASE_SALARY);
   const [supportRatePct, setSupportRatePct] = useState<number>(100);
   const [toast, setToast] = useState<string | null>(null);
-  // Inline quote preview — anchored under the "Xem bảng tính" button.
-  // This replaces the previous global modal to keep the panel near the user's
-  // attention area (no top-of-page jump).
-  const [quoteOpen, setQuoteOpen] = useState(false);
-  const quotePanelRef = useRef<HTMLDivElement | null>(null);
 
   const snapshot = useMemo(
     () =>
@@ -400,50 +390,16 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts, onOpenQuote
           <ActionBtn onClick={handleCopyTable} icon={<CopyIcon className="h-3.5 w-3.5" />}>Copy bảng</ActionBtn>
           <ActionBtn onClick={handleCopySummary} icon={<CopyIcon className="h-3.5 w-3.5" />}>Copy tóm tắt</ActionBtn>
           <ActionBtn
-            data-quote-toggle
-            onClick={() => {
-              setQuoteOpen((v) => {
-                const next = !v;
-                if (next) {
-                  // Smoothly bring the panel into view without jumping to top
-                  requestAnimationFrame(() => {
-                    quotePanelRef.current?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
-                  });
-                  onOpenQuote?.(snapshot); // optional secondary tracking
-                }
-                return next;
-              });
-            }}
-            icon={<PrinterIcon className="h-3.5 w-3.5" />}
-            active={quoteOpen}
-          >
-            {quoteOpen ? 'Đóng bảng tính' : 'Xem bảng tính'}
-          </ActionBtn>
-          <ActionBtn
             onClick={() => {
               setRooms(0);
               setMonths(12);
               setVatPct(DEFAULT_VAT_RATE * 100);
               setSupportRatePct(100); // Reset to default "thu đủ"
-              setQuoteOpen(false);
             }}
             icon={<RotateCcwIcon className="h-3.5 w-3.5" />}
           >
             Đặt lại
           </ActionBtn>
-
-          {quoteOpen && (
-            <div ref={quotePanelRef} className="mt-2">
-              <KaraokeQuotePreview
-                snapshot={snapshot}
-                customerName={context.customerName}
-                signboard={context.signboard}
-                showCloseButton
-                onClose={() => setQuoteOpen(false)}
-                compact
-              />
-            </div>
-          )}
         </div>
 
         {toast && (
