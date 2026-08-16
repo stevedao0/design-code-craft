@@ -25,10 +25,13 @@ Mỗi khu vực gồm: Khu vực/địa điểm · Lĩnh vực áp dụng · Quy
 Bậc áp dụng | Số lượng thực tế | MLCS | Hệ số điều chỉnh | Tỷ lệ đô thị | Thành tiền
 ```
 
-- Cột "Tỷ lệ đô thị" ghi tỷ lệ thật (80%, 50%…), không bao giờ ghi 100% khi thực tế khác.
+- Cột "Tỷ lệ đô thị" (đầy đủ: "Tỷ lệ áp dụng theo phân loại đô thị") ghi tỷ lệ thật (80%, 50%…), không bao giờ ghi 100% khi thực tế khác.
 - Thành tiền dùng công thức Excel tham chiếu MLCS × hệ số × số lượng × tỷ lệ đô thị.
 - Kết toán: Tổng trước VAT → VAT → Tổng thanh toán → Bằng chữ, mỗi dòng chỉ xuất hiện một lần.
 - Dòng mức trần chỉ in khi thực sự áp trần.
+- **Khối "Hướng dẫn đọc bảng tính"** cuối sheet: giải thích ngắn gọn theo ngôn ngữ khách hàng — thành tiền mỗi bậc = MLCS × hệ số biểu mức × số lượng × tỷ lệ đô thị; cộng các bậc ra tiền trước thuế; cộng thuế GTGT ra tổng thanh toán. Tuyệt đối không nhắc thứ tự xử lý nội bộ.
+- **Letterhead & chân trang**: dùng `vcpmcIdentity.ts` — tên đầy đủ VCPMC, website vcpmc.org, và thông tin **Chi nhánh phía Nam** (địa chỉ, điện thoại, email) vì app phục vụ chi nhánh phía Nam.
+
 
 ### 3. Dọn nội dung nội bộ khỏi file khách
 Xóa khỏi mọi cell/comment/shared string: "Cách áp dụng đô thị", "Cách 1/Cách 2", "Trước khi chia bậc", "Sau khi cộng tiền bậc", "Diện tích hiệu dụng / tính phí", chú thích ô nhập màu xanh, hướng dẫn khách sửa MLCS/VAT, các đoạn diễn giải văn xuôi. Không xuất `urbanMode`/`urbanModeLabel` — chỉ giữ trong state popup.
@@ -62,6 +65,58 @@ Commit trực tiếp trên `main`, không tạo branch, không force-push:
 fix(pricing): simplify customer excel export
 ```
 
+## Bổ sung: thuật ngữ và giao diện popup
+
+### A. Đổi thuật ngữ — bỏ chữ "cách tính"
+Trong popup dùng nhãn trung tính, tránh gợi cho khách hỏi "có bao nhiêu cách":
+
+- Tên nhóm: **"Phương thức áp dụng tỷ lệ đô thị"** (gợi ý thay thế: "Quy tắc áp dụng tỷ lệ đô thị").
+- Phương thức 1 (mặc định, đang dùng lâu nay): **"Áp dụng trên tổng tiền bậc"**.
+- Phương thức 2 (mới): **"Áp dụng theo từng bậc"**.
+- Bỏ mọi chuỗi "Cách 1", "Cách 2", "cách tính" trong UI, tooltip, ghi chú Karaoke, copy bảng/tóm tắt.
+- File Excel gửi khách vẫn tuyệt đối không xuất hiện thuật ngữ này ở bất kỳ dạng nào.
+
+### B. Cột hệ số đô thị trong bảng trên UI
+Đúng như yêu cầu: **không nhân tỷ lệ đô thị vào diện tích/số phòng**. Bảng bậc trong popup thêm cột:
+
+```text
+Bậc áp dụng | Số lượng | MLCS | Hệ số biểu mức | Tỷ lệ đô thị | Thành tiền
+```
+
+- Phương thức 2: cột "Tỷ lệ đô thị" hiện tỷ lệ thật trên **từng dòng**, thành tiền dòng = MLCS × hệ số × số lượng × tỷ lệ.
+- Phương thức 1: cột tỷ lệ để trống trên dòng bậc và hiện một dòng "× tỷ lệ đô thị (80%)" ngay dưới dòng cộng tiền bậc.
+- Hai phương thức luôn ra cùng tổng; hiển thị đối chiếu nhỏ để người lập yên tâm.
+
+### C. Dàn lại bố cục popup "Tính tiền bản quyền âm nhạc"
+Hiện các khối rời rạc chen nhau. Bố cục mới theo 2 cột (desktop ≥1100px), 1 cột dồn dọc trên mobile:
+
+```text
+┌─ Header: tiêu đề + căn cứ pháp lý (1 dòng) ────────────────┐
+├────────────────────────┬────────────────────────────────────┤
+│ CỘT TRÁI (cuộn)        │ CỘT PHẢI (sticky, w≈380px)         │
+│ 1. Thông tin khách hàng│  Tóm tắt kết toán                  │
+│ 2. Tham số chung       │   Tiền bản quyền                   │
+│    MLCS · thời hạn ·   │   − Hỗ trợ                         │
+│    GTGT · hỗ trợ ·     │   Cộng trước thuế                  │
+│    phân loại đô thị ·  │   Thuế GTGT                        │
+│    phương thức áp dụng │   Tổng thanh toán + bằng chữ       │
+│ 3. Khu vực & lĩnh vực  │  ─────────────────────             │
+│    (card gập/mở, mỗi   │   [ Xuất Excel ]                   │
+│     card có bảng bậc)  │   [ Áp dụng vào hợp đồng ]         │
+└────────────────────────┴────────────────────────────────────┘
+```
+
+Nguyên tắc trình bày (tham chiếu pattern quote-builder của Stripe/Xero/QuickBooks):
+- Mỗi nhóm là một `ContentCard` có số thứ tự, cách nhau `--section-gap`; bỏ các khung viền lồng nhau.
+- Tham số chung xếp lưới `auto-fit minmax(180px, 1fr)`, nhãn trên – ô nhập dưới, không trộn nhiều cỡ chữ.
+- Bảng bậc dùng `DataTable` chuẩn, số căn phải, tiền `1.234.567 ₫`; ≤900px chuyển card-mode.
+- Panel kết toán sticky bên phải là **nơi duy nhất** hiện tổng tiền và nút xuất — bỏ tổng lặp rải rác.
+- Chỉ dùng token trong `tokens.css`, accent `--accent-primary`; nhãn thuế ghi "Thuế GTGT".
+- Kiểm tra Playwright ở 390 / 820 / 1440px.
+
+### D. Truy cập từ trang đăng nhập
+Popup là công cụ dùng chung, không cần đăng nhập. Thêm nút **"Tính tiền bản quyền"** trên `LoginPage` (đặt dưới form, cùng hàng với liên kết vcpmc.org / Facebook), mở đúng popup `RoyaltyCalculatorFab` ở chế độ chung. Ở trạng thái chưa đăng nhập: cho tính và xuất Excel, ẩn nút "Áp dụng vào hợp đồng" và các thao tác cần quyền.
+
 ## Ghi chú kỹ thuật
 
-File chạm tới: `generateContractRoyaltyWorkbook.ts` (viết lại phần lớn), `contractRoyaltyModel.ts`, `pricingSnapshot.ts`, `calculationTypes.ts`, `calculationSnapshotAdapter.ts`, `ContractExcelExportDialog.tsx`, `RoyaltyCalculatorPage.tsx`. Không đụng backend, renderer hợp đồng, biểu hệ số/MLCS/VAT.
+File chạm tới: `generateContractRoyaltyWorkbook.ts` (viết lại phần lớn), `contractRoyaltyModel.ts`, `pricingSnapshot.ts`, `calculationTypes.ts`, `calculationSnapshotAdapter.ts`, `ContractExcelExportDialog.tsx`, `RoyaltyCalculatorPage.tsx`, `UrbanModeSelector.tsx`, `FabPricingWorkspace.tsx`, `KaraokePricingWorkspace.tsx`, `RoyaltyCalculatorFab.tsx`, `LoginPage.tsx`, `vcpmcIdentity.ts`, CSS trong `src/theme/`. Không đụng backend, renderer hợp đồng, biểu hệ số/MLCS/VAT.
