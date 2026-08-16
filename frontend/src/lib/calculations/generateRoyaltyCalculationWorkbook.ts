@@ -442,6 +442,12 @@ function buildLocationSheet(ws: ExcelJS.Worksheet, snap: CalculationSnapshot) {
       ['Quy mô', loc.areaDisplay || '—'],
       ['Loại đô thị', loc.urbanType || '—'],
       ['Hệ số đô thị', loc.urbanCoefficient || '—'],
+      ['Cách áp dụng đô thị', loc.urbanModeLabel || loc.urbanMode || '—'],
+      // Với Option 2 + lĩnh vực m²: hiển thị công thức diện tích gốc × hệ số = tính phí
+      ...(loc.applyUrbanBefore && Number.isFinite(loc.rawAreaM2) && Number.isFinite(loc.effectiveAreaM2) && loc.rawAreaM2! > 0
+        ? [['Diện tích gốc → tính phí',
+            `${loc.rawAreaM2!.toLocaleString('vi-VN')} m² × ${Math.round((loc.effectiveAreaM2! / loc.rawAreaM2!) * 100)}% = ${loc.effectiveAreaM2!.toLocaleString('vi-VN')} m²`]]
+        : []),
       ['Thời hạn', loc.termDisplay || '—'],
       ['Hệ số hỗ trợ', loc.supportDisplay || '—'],
       ['Mức lương cơ sở (MLCS)', snap.baseSalaryDisplay || '—'],

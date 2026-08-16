@@ -403,6 +403,26 @@ function SheetPreview({ model }: { model: ContractRoyaltyModel }) {
                   </td>
                 </tr>
               )}
+              {b.urbanModeLabel && (
+                <tr>
+                  <td colSpan={5} style={{ ...cell, textAlign: 'right', fontStyle: 'italic', background: C.band }}>
+                    Cách áp dụng đô thị:
+                  </td>
+                  <td style={{ ...cell, textAlign: 'left', fontWeight: 700, background: C.band }}>
+                    {b.urbanModeLabel}
+                  </td>
+                </tr>
+              )}
+              {b.applyUrbanBefore && Number.isFinite(b.rawArea) && Number.isFinite(b.effectiveArea) && (
+                <tr>
+                  <td colSpan={5} style={{ ...cell, textAlign: 'right', fontStyle: 'italic', background: C.band }}>
+                    Diện tích gốc → tính phí:
+                  </td>
+                  <td style={{ ...cell, textAlign: 'left', fontWeight: 700, background: C.band }}>
+                    {`${b.rawArea!.toLocaleString('vi-VN')} m² × ${b.rawArea! > 0 ? Math.round((b.effectiveArea! / b.rawArea!) * 100) : 0}% = ${b.effectiveArea!.toLocaleString('vi-VN')} m²`}
+                  </td>
+                </tr>
+              )}
               {b.urbanFactor !== 1 && (
                 <tr>
                   <td colSpan={5} style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>

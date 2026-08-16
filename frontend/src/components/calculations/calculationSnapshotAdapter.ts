@@ -47,6 +47,16 @@ export type CalculatorPerFieldLike = {
   areaM2?: number;
   /** Raw room count when known (for room-based fields). */
   roomsCount?: number;
+  /** Cách áp dụng đô thị: AFTER_SUBTOTAL (Cách 1) hoặc BEFORE_TIERING (Cách 2). */
+  urbanMode?: string | null;
+  /** Label dễ đọc của urbanMode. */
+  urbanModeLabel?: string | null;
+  /** Đô thị đã áp vào diện tích trước khi chia bậc. */
+  applyUrbanBefore?: boolean | null;
+  /** Diện tích gốc (m²) khi dùng diện tích bậc thang. */
+  rawArea?: number | null;
+  /** Diện tích tính phí sau khi áp urbanCoefficient (nếu applyUrbanBefore). */
+  effectiveArea?: number | null;
 };
 
 export type CalculatorSnapshotInput = {
@@ -107,7 +117,10 @@ function locationBreakdownFromResult(
   }));
   const narrative =
     `Cách tính: áp dụng MLCS (${formatVND(baseSalary)}) theo bậc thang Nghị định 17/2023/NĐ-CP. ` +
-    `Tổng cộng ${formatVND(pf.subTotal)} cho thời hạn ${formatTerm(pf.durationMonths)}.`;
+    `Tổng cộng ${formatVND(pf.subTotal)} cho thời hạn ${formatTerm(pf.durationMonths)}.` +
+    (pf.applyUrbanBefore
+      ? ` Hệ số đô thị đã được áp vào diện tích (${pf.rawArea ?? 0} m² → ${pf.effectiveArea ?? 0} m²) trước khi chia bậc.`
+      : '');
   return { breakdown, narrative };
 }
 
@@ -151,6 +164,11 @@ export function buildCalculationSnapshot(input: CalculatorSnapshotInput): Calcul
       termDisplay: formatTerm(pf.durationMonths),
       urbanType: pf.item.urbanLabel || '—',
       urbanCoefficient: formatPercent(pf.item.urbanFactor),
+      urbanMode: pf.urbanMode ?? null,
+      urbanModeLabel: pf.urbanModeLabel ?? null,
+      applyUrbanBefore: pf.applyUrbanBefore ?? null,
+      rawAreaM2: pf.rawArea ?? null,
+      effectiveAreaM2: pf.effectiveArea ?? null,
       supportDisplay: input.supportPct > 0 ? `−${formatPercent(input.supportPct)}` : '—',
       royaltyBeforeVatDisplay: formatVND(royaltyBeforeVat),
       vatDisplay: formatVND(locVat),

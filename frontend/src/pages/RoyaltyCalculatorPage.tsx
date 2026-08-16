@@ -228,24 +228,35 @@ export function RoyaltyCalculatorPage() {
 
       // Khi đô thị đã áp vào đầu vào thì không nhân lại ở bước cộng tiền.
       const effectiveUrbanFactor = applyUrbanBefore ? 1 : item.urbanFactor;
+      // exportItem đã được gắn nhãn "Cách 2" vào urbanLabel, nhưng Word/Excel
+      // cần field urbanMode rõ ràng để hiển thị "Cách áp dụng đô thị".
       const exportItem = applyUrbanBefore
         ? {
             ...item,
             urbanFactor: 1,
             urbanLabel: `${item.urbanLabel} · Cách 2 (đã áp trước khi chia bậc)`,
+            urbanMode,
+            urbanModeLabel,
           }
-        : item;
+        : {
+            ...item,
+            urbanMode,
+            urbanModeLabel,
+          };
 
       return {
         item,
         exportItem,
         field,
         vals,
+        computeVals,
         result,
         applyUrbanBefore,
         rawArea,
         effectiveArea,
         effectiveUrbanFactor,
+        urbanMode,
+        urbanModeLabel,
       };
     }),
     [selectedItems, inputsByInstance, baseSalary, urbanMode]
@@ -298,7 +309,7 @@ export function RoyaltyCalculatorPage() {
         // Global urban kept for backward compat / default reference; not used for per-instance calc
         urbanLabel, urbanFactor,
         supportPct, vatPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode, urbanModeLabel }) => ({
           fieldId: field.id,
           vals,
           result,
@@ -311,6 +322,11 @@ export function RoyaltyCalculatorPage() {
           urbanId: item.urbanId,
           urbanLabel: item.urbanLabel,
           urbanFactor: item.urbanFactor,
+          urbanMode,
+          urbanModeLabel,
+          applyUrbanBefore,
+          rawArea,
+          effectiveArea,
         })),
         totals, quoteDate: new Date().toLocaleDateString('vi-VN'),
       });
@@ -327,7 +343,7 @@ export function RoyaltyCalculatorPage() {
         baseSalary,
         vatPct,
         supportPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, effectiveArea, urbanMode, urbanModeLabel }) => ({
           item,
           fieldId: field.id,
           vals,
@@ -341,6 +357,12 @@ export function RoyaltyCalculatorPage() {
           })),
           capped: result.capped,
           durationMonths: contractMonths,
+          areaM2: (vals.area ?? 0) > 0 ? (vals.area as number) : undefined,
+          urbanMode,
+          urbanModeLabel,
+          applyUrbanBefore,
+          rawArea: (vals.area ?? 0) > 0 ? (vals.area as number) : null,
+          effectiveArea: applyUrbanBefore ? effectiveArea : null,
         })),
       });
       recordSnapshot(snapshot);
@@ -352,7 +374,7 @@ export function RoyaltyCalculatorPage() {
 
   // Nguồn dữ liệu cho hộp thoại xuất Excel — bố cục bảng tính hợp đồng.
   const excelSource = useMemo(() => ({
-    instances: activeInstances.map(({ exportItem: item, field, vals, result }) => ({
+    instances: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode, urbanModeLabel }) => ({
       instanceId: item.instanceId,
       field,
       result,
@@ -361,6 +383,11 @@ export function RoyaltyCalculatorPage() {
       displayName: item.displayName,
       urbanLabel: item.urbanLabel,
       urbanFactor: item.urbanFactor,
+      urbanMode,
+      urbanModeLabel,
+      applyUrbanBefore,
+      rawArea,
+      effectiveArea,
     })),
     customer,
     baseSalary,

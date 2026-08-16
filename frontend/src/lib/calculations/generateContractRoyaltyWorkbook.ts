@@ -300,6 +300,28 @@ export async function generateContractRoyaltyWorkbook(
       det.getRow(d).height = 16; d++;
     }
 
+    // Cách áp dụng đô thị — luôn hiển thị để file Excel thể hiện rõ Cách 1/Cách 2
+    if (block.urbanModeLabel) {
+      det.mergeCells(`A${d}:E${d}`);
+      det.getCell(`A${d}`).value = 'Cách áp dụng đô thị:';
+      style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      det.getCell(`F${d}`).value = block.urbanModeLabel;
+      style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
+      det.getRow(d).height = 16; d++;
+    }
+
+    // Option 2 + lĩnh vực m²: hiển thị công thức diện tích gốc × hệ số = diện tích tính phí
+    if (block.applyUrbanBefore && Number.isFinite(block.rawArea) && Number.isFinite(block.effectiveArea) && block.rawArea! > 0) {
+      const displayedPct = Math.round((block.effectiveArea! / block.rawArea!) * 100);
+      det.mergeCells(`A${d}:E${d}`);
+      det.getCell(`A${d}`).value = 'Diện tích gốc → tính phí:';
+      style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      det.getCell(`F${d}`).value =
+        `${block.rawArea!.toLocaleString('vi-VN')} m² × ${displayedPct}% = ${block.effectiveArea!.toLocaleString('vi-VN')} m²`;
+      style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
+      det.getRow(d).height = 16; d++;
+    }
+
     if (block.urbanFactor !== 1) {
       det.mergeCells(`A${d}:E${d}`);
       det.getCell(`A${d}`).value =
@@ -549,6 +571,26 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
       M(r);
       ws.getCell(`A${r}`).value = block.cappedNote;
       style(ws.getCell(`A${r}`), { italic: true, size: 9.5, align: 'center', wrap: true, color: C.danger, border: box(C.rule) });
+      ws.getRow(r).height = 16; r++;
+    }
+
+    if (block.urbanModeLabel) {
+      M(r);
+      ws.getCell(`A${r}`).value = 'Cách áp dụng đô thị:';
+      style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      ws.getCell(`C${r}`).value = block.urbanModeLabel;
+      style(ws.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
+      ws.getRow(r).height = 16; r++;
+    }
+
+    if (block.applyUrbanBefore && Number.isFinite(block.rawArea) && Number.isFinite(block.effectiveArea) && block.rawArea! > 0) {
+      const displayedPct = Math.round((block.effectiveArea! / block.rawArea!) * 100);
+      M(r);
+      ws.getCell(`A${r}`).value = 'Diện tích gốc → tính phí:';
+      style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      ws.getCell(`C${r}`).value =
+        `${block.rawArea!.toLocaleString('vi-VN')} m² × ${displayedPct}% = ${block.effectiveArea!.toLocaleString('vi-VN')} m²`;
+      style(ws.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
       ws.getRow(r).height = 16; r++;
     }
 

@@ -91,6 +91,9 @@ export type ExportData = {
   urbanFactor: number;
   supportPct: number;
   vatPct: number;
+  /** Cách áp dụng hệ số đô thị (áp dụng cho toàn bảng tính; chỉ tham khảo khi perField có urbanMode riêng). */
+  urbanMode?: string;
+  urbanModeLabel?: string;
   perField: {
     instanceId: string;
     fieldId: string;
@@ -110,6 +113,15 @@ export type ExportData = {
     urbanId: string;
     urbanLabel: string;
     urbanFactor: number;
+    /** Cách áp dụng đô thị cho instance này (AFTER_SUBTOTAL hoặc BEFORE_TIERING). */
+    urbanMode?: string;
+    urbanModeLabel?: string;
+    /** True khi đô thị đã được áp vào diện tích trước khi chia bậc (Option 2 + lĩnh vực m²). */
+    applyUrbanBefore?: boolean;
+    /** Diện tích gốc (m²) khi lĩnh vực dùng diện tích bậc thang. */
+    rawArea?: number;
+    /** Diện tích tính phí (m²). Với Option 2 = rawArea × hệ số đô thị; Option 1 = rawArea. */
+    effectiveArea?: number;
   }[];
   totals: QuoteTotals;
   quoteNo?: string;
@@ -145,10 +157,6 @@ function fieldSection(item: ExportData['perField'][number], baseSalary: number, 
   const field = FIELDS.find(f => f.id === item.fieldId)!;
   const { result } = item;
   const out: (Paragraph | Table)[] = [];
-
-  // #region agent log
-  fetch('http://127.0.0.1:7610/ingest/ed7e2e57-0f77-4520-9015-327ec659fccf',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'bb17f6'},body:JSON.stringify({sessionId:'bb17f6',location:'exportRoyaltyQuoteDocx.ts:fieldSection',message:'fieldSection entry - testing H3 H4',data:{areaIndex,displayName:item.displayName,locationName:item.locationName,fieldName:field.name},timestamp:Date.now()})}).catch(()=>{});
-  // #endregion
 
   // ── Location / area header ───────────────────────────────────────────────────
   // Fallback: displayName → locationName → field standard name with number
@@ -189,19 +197,43 @@ function fieldSection(item: ExportData['perField'][number], baseSalary: number, 
   }
 
   // Urban classification — per-instance, always shown
+  const urbanRows: TableRow[] = [
+    new TableRow({ children: [
+      cell('Loại đô thị:', { bold: true, color: '#334155', width: 2200 }),
+      cell(item.urbanLabel, { color: '#1F2937', width: 6000 }),
+    ]}),
+    new TableRow({ children: [
+      cell('Hệ số đô thị:', { bold: true, color: '#334155', width: 2200 }),
+      cell(`${(item.urbanFactor * 100).toFixed(0)}%`, { color: '#1F2937', width: 6000 }),
+    ]}),
+  ];
+  // Cách áp dụng đô thị: luôn hiển thị để người đọc biết bảng tính dùng cách nào.
+  if (item.urbanModeLabel) {
+    urbanRows.push(new TableRow({ children: [
+      cell('Cách áp dụng đô thị:', { bold: true, color: '#334155', width: 2200 }),
+      cell(item.urbanModeLabel, { color: '#1F2937', width: 6000, bold: true }),
+    ]}));
+  }
+  // Với Option 2 (applyUrbanBefore=true) và lĩnh vực dùng m²: hiển thị công thức
+  // diện tích gốc × hệ số = diện tích tính phí để khách hiểu cách chia bậc.
+  if (item.applyUrbanBefore && Number.isFinite(item.rawArea) && Number.isFinite(item.effectiveArea)) {
+    // urbanFactor đã được set = 1 khi applyUrbanBefore=true (đô thị đã nhân trong diện tích).
+    // Lấy lại hệ số gốc từ rawArea/effectiveArea nếu có thể (để hiển thị công thức).
+    const displayedPct = item.rawArea && item.rawArea > 0
+      ? Math.round((item.effectiveArea! / item.rawArea) * 100)
+      : null;
+    const formulaText = displayedPct != null
+      ? `${item.rawArea!.toLocaleString('vi-VN')} m² × ${displayedPct}% = ${item.effectiveArea!.toLocaleString('vi-VN')} m²`
+      : `${item.rawArea!.toLocaleString('vi-VN')} m² → ${item.effectiveArea!.toLocaleString('vi-VN')} m²`;
+    urbanRows.push(new TableRow({ children: [
+      cell('Diện tích gốc → tính phí:', { bold: true, color: '#334155', width: 2200 }),
+      cell(formulaText, { color: '#1F2937', width: 6000, bold: true }),
+    ]}));
+  }
   out.push(new Table({
     width: { size: 8200, type: WidthType.DXA },
     columnWidths: [2200, 6000],
-    rows: [
-      new TableRow({ children: [
-        cell('Loại đô thị:', { bold: true, color: '#334155', width: 2200 }),
-        cell(item.urbanLabel, { color: '#1F2937', width: 6000 }),
-      ]}),
-      new TableRow({ children: [
-        cell('Hệ số đô thị:', { bold: true, color: '#334155', width: 2200 }),
-        cell(`${(item.urbanFactor * 100).toFixed(0)}%`, { color: '#1F2937', width: 6000 }),
-      ]}),
-    ],
+    rows: urbanRows,
   }));
   out.push(p([], { spacing: 80 }));
   // ─────────────────────────────────────────────────────────────────────────────
@@ -329,6 +361,13 @@ function fieldSection(item: ExportData['perField'][number], baseSalary: number, 
     out.push(p([
       txt('⇒ Sau áp đô thị: ', { bold: true, size: 22 }),
       txt('Không áp dụng (phí trọn gói)', { bold: true, size: 22, color: COLOR.mute }),
+    ], { spacing: 120 }));
+  } else if (item.applyUrbanBefore) {
+    // Option 2: đô thị đã được nhân vào diện tích trước khi chia bậc.
+    // Thành tiền đã bao gồm đô thị → không nhân lại.
+    out.push(p([
+      txt('⇒ Sau áp đô thị: ', { bold: true, size: 22 }),
+      txt(`${formatVND(result.subTotal)} (đã áp đô thị trước khi chia bậc)`, { bold: true, size: 22, color: COLOR.ok }),
     ], { spacing: 120 }));
   } else {
     const afterUrban = result.subTotal * item.urbanFactor;
@@ -487,6 +526,13 @@ function collectContent(data: ExportData): (Paragraph | Table)[] {
     out.push(p([txt('Phân loại đô thị: ', { bold: true }), txt('Áp dụng riêng theo từng khu vực/địa điểm')]));
   } else if (data.perField.length === 1) {
     out.push(p([txt('Phân loại đô thị: ', { bold: true }), txt(`${data.perField[0].urbanLabel} (${(data.perField[0].urbanFactor * 100).toFixed(0)}% khung giá)`)]));
+  }
+  // Cách áp dụng đô thị ở mức bảng tính — dùng mode của instance đầu tiên nếu có,
+  // fallback về data.urbanMode. Option 2 với lĩnh vực m² sẽ hiển thị "Cách 2".
+  const headerUrbanModeLabel =
+    data.perField[0]?.urbanModeLabel ?? data.urbanModeLabel ?? null;
+  if (headerUrbanModeLabel) {
+    out.push(p([txt('Cách áp dụng đô thị: ', { bold: true }), txt(headerUrbanModeLabel)]));
   }
   out.push(p([txt('Thời hạn hợp đồng: ', { bold: true }), txt(`${data.contractMonths} tháng`)]));
   out.push(p([txt('Mức lương cơ sở áp dụng: ', { bold: true }), txt(formatVND(data.baseSalary))], { spacing: 200 }));

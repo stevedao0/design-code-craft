@@ -58,6 +58,16 @@ export type ContractBlock = {
   subTotalRaw: number;
   /** Cộng sau hệ số đô thị */
   subTotalAfterUrban: number;
+  /** Cách áp dụng đô thị cho block này (AFTER_SUBTOTAL hoặc BEFORE_TIERING). */
+  urbanMode?: string;
+  /** Label dễ đọc của urbanMode. */
+  urbanModeLabel?: string;
+  /** True khi đô thị đã được áp vào diện tích trước khi chia bậc. */
+  applyUrbanBefore?: boolean;
+  /** Diện tích gốc (m²) khi dùng diện tích bậc thang. */
+  rawArea?: number;
+  /** Diện tích tính phí (m²). */
+  effectiveArea?: number;
 };
 
 export type ContractCustomFee = { label: string; amount: number };
@@ -100,6 +110,15 @@ export type BuildContractModelInput = {
     displayName?: string;
     urbanLabel?: string;
     urbanFactor?: number;
+    /** Cách áp dụng đô thị: AFTER_SUBTOTAL hoặc BEFORE_TIERING. */
+    urbanMode?: string;
+    urbanModeLabel?: string;
+    /** Đô thị đã áp vào diện tích trước khi chia bậc. */
+    applyUrbanBefore?: boolean;
+    /** Diện tích gốc (m²) khi lĩnh vực dùng m². */
+    rawArea?: number;
+    /** Diện tích tính phí (m²). */
+    effectiveArea?: number;
   }>;
   customer?: { name?: string; address?: string; representative?: string };
   customFees?: ContractCustomFee[];
@@ -161,7 +180,14 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
         urbanFactor,
         urbanExempt: Boolean(i.result.urbanExempt),
         subTotalRaw,
+        // Option 2 (applyUrbanBefore=true) đã bao gồm đô thị trong bậc thang,
+        // không nhân lại ở đây. urbanFactor đã được set = 1 ở dòng trên.
         subTotalAfterUrban: r0(subTotalRaw * urbanFactor),
+        urbanMode: i.urbanMode,
+        urbanModeLabel: i.urbanModeLabel,
+        applyUrbanBefore: i.applyUrbanBefore,
+        rawArea: i.rawArea,
+        effectiveArea: i.effectiveArea,
       };
     });
 
