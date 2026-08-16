@@ -77,7 +77,7 @@ export function YearSelector({ year, onChange, className = '' }: YearSelectorPro
           onClick={() => setOpen(o => !o)}
           className="flex items-center justify-center rounded-md px-3 py-1 text-[13px] font-semibold tabular-nums transition-colors"
           style={{
-            background: '#c95867',
+            background: 'var(--accent-danger)',
             color: '#ffffff',
             minWidth: 72,
           }}

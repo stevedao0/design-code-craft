@@ -127,7 +127,7 @@ function SummaryStat({
     tone === 'danger'
       ? 'var(--accent-primary, #4A7202)'
       : tone === 'warning'
-        ? 'var(--accent-warning, #d99425)'
+        ? 'var(--accent-warning)'
         : accent
           ? 'var(--accent-primary, #4A7202)'
           : 'var(--text-primary)';
@@ -807,7 +807,7 @@ function RenewalsTab({ year }: { year: number }) {
                     : cls.tone === 'danger'
                       ? { background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 12%, white)', color: 'var(--accent-primary, #4A7202)' }
                       : cls.tone === 'warning'
-                        ? { background: 'color-mix(in srgb, var(--accent-warning, #d99425) 14%, white)', color: 'var(--accent-warning, #d99425)' }
+                        ? { background: 'color-mix(in srgb, var(--accent-warning) 14%, white)', color: 'var(--accent-warning)' }
                         : { background: 'color-mix(in srgb, var(--accent-brass) 12%, white)', color: 'var(--accent-brass)' };
                   return (
                     <tr key={item.old_contract_id} className="border-t" style={{ borderColor: 'var(--border-default)' }}>

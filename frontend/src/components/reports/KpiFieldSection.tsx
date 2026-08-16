@@ -176,7 +176,7 @@ function AdminKpiOverview(props: {
             const toneStyle = st.tone === 'success'
               ? { bg: 'color-mix(in srgb, var(--accent-success) 12%, white)', color: 'var(--accent-success)' }
               : st.tone === 'warning'
-                ? { bg: 'color-mix(in srgb, var(--accent-warning, #d99425) 12%, white)', color: 'var(--accent-warning, #d99425)' }
+                ? { bg: 'color-mix(in srgb, var(--accent-warning) 12%, white)', color: 'var(--accent-warning)' }
                 : { bg: 'var(--surface)', color: 'var(--text-muted)' };
             const ringFields = emp.active_count > 0
               ? [{
@@ -325,7 +325,7 @@ function EmployeeKpiDetail(props: {
         <div className="rounded-xl border p-4 text-[12px]"
           style={{
             borderColor: 'var(--accent-warning)',
-            background: 'color-mix(in srgb, var(--accent-warning, #d99425) 6%, white)',
+            background: 'color-mix(in srgb, var(--accent-warning) 6%, white)',
           }}>
           <div className="font-semibold mb-1" style={{ color: 'var(--accent-warning)' }}>
             Thông tin đối soát KPI
@@ -395,7 +395,7 @@ function FieldKpiCard({ field }: FieldKpiCardProps) {
     : pct >= 75
       ? 'var(--accent-primary, #4A7202)'
       : pct >= 40
-        ? 'var(--accent-warning, #d99425)'
+        ? 'var(--accent-warning)'
         : 'var(--accent-brass)';
 
   return (

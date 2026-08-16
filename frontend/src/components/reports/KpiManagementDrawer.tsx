@@ -358,7 +358,7 @@ export function KpiManagementDrawer({
                         type="button"
                         title={a.is_active ? 'Ngừng áp dụng' : 'Kích hoạt'}
                         onClick={() => toggleActive(a)}
-                        className="rounded-md p-1.5 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-warning,#d99425)_10%,white)]"
+                        className="rounded-md p-1.5 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-warning)_10%,white)]"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         <PowerIcon className="h-3.5 w-3.5" />
