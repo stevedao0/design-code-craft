@@ -133,11 +133,6 @@ export function CalculationHistoryPage({
     }
   };
 
-  const handleExportWord = (snapshot: CalculationSnapshot) => {
-    // Recompose export payload from snapshot and run the existing Word flow.
-    if (onPickSnapshot) onPickSnapshot(snapshot);
-  };
-
   return (
     <div
       className="min-h-full"
@@ -288,7 +283,6 @@ export function CalculationHistoryPage({
         <CalculationDetailSheet
           onClose={() => setSelectedSnapshot(null)}
           onExportExcelRequest={handleExportExcelRequest}
-          onExportWord={handleExportWord}
           snapshot={selectedSnapshot}
         />
       </div>

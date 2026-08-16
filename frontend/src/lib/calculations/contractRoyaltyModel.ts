@@ -32,6 +32,12 @@ export type ContractTierLine = {
   qty: number;
   /** Thành tiền của bậc (MLCS × hệ số × số lượng) */
   amount: number;
+  /**
+   * Thành tiền của bậc sau khi nhân tỷ lệ đô thị.
+   * Dùng cho Cách 2 (per-tier) - bằng `amount × urbanFactor`, cùng tổng với Cách 1.
+   * Để trống thì bộ render dùng `amount` (Cách 1 - after-subtotal).
+   */
+  amountAfterUrban?: number;
   /** Bậc trọn gói — không hiển thị công thức MLCS × hệ số */
   hideFormula?: boolean;
 };
@@ -56,6 +62,8 @@ export type ContractBlock = {
   /** Tỷ lệ đô thị hiển thị % cho khách — lấy từ urbanFactor. */
   urbanRatePercent?: number;
   urbanExempt: boolean;
+  /** Cách áp dụng tỷ lệ đô thị cho block này. */
+  urbanMode?: 'AFTER_SUBTOTAL' | 'PER_TIER';
   /** Tiền cộng theo định mức (chưa nhân tỷ lệ đô thị) */
   baseTierAmount: number;
   /** Tiền sau khi áp tỷ lệ đô thị */
@@ -106,6 +114,8 @@ export type BuildContractModelInput = {
     displayName?: string;
     urbanLabel?: string;
     urbanFactor?: number;
+    /** Cách áp dụng tỷ lệ đô thị của instance này. */
+    urbanMode?: 'AFTER_SUBTOTAL' | 'PER_TIER';
   }>;
   customer?: { name?: string; address?: string; representative?: string };
   customFees?: ContractCustomFee[];
@@ -144,8 +154,14 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
     .filter((i) => i.result.hasInput && i.result.rows.length > 0)
     .map((i, idx) => {
       const urbanFactor = i.result.urbanExempt ? 1 : (i.urbanFactor ?? 1);
+      const urbanMode = i.urbanMode ?? 'AFTER_SUBTOTAL';
       const baseTierAmount = r0(i.result.subTotal);
+      // urbanAdjustedAmount là tổng cuối cùng — Cách 1 và Cách 2 đều cho cùng giá trị
+      // khi cùng quy tắc làm tròn (cộng linear × cùng hệ số).
       const urbanAdjustedAmount = r0(baseTierAmount * urbanFactor);
+      // Khi Cách 2 (PER_TIER), bộ render sẽ hiển thị từng dòng tier đã nhân urbanFactor
+      // nhưng tổng cộng không đổi (cùng urbanAdjustedAmount).
+      const showUrbanPerTier = !i.result.urbanExempt && urbanMode === 'PER_TIER' && urbanFactor !== 1;
       return {
         id: i.instanceId,
         fieldName: i.field.name,
@@ -159,6 +175,7 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
           coefText: row.coefText,
           qty: row.qty || 1,
           amount: r0(row.amount),
+          amountAfterUrban: showUrbanPerTier ? r0(row.amount * urbanFactor) : undefined,
           hideFormula: row.hideFormula,
         })),
         cappedNote: i.result.capped && i.result.capMultiplier !== undefined
@@ -168,6 +185,7 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
         urbanFactor,
         urbanRatePercent: Math.round(urbanFactor * 100),
         urbanExempt: Boolean(i.result.urbanExempt),
+        urbanMode,
         baseTierAmount,
         urbanAdjustedAmount,
         subTotalRaw: baseTierAmount,

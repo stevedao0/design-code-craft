@@ -1,9 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { FileTextIcon, XIcon } from 'lucide-react';
+import { XIcon } from 'lucide-react';
 import { CalculationSnapshotSummary } from './CalculationSnapshotSummary';
 import { ExcelExportButton } from './ExcelExportButton';
-import { ExportStatusState } from './ExportStatusState';
 import { LocationBreakdown } from './LocationBreakdown';
 import type {
   CalculationLocationSnapshot,
@@ -15,12 +14,10 @@ export function CalculationDetailSheet({
   snapshot,
   onClose,
   onExportExcelRequest,
-  onExportWord,
 }: {
   snapshot: CalculationSnapshot | null;
   onClose: () => void;
   onExportExcelRequest?: (snapshot: CalculationSnapshot) => void;
-  onExportWord?: (snapshot: CalculationSnapshot) => void;
 }) {
   const [excelState, setExcelState] = useState<ExcelExportUiState>('ready');
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -159,25 +156,12 @@ export function CalculationDetailSheet({
           <p className="py-2 text-[11px] italic leading-relaxed text-stone-500">
             Bằng chữ: {snapshot.amountInWords}
           </p>
-          <div className="flex flex-col gap-3 border-t border-stone-100 py-3 sm:flex-row sm:items-center sm:justify-between">
-            <ExportStatusState state={excelState} />
-            <div className="flex items-center justify-end gap-2">
-              {onExportWord ? (
-                <button
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-[10px] border border-stone-300 bg-white px-3.5 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-lime-700/30"
-                  onClick={() => onExportWord(snapshot)}
-                  type="button"
-                >
-                  <FileTextIcon className="h-4 w-4" />
-                  Xuất Word
-                </button>
-              ) : null}
-              <ExcelExportButton
-                disabled={!canExportExcel}
-                onRequest={requestExcel}
-                state={excelState}
-              />
-            </div>
+          <div className="flex flex-col gap-3 border-t border-stone-100 py-3 sm:flex-row sm:items-center sm:justify-end">
+            <ExcelExportButton
+              disabled={!canExportExcel}
+              onRequest={requestExcel}
+              state={excelState}
+            />
           </div>
         </footer>
       </aside>

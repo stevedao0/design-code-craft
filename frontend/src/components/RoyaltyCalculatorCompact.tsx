@@ -5,12 +5,11 @@
  * scale+fade animation, modern and minimal.
  */
 import React, { useMemo, useState, useRef, useEffect } from 'react';
-import { XIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon, FileDownIcon, ExternalLinkIcon, Maximize2Icon, InfoIcon } from 'lucide-react';
+import { XIcon, PlusIcon, ChevronDownIcon, ChevronUpIcon, ExternalLinkIcon, Maximize2Icon, InfoIcon } from 'lucide-react';
 import {
   FIELDS, FieldResult, computeQuoteTotals, formatVND, formatCoef,
 } from '../lib/royaltyCalc';
 import { numberToVietnameseWords } from '../lib/numberToVietnameseWords';
-import { exportRoyaltyQuoteDocx } from '../lib/exportRoyaltyQuoteDocx';
 import { VcpmcMoneyTable } from './app-ui/data-table/VcpmcMoneyTable';
 import type {
   DataTableColumn,
@@ -72,7 +71,6 @@ export function RoyaltyCalculatorCompact({ onOpenFullPage, embedded = false }: R
   const [supportPct, setSupportPct] = useState(0);
   const [fields, setFields] = useState<ActiveField[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [exporting, setExporting] = useState(false);
   const [customFees, setCustomFees] = useState<Array<{ id: string; label: string; amount: number }>>([]);
 
   const urbanFactor = URBAN_OPTIONS.find((u) => u.id === urban)!.factor;
@@ -135,31 +133,6 @@ export function RoyaltyCalculatorCompact({ onOpenFullPage, embedded = false }: R
       grandTotal: taxableSubtotal + gtgtAmount,
     };
   }, [perField, urbanFactor, supportPct, vatPct, customFees]);
-
-  const canExport = activeFields.length > 0 || customFees.some((f) => f.amount > 0);
-
-  const handleExport = async () => {
-    if (!canExport) return;
-    setExporting(true);
-    try {
-      await exportRoyaltyQuoteDocx({
-        customer: { name: '', address: '', representative: '' },
-        contractMonths: 12,
-        baseSalary,
-        urbanLabel,
-        urbanFactor,
-        supportPct: supportPct / 100,
-        vatPct: vatPct / 100,
-        perField: activeFields.map(({ field, vals, result }) => ({
-          fieldId: field.id, vals, result,
-        })),
-        totals,
-        quoteDate: new Date().toLocaleDateString('vi-VN'),
-      });
-    } finally {
-      setExporting(false);
-    }
-  };
 
   return (
     <div className={`flex flex-col h-full min-h-0 ${embedded ? '!min-h-[60vh]' : ''}`}>
@@ -371,14 +344,6 @@ export function RoyaltyCalculatorCompact({ onOpenFullPage, embedded = false }: R
       {/* Footer actions */}
       {(activeFields.length > 0 || customFees.some((f) => f.amount > 0)) && (
         <div className="flex-shrink-0 px-5 py-3.5 border-t border-zinc-200/80 flex items-center gap-2">
-          <button
-            onClick={handleExport}
-            disabled={exporting || !canExport}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-lime-500 hover:bg-lime-600 text-white text-xs font-semibold transition-colors disabled:opacity-40"
-          >
-            <FileDownIcon size={13} />
-            {exporting ? 'Đang tạo…' : 'Xuất Word'}
-          </button>
           <button
             onClick={handleOpenFullPage}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-zinc-300 text-zinc-600 text-xs font-semibold hover:bg-zinc-50 transition-colors"

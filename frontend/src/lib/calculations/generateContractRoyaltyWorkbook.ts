@@ -103,8 +103,10 @@ export async function generateContractRoyaltyWorkbook(
   wb.title = model.documentTitle;
 
   const sum = wb.addWorksheet('Tổng hợp', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  const det = wb.addWorksheet('Chi tiết', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  const ctr = wb.addWorksheet('Bảng hợp đồng', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
+  const det = wb.addWorksheet('Chi tiết', { state: 'hidden', pageSetup: PAGE(), views: [{ showGridLines: false }] });
+  const ctr = wb.addWorksheet('Bảng hợp đồng', { state: 'hidden', pageSetup: PAGE(), views: [{ showGridLines: false }] });
+  // Chỉ một sheet "Tổng hợp" hiển thị — sheet mặc định khi mở file.
+  wb.views = [{ activeTab: 0, firstSheet: 0, visibility: 'visible', x: 0, y: 0, width: 0, height: 0 }];
 
   sum.columns = [
     { key: 'a', width: 5.5 }, { key: 'b', width: 27 }, { key: 'c', width: 24 },
@@ -251,6 +253,7 @@ export async function generateContractRoyaltyWorkbook(
     det.getRow(d).height = 26; d++;
 
     const firstTier = d;
+    const perTier = block.urbanMode === 'PER_TIER' && !block.urbanExempt && block.urbanFactor !== 1;
     block.tiers.forEach((t, ti) => {
       det.getCell(`A${d}`).value = ti + 1;
       style(det.getCell(`A${d}`), { size: 10, align: 'center', border: box(C.rule) });
@@ -262,7 +265,7 @@ export async function generateContractRoyaltyWorkbook(
         det.mergeCells(`C${d}:E${d}`);
         det.getCell(`C${d}`).value = 'Mức trọn gói theo biểu mức';
         style(det.getCell(`C${d}`), { italic: true, size: 10, align: 'center', color: C.muted, border: box(C.rule) });
-        det.getCell(`F${d}`).value = t.amount;
+        det.getCell(`F${d}`).value = perTier ? (t.amountAfterUrban ?? t.amount) : t.amount;
       } else {
         det.getCell(`C${d}`).value = t.qty;
         style(det.getCell(`C${d}`), { size: 10, align: 'center', border: box(C.rule) });
@@ -270,9 +273,17 @@ export async function generateContractRoyaltyWorkbook(
         style(det.getCell(`D${d}`), { size: 10, align: 'center', border: box(C.rule) });
         det.getCell(`E${d}`).value = { formula: 'MLCS', result: model.baseSalary } as ExcelJS.CellFormulaValue;
         style(det.getCell(`E${d}`), { size: 10, align: 'right', numFmt: MONEY, border: box(C.rule) });
-        det.getCell(`F${d}`).value = {
-          formula: `ROUND(MLCS*${t.coef}*${t.qty},0)`, result: t.amount,
-        } as ExcelJS.CellFormulaValue;
+        // Cách 2 (per-tier): mỗi dòng tier đã nhân tỷ lệ đô thị trong Excel formula.
+        if (perTier) {
+          det.getCell(`F${d}`).value = {
+            formula: `ROUND(MLCS*${t.coef}*${t.qty}*${block.urbanFactor},0)`,
+            result: t.amountAfterUrban ?? t.amount,
+          } as ExcelJS.CellFormulaValue;
+        } else {
+          det.getCell(`F${d}`).value = {
+            formula: `ROUND(MLCS*${t.coef}*${t.qty},0)`, result: t.amount,
+          } as ExcelJS.CellFormulaValue;
+        }
       }
       style(det.getCell(`F${d}`), { size: 10, bold: true, align: 'right', numFmt: MONEY, border: box(C.rule) });
       det.getRow(d).height = 18; d++;
@@ -285,8 +296,11 @@ export async function generateContractRoyaltyWorkbook(
       det.mergeCells(`A${d}:E${d}`);
       det.getCell(`A${d}`).value = 'Cộng tiền bản quyền theo khung giá';
       style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      // Per-tier: SUM từng dòng (đã nhân urbanFactor) = urbanAdjustedAmount
+      // After-subtotal: SUM từng dòng (raw) = baseTierAmount
       det.getCell(`F${d}`).value = {
-        formula: `SUM(F${firstTier}:F${lastTier})`, result: block.subTotalRaw,
+        formula: `SUM(F${firstTier}:F${lastTier})`,
+        result: perTier ? block.subTotalAfterUrban : block.subTotalRaw,
       } as ExcelJS.CellFormulaValue;
       style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'right', numFmt: MONEY, fill: C.band, border: box(C.rule) });
       blockRef = `F${d}`;
@@ -312,7 +326,7 @@ export async function generateContractRoyaltyWorkbook(
       det.getRow(d).height = 16; d++;
     }
 
-    if (block.urbanFactor !== 1) {
+    if (block.urbanFactor !== 1 && !perTier) {
       det.mergeCells(`A${d}:E${d}`);
       const urbanText = `Áp dụng tỷ lệ đô thị${block.urbanLabel ? ` — ${block.urbanLabel}` : ''}`;
       det.getCell(`A${d}`).value = urbanText;
@@ -362,7 +376,7 @@ export async function generateContractRoyaltyWorkbook(
     ['B', 'Khu vực sử dụng', 'left'],
     ['C', 'Lĩnh vực áp dụng', 'left'],
     ['D', 'Quy mô', 'center'],
-    ['E', 'Hệ số đô thị', 'center'],
+    ['E', 'Tỷ lệ đô thị', 'center'],
     ['F', 'Tiền bản quyền (đồng)', 'center'],
   ];
   for (const [col, text, al] of sHeads) {
@@ -384,7 +398,12 @@ export async function generateContractRoyaltyWorkbook(
     style(sum.getCell(`C${r}`), { size: 10, wrap: true, indent: 1, fill: zebra, border: box(C.rule) });
     sum.getCell(`D${r}`).value = b.scaleText;
     style(sum.getCell(`D${r}`), { size: 10, align: 'center', fill: zebra, border: box(C.rule) });
-    sum.getCell(`E${r}`).value = b.urbanExempt ? 'Miễn áp dụng' : fmtFactor(b.urbanFactor);
+    // Cột Tỷ lệ đô thị — ưu tiên nhãn + phần trăm, fallback hệ số thập phân.
+    sum.getCell(`E${r}`).value = b.urbanExempt
+      ? 'Miễn áp dụng'
+      : b.urbanLabel
+        ? `${b.urbanLabel} (${Math.round(b.urbanFactor * 100)}%)`
+        : fmtFactor(b.urbanFactor);
     style(sum.getCell(`E${r}`), { size: 10, align: 'center', fill: zebra, border: box(C.rule) });
     sum.getCell(`F${r}`).value = {
       formula: `=${blockTotalRefs[i]}`, result: b.subTotalAfterUrban,
@@ -546,6 +565,7 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
     ws.getRow(r).height = 18; r++;
 
     const firstTierRow = r;
+    const perTier = block.urbanMode === 'PER_TIER' && !block.urbanExempt && block.urbanFactor !== 1;
     block.tiers.forEach((t, ti) => {
       ws.getCell(`A${r}`).value = ti === 0 ? block.scaleText : '';
       style(ws.getCell(`A${r}`), { bold: ti === 0, size: 10.5, align: 'center', wrap: true, border: box(C.rule) });
@@ -557,9 +577,18 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
         : `${t.label}: ${num(model.baseSalary)} đồng x ${rateTxt}/năm x ${num(t.qty)}`;
       style(ws.getCell(`B${r}`), { size: 10.5, align: 'left', indent: 1, wrap: true, border: box(C.rule) });
 
-      ws.getCell(`C${r}`).value = t.hideFormula
-        ? Math.round(t.amount)
-        : ({ formula: `ROUND(MLCS*${t.coef}*${t.qty},0)`, result: t.amount } as ExcelJS.CellFormulaValue);
+      if (t.hideFormula) {
+        ws.getCell(`C${r}`).value = perTier ? Math.round(t.amountAfterUrban ?? t.amount) : Math.round(t.amount);
+      } else if (perTier) {
+        ws.getCell(`C${r}`).value = {
+          formula: `ROUND(MLCS*${t.coef}*${t.qty}*${block.urbanFactor},0)`,
+          result: t.amountAfterUrban ?? t.amount,
+        } as ExcelJS.CellFormulaValue;
+      } else {
+        ws.getCell(`C${r}`).value = {
+          formula: `ROUND(MLCS*${t.coef}*${t.qty},0)`, result: t.amount,
+        } as ExcelJS.CellFormulaValue;
+      }
       style(ws.getCell(`C${r}`), { size: 10.5, align: 'right', numFmt: MONEY, border: box(C.rule) });
       ws.getRow(r).height = 18; r++;
     });
@@ -568,6 +597,8 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
     let ref = `C${lastTierRow}`;
     if (block.tiers.length > 1) {
       ref = `SUM(C${firstTierRow}:C${lastTierRow})`;
+    } else if (perTier) {
+      ref = `C${lastTierRow}`;
     }
 
     if (block.cappedNote) {

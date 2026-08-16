@@ -426,7 +426,7 @@ function SheetPreview({ model }: { model: ContractRoyaltyModel }) {
               {b.urbanFactor !== 1 && (
                 <tr>
                   <td colSpan={5} style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>
-                    Hệ số khu vực đô thị{b.urbanLabel ? ` — ${b.urbanLabel}` : ''} (x {fmtFactor(b.urbanFactor)})
+                    Áp dụng tỷ lệ đô thị{b.urbanLabel ? ` — ${b.urbanLabel}` : ''} (x {fmtFactor(b.urbanFactor)})
                   </td>
                   <td style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>
                     {vnd(b.subTotalAfterUrban)}

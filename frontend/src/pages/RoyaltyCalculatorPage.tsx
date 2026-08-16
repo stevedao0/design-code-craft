@@ -26,7 +26,6 @@ import {
   type UrbanApplicationMode,
 } from '../lib/pricingSnapshot';
 import { UrbanModeSelector } from '../components/pricing/UrbanModeSelector';
-import { exportRoyaltyQuoteDocx } from '../lib/exportRoyaltyQuoteDocx';
 import {
   buildCalculationSnapshot,
 } from '../components/calculations/calculationSnapshotAdapter';
@@ -288,42 +287,6 @@ export function RoyaltyCalculatorPage() {
 
   const currentUrbanModeLabel = getUrbanModeLabel(urbanMode);
 
-  const handleExport = async () => {
-    if (activeInstances.length === 0) return;
-    setExporting(true);
-    try {
-      await exportRoyaltyQuoteDocx({
-        customer, contractMonths, baseSalary,
-        urbanLabel, urbanFactor,
-        supportPct, vatPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result, urbanFactor, urbanAdjustedAmount }) => ({
-          fieldId: field.id,
-          vals,
-          result,
-          instanceId: item.instanceId,
-          displayName: item.displayName,
-          locationName: item.locationName,
-          tradeName: item.tradeName,
-          businessAddress: item.businessAddress,
-          locationNote: item.locationNote,
-          urbanId: item.urbanId,
-          urbanLabel: item.urbanLabel,
-          urbanFactor,
-          baseTierAmount: result.subTotal,
-          urbanAdjustedAmount,
-        })),
-        totals, quoteDate: new Date().toLocaleDateString('vi-VN'),
-      });
-    } catch (e) {
-      console.error('[RoyaltyCalculator Word Export] failed:', e, {
-        name: e instanceof Error ? e.name : undefined,
-        message: e instanceof Error ? e.message : String(e),
-        stack: e instanceof Error ? e.stack : undefined,
-      });
-      throw e;
-    } finally { setExporting(false); }
-  };
-
   const handleSaveToHistory = () => {
     if (activeInstances.length === 0) return;
     setExporting(true);
@@ -363,7 +326,7 @@ export function RoyaltyCalculatorPage() {
 
   // Nguồn dữ liệu cho hộp thoại xuất Excel — bố cục bảng tính hợp đồng.
   const excelSource = useMemo(() => ({
-    instances: activeInstances.map(({ exportItem: item, field, vals, result, urbanFactor, urbanAdjustedAmount, baseTierAmount }) => ({
+    instances: activeInstances.map(({ exportItem: item, field, vals, result, urbanFactor, urbanAdjustedAmount, baseTierAmount, urbanMode }) => ({
       instanceId: item.instanceId,
       field,
       result,
@@ -372,6 +335,8 @@ export function RoyaltyCalculatorPage() {
       displayName: item.displayName,
       urbanLabel: item.urbanLabel,
       urbanFactor,
+      // BEFORE_TIERING = Cách 2 (per-tier) theo nhãn UI mới.
+      urbanMode: (urbanMode === 'BEFORE_TIERING' ? 'PER_TIER' : 'AFTER_SUBTOTAL') as 'AFTER_SUBTOTAL' | 'PER_TIER',
       baseTierAmount,
       urbanAdjustedAmount,
     })),
@@ -708,17 +673,6 @@ export function RoyaltyCalculatorPage() {
 
           {/* Footer actions */}
           <div className="border-t p-4 space-y-2" style={{ background: C.paper, borderColor: C.line }}>
-            <button
-              onClick={handleExport}
-              disabled={activeInstances.length === 0 || exporting}
-              className="w-full py-3 rounded-[10px] font-semibold text-[12.5px] text-white flex items-center justify-center gap-2 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-              style={{ background: C.green }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = C.navy)}
-              onMouseLeave={(e) => (e.currentTarget.style.background = C.green)}
-            >
-              <FileDownIcon className="h-4 w-4" />
-              {exporting ? 'Đang tạo file…' : 'Xuất bảng tính Word'}
-            </button>
             <ExcelExportButton
               state={excelState}
               disabled={activeInstances.length === 0 || exporting}
