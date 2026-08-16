@@ -301,7 +301,7 @@ export async function generateContractRoyaltyWorkbook(
     }
 
     // Cách áp dụng đô thị — luôn hiển thị để file Excel thể hiện rõ Cách 1/Cách 2
-    if (block.urbanModeLabel) {
+    if (typeof block.urbanModeLabel === 'string' && block.urbanModeLabel) {
       det.mergeCells(`A${d}:E${d}`);
       det.getCell(`A${d}`).value = 'Cách áp dụng đô thị:';
       style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
@@ -357,7 +357,8 @@ export async function generateContractRoyaltyWorkbook(
   // Cách áp dụng đô thị ở mức bảng tính: nếu tất cả block cùng mode thì hiển thị 1 dòng.
   const allModes = model.blocks.map((b) => b.urbanMode).filter(Boolean);
   if (allModes.length > 0 && allModes.every((m) => m === allModes[0])) {
-    const sharedLabel = model.blocks[0].urbanModeLabel || '—';
+    const firstLabel = model.blocks[0].urbanModeLabel;
+    const sharedLabel = typeof firstLabel === 'string' && firstLabel ? firstLabel : '—';
     sum.mergeCells(`A${r}:B${r}`);
     sum.getCell(`A${r}`).value = 'Cách áp dụng đô thị:';
     style(sum.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
@@ -586,7 +587,7 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
       ws.getRow(r).height = 16; r++;
     }
 
-    if (block.urbanModeLabel) {
+    if (typeof block.urbanModeLabel === 'string' && block.urbanModeLabel) {
       // Merge A:B (label), ghi value độc lập ở C.
       // Không merge A:C vì sẽ không ghi được value riêng ở C.
       ws.mergeCells(`A${r}:B${r}`);

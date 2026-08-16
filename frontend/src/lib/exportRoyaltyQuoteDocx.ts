@@ -208,7 +208,7 @@ function fieldSection(item: ExportData['perField'][number], baseSalary: number, 
     ]}),
   ];
   // Cách áp dụng đô thị: luôn hiển thị để người đọc biết bảng tính dùng cách nào.
-  if (item.urbanModeLabel) {
+  if (typeof item.urbanModeLabel === 'string' && item.urbanModeLabel) {
     urbanRows.push(new TableRow({ children: [
       cell('Cách áp dụng đô thị:', { bold: true, color: '#334155', width: 2200 }),
       cell(item.urbanModeLabel, { color: '#1F2937', width: 6000, bold: true }),
@@ -530,7 +530,8 @@ function collectContent(data: ExportData): (Paragraph | Table)[] {
   // Cách áp dụng đô thị ở mức bảng tính — dùng mode của instance đầu tiên nếu có,
   // fallback về data.urbanMode. Option 2 với lĩnh vực m² sẽ hiển thị "Cách 2".
   const headerUrbanModeLabel =
-    data.perField[0]?.urbanModeLabel ?? data.urbanModeLabel ?? null;
+    (typeof data.perField[0]?.urbanModeLabel === 'string' && data.perField[0].urbanModeLabel) ||
+    (typeof data.urbanModeLabel === 'string' ? data.urbanModeLabel : null);
   if (headerUrbanModeLabel) {
     out.push(p([txt('Cách áp dụng đô thị: ', { bold: true }), txt(headerUrbanModeLabel)]));
   }

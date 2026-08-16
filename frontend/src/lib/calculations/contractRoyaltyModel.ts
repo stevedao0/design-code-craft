@@ -158,6 +158,8 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
     .map((i, idx) => {
       const urbanFactor = i.result.urbanExempt ? 1 : (i.urbanFactor ?? 1);
       const subTotalRaw = r0(i.result.subTotal);
+      const safeUrbanModeLabel =
+        typeof i.urbanModeLabel === 'string' ? i.urbanModeLabel : undefined;
       return {
         id: i.instanceId,
         fieldName: i.field.name,
@@ -184,7 +186,7 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
         // không nhân lại ở đây. urbanFactor đã được set = 1 ở dòng trên.
         subTotalAfterUrban: r0(subTotalRaw * urbanFactor),
         urbanMode: i.urbanMode,
-        urbanModeLabel: i.urbanModeLabel,
+        urbanModeLabel: safeUrbanModeLabel,
         applyUrbanBefore: i.applyUrbanBefore,
         rawArea: i.rawArea,
         effectiveArea: i.effectiveArea,

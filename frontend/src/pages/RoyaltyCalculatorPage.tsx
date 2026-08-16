@@ -22,7 +22,7 @@ import {
 import { numberToVietnameseWords } from '../lib/numberToVietnameseWords';
 import {
   DEFAULT_URBAN_APPLICATION_MODE,
-  urbanModeLabel,
+  urbanModeLabel as getUrbanModeLabel,
   type UrbanApplicationMode,
 } from '../lib/pricingSnapshot';
 import { UrbanModeSelector } from '../components/pricing/UrbanModeSelector';
@@ -210,8 +210,9 @@ export function RoyaltyCalculatorPage() {
   };
 
   // Build per-instance display data. Each entry corresponds to one usage instance.
-  const perInstance = useMemo(() =>
-    selectedItems.map((item) => {
+  const perInstance = useMemo(() => {
+    const currentUrbanModeLabel = getUrbanModeLabel(urbanMode);
+    return selectedItems.map((item) => {
       const field = FIELDS.find((f) => f.id === item.fieldId)!;
       const vals = inputsByInstance[item.instanceId] || {};
 
@@ -236,12 +237,12 @@ export function RoyaltyCalculatorPage() {
             urbanFactor: 1,
             urbanLabel: `${item.urbanLabel} · Cách 2 (đã áp trước khi chia bậc)`,
             urbanMode,
-            urbanModeLabel,
+            urbanModeLabel: currentUrbanModeLabel,
           }
         : {
             ...item,
             urbanMode,
-            urbanModeLabel,
+            urbanModeLabel: currentUrbanModeLabel,
           };
 
       return {
@@ -256,9 +257,10 @@ export function RoyaltyCalculatorPage() {
         effectiveArea,
         effectiveUrbanFactor,
         urbanMode,
-        urbanModeLabel,
+        urbanModeLabel: currentUrbanModeLabel,
       };
-    }),
+    });
+    },
     [selectedItems, inputsByInstance, baseSalary, urbanMode]
   );
 
@@ -300,6 +302,8 @@ export function RoyaltyCalculatorPage() {
     };
   }, [perInstance, vatPct]);
 
+  const currentUrbanModeLabel = getUrbanModeLabel(urbanMode);
+
   const handleExport = async () => {
     if (activeInstances.length === 0) return;
     setExporting(true);
@@ -309,7 +313,7 @@ export function RoyaltyCalculatorPage() {
         // Global urban kept for backward compat / default reference; not used for per-instance calc
         urbanLabel, urbanFactor,
         supportPct, vatPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode, urbanModeLabel }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode }) => ({
           fieldId: field.id,
           vals,
           result,
@@ -323,13 +327,20 @@ export function RoyaltyCalculatorPage() {
           urbanLabel: item.urbanLabel,
           urbanFactor: item.urbanFactor,
           urbanMode,
-          urbanModeLabel,
+          urbanModeLabel: currentUrbanModeLabel,
           applyUrbanBefore,
           rawArea,
           effectiveArea,
         })),
         totals, quoteDate: new Date().toLocaleDateString('vi-VN'),
       });
+    } catch (e) {
+      console.error('[RoyaltyCalculator Word Export] failed:', e, {
+        name: e instanceof Error ? e.name : undefined,
+        message: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+      });
+      throw e;
     } finally { setExporting(false); }
   };
 
@@ -343,7 +354,7 @@ export function RoyaltyCalculatorPage() {
         baseSalary,
         vatPct,
         supportPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, effectiveArea, urbanMode, urbanModeLabel }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, effectiveArea, urbanMode }) => ({
           item,
           fieldId: field.id,
           vals,
@@ -359,7 +370,7 @@ export function RoyaltyCalculatorPage() {
           durationMonths: contractMonths,
           areaM2: (vals.area ?? 0) > 0 ? (vals.area as number) : undefined,
           urbanMode,
-          urbanModeLabel,
+          urbanModeLabel: currentUrbanModeLabel,
           applyUrbanBefore,
           rawArea: (vals.area ?? 0) > 0 ? (vals.area as number) : null,
           effectiveArea: applyUrbanBefore ? effectiveArea : null,
@@ -374,7 +385,7 @@ export function RoyaltyCalculatorPage() {
 
   // Nguồn dữ liệu cho hộp thoại xuất Excel — bố cục bảng tính hợp đồng.
   const excelSource = useMemo(() => ({
-    instances: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode, urbanModeLabel }) => ({
+    instances: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode }) => ({
       instanceId: item.instanceId,
       field,
       result,
@@ -384,7 +395,7 @@ export function RoyaltyCalculatorPage() {
       urbanLabel: item.urbanLabel,
       urbanFactor: item.urbanFactor,
       urbanMode,
-      urbanModeLabel,
+      urbanModeLabel: currentUrbanModeLabel,
       applyUrbanBefore,
       rawArea,
       effectiveArea,
@@ -395,7 +406,7 @@ export function RoyaltyCalculatorPage() {
     supportPct,
     contractMonths,
     quoteDate: new Date().toLocaleDateString('vi-VN'),
-  }), [activeInstances, customer, baseSalary, vatPct, supportPct, contractMonths]);
+  }), [activeInstances, customer, baseSalary, vatPct, supportPct, contractMonths, currentUrbanModeLabel]);
 
   const handleExportExcel = () => {
     if (activeInstances.length === 0) return;
@@ -681,7 +692,7 @@ export function RoyaltyCalculatorPage() {
 
                 {/* Waterfall */}
                 <div className="mt-5 space-y-2.5 text-[13px]">
-                  <WRow label="Cách áp dụng đô thị" value={urbanModeLabel(urbanMode)} />
+                  <WRow label="Cách áp dụng đô thị" value={getUrbanModeLabel(urbanMode)} />
                   <WRow label="Tổng cộng định mức" value={formatVND(totals.rawSubTotal)} />
                   <WRow
                     label={urbanMode === 'BEFORE_TIERING' ? 'Tổng (đô thị áp trước khi chia bậc)' : 'Tổng sau đô thị'}

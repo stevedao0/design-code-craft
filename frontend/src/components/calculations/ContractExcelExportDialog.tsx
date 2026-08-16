@@ -87,8 +87,18 @@ export function ContractExcelExportDialog({ open, onClose, source }: ContractExc
       setDone(true);
       setTimeout(() => setDone(false), 3000);
     } catch (e) {
-      console.error('[ContractExcelExport] failed:', e);
-      setError('Không tạo được file. Vui lòng thử lại.');
+      console.error('[ContractExcelExport] failed full error:', e);
+      console.error('[ContractExcelExport] failed details:', {
+        name: e instanceof Error ? e.name : undefined,
+        message: e instanceof Error ? e.message : String(e),
+        stack: e instanceof Error ? e.stack : undefined,
+        model,
+      });
+      setError(
+        e instanceof Error && e.message
+          ? `Không tạo được file: ${e.message}`
+          : 'Không tạo được file. Vui lòng thử lại.'
+      );
     } finally {
       setBusy(false);
     }
@@ -403,7 +413,7 @@ function SheetPreview({ model }: { model: ContractRoyaltyModel }) {
                   </td>
                 </tr>
               )}
-              {b.urbanModeLabel && (
+              {typeof b.urbanModeLabel === 'string' && b.urbanModeLabel && (
                 <tr>
                   <td colSpan={5} style={{ ...cell, textAlign: 'right', fontStyle: 'italic', background: C.band }}>
                     Cách áp dụng đô thị:
