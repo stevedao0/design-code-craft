@@ -929,6 +929,11 @@ function FieldBlock({
               {item.urbanLabel} ({Math.round(urbanFactor * 100)}%)
             </b>
           </span>
+          <span>
+            {urbanMode === 'BEFORE_TIERING'
+              ? 'Phương thức 2 — nhân tỷ lệ đô thị vào tiền từng bậc'
+              : 'Phương thức 1 — nhân tỷ lệ đô thị vào tổng tiền bậc'}
+          </span>
         </div>
       )}
 
