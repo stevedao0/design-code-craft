@@ -493,8 +493,11 @@ export async function generateContractRoyaltyWorkbook(
 
   sum.pageSetup.printArea = `A1:F${r}`;
 
-  /* ══════════════ SHEET 3 · BẢNG HỢP ĐỒNG (bố cục 3 cột như mẫu Word) ══════════════ */
-  buildContractTableSheet(ctr, model);
+  // File gửi khách chỉ còn duy nhất sheet "Tổng hợp" — bỏ hẳn các sheet phụ.
+  wb.removeWorksheet(det.id);
+  wb.removeWorksheet(ctr.id);
+
+
 
   const buf = await wb.xlsx.writeBuffer();
   return new Blob([buf], {
