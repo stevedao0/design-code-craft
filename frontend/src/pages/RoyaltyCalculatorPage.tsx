@@ -560,6 +560,7 @@ export function RoyaltyCalculatorPage() {
                   vals={vals}
                   result={result}
                   urbanFactor={urbanFactor}
+                  urbanMode={urbanMode}
                   baseTierAmount={baseTierAmount}
                   urbanAdjustedAmount={urbanAdjustedAmount}
                   expanded={expandedInstanceId === item.instanceId}
