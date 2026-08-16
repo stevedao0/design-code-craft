@@ -301,7 +301,7 @@ export const FIELDS: FieldDef[] = [
     unit: 'phòng',
     hint: '4 phòng đầu: 1,5/phòng · 6 phòng tiếp: 1,2/phòng · từ phòng 11: 1,05/phòng',
     inputs: [{ key: 'rooms', label: 'Số phòng karaoke ≤20m²', suffix: 'phòng' }],
-    compute: ({ rooms }, mlcs) => karaokeBand(rooms || 0, [1.5, 1.2, 1.05], mlcs, '≤20m²'),
+    compute: ({ rooms }, mlcs) => karaokeBand(rooms || 0, [1.5, 1.2, 1.05], mlcs),
   },
   {
     id: 'karaoke-2030', no: 6, name: 'Karaoke (phòng 20–30m²)', icon: 'MicIcon',
@@ -309,7 +309,7 @@ export const FIELDS: FieldDef[] = [
     unit: 'phòng',
     hint: '4 phòng đầu: 1,6/phòng · 6 phòng tiếp: 1,28/phòng · từ phòng 11: 1,12/phòng',
     inputs: [{ key: 'rooms', label: 'Số phòng karaoke 20-30m²', suffix: 'phòng' }],
-    compute: ({ rooms }, mlcs) => karaokeBand(rooms || 0, [1.6, 1.28, 1.12], mlcs, '20–30m²'),
+    compute: ({ rooms }, mlcs) => karaokeBand(rooms || 0, [1.6, 1.28, 1.12], mlcs),
   },
   {
     id: 'karaoke-gt30', no: 7, name: 'Karaoke (phòng >30m²)', icon: 'MicIcon',
@@ -317,7 +317,7 @@ export const FIELDS: FieldDef[] = [
     unit: 'phòng',
     hint: '4 phòng đầu: 1,7/phòng · 6 phòng tiếp: 1,36/phòng · từ phòng 11: 1,19/phòng',
     inputs: [{ key: 'rooms', label: 'Số phòng karaoke >30m²', suffix: 'phòng' }],
-    compute: ({ rooms }, mlcs) => karaokeBand(rooms || 0, [1.7, 1.36, 1.19], mlcs, '>30m²'),
+    compute: ({ rooms }, mlcs) => karaokeBand(rooms || 0, [1.7, 1.36, 1.19], mlcs),
   },
   {
     id: 'karaoke-box', no: 8, name: 'Karaoke Box', icon: 'MicIcon',
@@ -627,14 +627,14 @@ function weddingSeats(seats: number, baseType: number, mlcs: number): FieldResul
 }
 
 
-function karaokeBand(rooms: number, rates: [number, number, number], mlcs: number, sizeLabel: string): FieldResult {
+function karaokeBand(rooms: number, rates: [number, number, number], mlcs: number): FieldResult {
   if (rooms <= 0) return emptyResult();
   const rows: BreakdownRow[] = [];
   const b1 = Math.min(rooms, 4);
   const b2 = Math.min(Math.max(rooms - 4, 0), 6);
   const b3 = Math.max(rooms - 10, 0);
   if (b1 > 0) rows.push({
-    label: `4 phòng đầu (${sizeLabel})`,
+    label: '4 phòng đầu',
     coefText: `${rates[0].toString().replace('.', ',')}/phòng`,
     qty: b1, coef: rates[0], mode: 'per-room', amount: rates[0] * b1 * mlcs,
     scaleText: `${b1} phòng`,
