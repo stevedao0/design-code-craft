@@ -168,7 +168,7 @@ export async function generateContractRoyaltyWorkbook(
     sum.mergeCells(`A${r}:B${r}`);
     sum.getCell(`A${r}`).value = label;
     style(sum.getCell(`A${r}`), { bold: true, size: 10, color: C.navy, fill: C.band, indent: 1 });
-    sum.mergeCells(`C${r}:H${r}`);
+    sum.mergeCells(`C${r}:G${r}`);
     sum.getCell(`C${r}`).value = value;
     style(sum.getCell(`C${r}`), { size: 10, indent: 1, wrap: true });
     sum.getRow(r).height = 16; r++;
