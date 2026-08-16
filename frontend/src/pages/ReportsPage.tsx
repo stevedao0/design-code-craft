@@ -968,6 +968,9 @@ export function ReportsPage() {
       {/* Content */}
       <div className="min-h-0 flex-1 overflow-auto">
         <div className="py-1">
+          {!canView && <ReportDenied />}
+          {canView && (
+          <>
           {/* ADMIN tabs */}
           {isAdminOrManager && (
             <>
