@@ -267,7 +267,9 @@ function StaffOverviewTab({
   const fields = fieldKpi?.fields ?? [];
   const hasKpi = fields.length > 0;
   const totals = fieldKpi?.totals ?? null;
-  const progress = totals && totals.target > 0 ? (totals.actual / totals.target) * 100 : 0;
+  const progress = totals && totals.target_amount > 0
+    ? (totals.actual_amount / totals.target_amount) * 100
+    : 0;
 
   return (
     <BentoGrid>
@@ -275,20 +277,20 @@ function StaffOverviewTab({
         <>
           <ReportTile span={4} tone="hero" label="KPI của tôi" labelRight={year}>
             <TileValue sub={`Tiến độ ${progress.toFixed(1)}%`}>
-              {canViewMoney && totals ? fmtVND(totals.actual) : fmtNum(fields.length)}
+              {canViewMoney && totals ? fmtVND(totals.actual_amount) : fmtNum(fields.length)}
             </TileValue>
             <Meter percent={progress} />
           </ReportTile>
 
           <ReportTile span={4} tone="brass" label="Chỉ tiêu năm">
             <TileValue tone="brass">
-              {canViewMoney && totals ? fmtVND(totals.target) : '—'}
+              {canViewMoney && totals ? fmtVND(totals.target_amount) : '—'}
             </TileValue>
           </ReportTile>
 
           <ReportTile span={4} label="Lĩnh vực được giao">
             <StatList rows={fields.slice(0, 5).map(f => ({
-              label: f.field_label ?? f.field,
+              label: f.field_label,
               value: canViewMoney ? fmtVND(f.actual) : fmtNum(f.contract_count ?? 0),
             }))} />
           </ReportTile>
