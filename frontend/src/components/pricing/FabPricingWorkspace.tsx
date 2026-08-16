@@ -418,13 +418,13 @@ function LocationCard({
 
 
                     <tr style={{ fontWeight: 600 }}>
-                      <td className="px-3 py-2" colSpan={4}>
+                      <td className="px-3 py-2" colSpan={5}>
                         Cho {snapshot.durationMonths} tháng (×{snapshot.durationMonths}/{12})
                       </td>
                       <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.royaltyBeforeVat)}</td>
                     </tr>
                     <tr style={{ background: '#E8F5E9', fontWeight: 700, borderTop: '2px solid #E7EDE1' }}>
-                      <td className="px-3 py-2" colSpan={4}>Tổng khu vực {index + 1}</td>
+                      <td className="px-3 py-2" colSpan={5}>Tổng khu vực {index + 1}</td>
                       <td className="px-3 py-2 text-right font-mono text-lime-700">{formatVND(snapshot.royaltyBeforeVat)} đ/năm</td>
                     </tr>
                   </tbody>
