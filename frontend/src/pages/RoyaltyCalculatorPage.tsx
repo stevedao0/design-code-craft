@@ -749,9 +749,10 @@ function WRow({ label, value, tone }: { label: string; value: string; tone?: 'po
 function FieldBlock({
   field, vals, result, expanded, onToggleExpand, onChange, onRemove, baseSalary,
   item, onLocationChange, onUrbanChange, onDisplayNameChange,
-  urbanFactor, baseTierAmount, urbanAdjustedAmount,
+  urbanFactor, urbanMode, baseTierAmount, urbanAdjustedAmount,
 }: {
   urbanFactor: number;
+  urbanMode: UrbanApplicationMode;
   baseTierAmount: number;
   urbanAdjustedAmount: number;
   field: FieldDef;
