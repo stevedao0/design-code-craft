@@ -330,25 +330,10 @@ function BranchOverviewTab({
 
   useEffect(() => { load(); }, [load]);
 
-  if (loading) return (
-    <div className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {[1,2,3,4].map(i => <Skeleton key={i} className="h-20 w-full rounded-xl" />)}
-      </div>
-      <Skeleton className="h-64 w-full rounded-xl" />
-    </div>
-  );
+  if (loading) return <ReportLoading />;
 
   if (error) return (
-    <div className="flex items-start gap-3 rounded-lg border px-4 py-3"
-      style={{ borderColor: 'var(--accent-danger)', background: 'var(--accent-danger-soft)' }}>
-      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-danger)' }} />
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Lỗi khi tải dữ liệu</div>
-        <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</div>
-      </div>
-      <Button variant="secondary" size="sm" onClick={load} className="shrink-0 rounded-lg">Thử lại</Button>
-    </div>
+    <BentoGrid><ReportError message={error} onRetry={load} /></BentoGrid>
   );
 
   if (!overview) return null;
