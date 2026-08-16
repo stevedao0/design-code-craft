@@ -1107,9 +1107,20 @@ function RoyaltyBreakdownTable({
       headerClassName: 'bg-[color:var(--vcpmc-table-header-bg)] text-[color:var(--vcpmc-table-header-fg)] text-right',
       render: (row) => (row.hideFormula ? '-' : formatCoef(row.qty, 2)),
     },
+    ...(perTierUrban
+      ? [{
+          key: 'urbanText' as const,
+          header: 'Tỷ lệ đô thị',
+          align: 'right' as const,
+          wrap: 'nowrap' as const,
+          cellClassName: 'text-[12px]',
+          headerClassName: 'bg-[color:var(--vcpmc-table-header-bg)] text-[color:var(--vcpmc-table-header-fg)] text-right',
+          render: (row: BreakdownRowView) => row.urbanText,
+        }]
+      : []),
     {
       key: 'amount',
-      header: 'Thành tiền',
+      header: perTierUrban ? 'Thành tiền (đã áp đô thị)' : 'Thành tiền',
       align: 'right',
       wrap: 'nowrap',
       meta: { kind: 'currency', tone: 'strong' },
@@ -1119,12 +1130,16 @@ function RoyaltyBreakdownTable({
     },
   ];
 
+  const congTotal = perTierUrban
+    ? (urbanAdjustedAmount ?? Math.round(result.subTotal * urbanFactor))
+    : result.subTotal;
+
   const summaryRows: DataTableSummaryRow[] = [
     {
       id: 'cong',
       cells: [
-        { id: 'cong-label', content: 'Cộng', align: 'right', colSpan: 4, tone: 'strong' },
-        { id: 'cong-value', content: formatVND(result.subTotal), align: 'right', tone: 'strong' },
+        { id: 'cong-label', content: 'Cộng', align: 'right', colSpan: perTierUrban ? 5 : 4, tone: 'strong' },
+        { id: 'cong-value', content: formatVND(congTotal), align: 'right', tone: 'strong' },
       ],
     },
   ];
