@@ -297,182 +297,276 @@ export function ContractExcelExportDialog({ open, onClose, source }: ContractExc
   );
 }
 
-/* ── Bản xem trước bảng tính ─────────────────────────────────────────────── */
+/* ── Bản xem trước bảng tính (bám sát 1:1 bố cục file .xlsx) ─────────────── */
+
+const PV = {
+  head: '#4A7202',
+  headText: '#FFFFFF',
+  navy: '#4A7202',
+  navySoft: '#EDF5E1',
+  band: '#F6FAF1',
+  total: '#E1EFCC',
+  rule: '#BCD095',
+  muted: '#6B7A5C',
+  gold: '#B07D2B',
+  danger: '#B03A2E',
+  input: '#0000FF',
+};
+
+/** Bề rộng cột tương ứng width Excel [5,28,9,13,15,14,18] */
+const COL_W = ['4.9%', '27.5%', '8.8%', '12.7%', '14.7%', '13.7%', '17.7%'];
+
+const bd = `1px solid ${PV.rule}`;
+const td: React.CSSProperties = { border: bd, padding: '3px 6px', fontSize: 11.5, color: C.ink, verticalAlign: 'middle' };
 
 function SheetPreview({ model }: { model: ContractRoyaltyModel }) {
-  const bd = `1px solid #9DBE6E`;
-  const cell: React.CSSProperties = { border: bd, padding: '4px 6px', fontSize: 12.5, color: C.ink };
-  const single = model.blocks.length === 1;
-
   return (
     <>
-      <div className="mb-3 border-b pb-2 text-center" style={{ borderColor: '#4A720233' }}>
-        <div className="text-[12px] font-bold uppercase" style={{ color: C.navy }}>
-          {VCPMC.fullName} ({VCPMC.shortName})
-        </div>
-        <div className="text-[10px] leading-snug" style={{ color: C.muted }}>
-          {VCPMC_HEAD_CONTACT_LINE}
-        </div>
-        <div className="text-[10px] leading-snug" style={{ color: C.muted }}>
-          {VCPMC_SOUTH_CONTACT_LINE}
-        </div>
+      {/* Dải tiêu đề */}
+      <div style={{ background: PV.head, color: PV.headText, textAlign: 'center', fontWeight: 700, fontSize: 11, padding: '5px 6px' }}>
+        {VCPMC.fullName} ({VCPMC.shortName})
       </div>
-      <h2 className="text-center text-[17px] font-bold uppercase" style={{ color: C.navy }}>
+      <div style={{ textAlign: 'center', fontSize: 9.5, color: PV.muted, lineHeight: 1.35, padding: '3px 8px' }}>
+        {VCPMC_HEAD_CONTACT_LINE}
+      </div>
+      <div style={{ textAlign: 'center', fontSize: 9.5, color: PV.muted, lineHeight: 1.35, padding: '0 8px 6px' }}>
+        {VCPMC_SOUTH_CONTACT_LINE}
+      </div>
+      <h2 style={{ textAlign: 'center', fontSize: 18, fontWeight: 700, color: PV.navy, textTransform: 'uppercase' }}>
         {model.documentTitle}
       </h2>
-      <p className="mt-1 text-center text-[11px] italic" style={{ color: C.muted }}>
+      <p style={{ textAlign: 'center', fontSize: 10.5, fontStyle: 'italic', color: PV.muted, marginTop: 2 }}>
         Căn cứ: {model.legalBasis}
       </p>
 
-      <table className="mt-5 w-full" style={{ borderCollapse: 'collapse' }}>
+      {/* A. Thông tin đơn vị */}
+      <SectionBand>A. THÔNG TIN ĐƠN VỊ SỬ DỤNG ÂM NHẠC</SectionBand>
+      <Grid>
         <tbody>
-          {[
-            ['Đơn vị sử dụng', model.orgName || 'Chưa khai báo'],
-            ['Địa chỉ', model.orgAddress || 'Chưa khai báo'],
-            ['Người đại diện', model.orgRepresentative || 'Chưa khai báo'],
+          {([
+            ['Đơn vị sử dụng', model.orgName || ''],
+            ['Địa chỉ', model.orgAddress || ''],
+            ['Người đại diện', model.orgRepresentative || ''],
             ['Thời hạn hợp đồng', `${model.contractMonths} tháng`],
             ['Ngày lập bảng tính', model.quoteDate],
-          ].map(([k, v]) => (
+          ] as Array<[string, string]>).map(([k, v]) => (
             <tr key={k}>
-              <td style={{ ...cell, width: '34%', background: C.band, fontWeight: 700, color: C.navy }}>{k}</td>
-              <td style={cell}>{v}</td>
+              <td colSpan={2} style={{ ...td, fontWeight: 700, color: PV.navy, background: PV.band }}>{k}</td>
+              <td colSpan={5} style={td}>{v}</td>
             </tr>
           ))}
-          <tr>
-            <td style={{ ...cell, background: C.band, fontWeight: 700, color: C.navy }}>Mức lương cơ sở (MLCS)</td>
-            <td style={{ ...cell, fontWeight: 700, color: C.navy }}>
-              {vnd(model.baseSalary)} đồng · Thuế GTGT {(model.vatPct * 100).toFixed(0)}%
-            </td>
-          </tr>
         </tbody>
-      </table>
+      </Grid>
 
-      {model.blocks.map((b, bi) => (
-        <div key={b.id} className="mt-6">
-          {!single && (
-            <div style={{ background: C.navy, color: '#fff', padding: '5px 8px', fontSize: 12.5, fontWeight: 700 }}>
-              {bi + 1}. {b.locationName} — {b.fieldName}
-            </div>
-          )}
-          <table className="w-full" style={{ borderCollapse: 'collapse' }}>
-            <thead>
-              <tr>
-                <th style={{ ...cell, width: '20%', background: C.head, color: C.headText, textAlign: 'center' }}>{b.quantityHeader}</th>
-                <th colSpan={4} style={{ ...cell, background: C.head, color: C.headText, textAlign: 'center' }}>
-                  Mức tiền bản quyền chưa bao gồm thuế GTGT
-                </th>
-                <th style={{ ...cell, width: '19%', background: C.head, color: C.headText, textAlign: 'center' }}>Thành tiền (đồng)</th>
-              </tr>
-              <tr>
-                <td colSpan={6} style={{ ...cell, textAlign: 'center', fontStyle: 'italic' }}>
-                  (Số tiền bản quyền chi trả (tính theo năm) = Mức lương cơ sở x Hệ số điều chỉnh)
-                </td>
-              </tr>
-            </thead>
-            <tbody>
-              {b.tiers.map((t, ti) => (
-                <tr key={ti}>
-                  {ti === 0 && (
-                    <td
-                      rowSpan={b.tiers.length}
-                      style={{ ...cell, textAlign: 'center', fontWeight: 700, verticalAlign: 'middle' }}
-                    >
-                      {b.scaleText}
-                    </td>
-                  )}
-                  <td style={{ ...cell, width: '22%' }}>{t.label}</td>
-                  {t.hideFormula ? (
-                    <td colSpan={3} style={{ ...cell, textAlign: 'center', fontStyle: 'italic', color: C.muted }}>
-                      Mức trọn gói theo biểu mức
-                    </td>
-                  ) : (
-                    <>
-                      <td style={{ ...cell, textAlign: 'right', whiteSpace: 'nowrap' }}>{vnd(model.baseSalary)} đồng</td>
-                      <td style={{ ...cell, textAlign: 'center', width: 18 }}>x</td>
-                      <td style={{ ...cell, textAlign: 'center', whiteSpace: 'nowrap' }}>{t.coefText}/năm</td>
-                    </>
-                  )}
-                  <td style={{ ...cell, textAlign: 'right', whiteSpace: 'nowrap' }}>{vnd(t.amount)}</td>
-                </tr>
-              ))}
-
-              {(b.tiers.length > 1 || b.urbanFactor !== 1 || b.cappedNote) && (
-                <tr>
-                  <td colSpan={5} style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>
-                    Cộng tiền bản quyền theo khung giá
-                  </td>
-                  <td style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>
-                    {vnd(b.subTotalRaw)}
-                  </td>
-                </tr>
-              )}
-              {b.cappedNote && (
-                <tr>
-                  <td colSpan={6} style={{ ...cell, textAlign: 'center', fontStyle: 'italic', color: C.danger }}>
-                    {b.cappedNote}
-                  </td>
-                </tr>
-              )}
-              {!b.urbanExempt && b.urbanFactor !== 1 && b.urbanLabel && (
-                <tr>
-                  <td colSpan={5} style={{ ...cell, textAlign: 'right', fontStyle: 'italic', background: C.band }}>
-                    Tỷ lệ áp dụng theo phân loại đô thị:
-                  </td>
-                  <td style={{ ...cell, textAlign: 'left', fontWeight: 700, background: C.band }}>
-                    {b.urbanLabel} ({Math.round(b.urbanFactor * 100)}%)
-                  </td>
-                </tr>
-              )}
-              {b.urbanFactor !== 1 && (
-                <tr>
-                  <td colSpan={5} style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>
-                    Áp dụng tỷ lệ đô thị{b.urbanLabel ? ` — ${b.urbanLabel}` : ''} (x {fmtFactor(b.urbanFactor)})
-                  </td>
-                  <td style={{ ...cell, textAlign: 'right', fontWeight: 700, background: C.band }}>
-                    {vnd(b.subTotalAfterUrban)}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      ))}
-
-      <table className="mt-2 w-full" style={{ borderCollapse: 'collapse' }}>
+      {/* B. Tham số tính */}
+      <SectionBand>B. THAM SỐ TÍNH</SectionBand>
+      <Grid>
         <tbody>
-          {model.blocks.length > 1 && (
-            <TotalRow label="Cộng tiền bản quyền" value={vnd(model.royaltyTotal)} />
-          )}
-          {model.supportPct > 0 && (
-            <TotalRow
-              label={`Mức hỗ trợ cho năm ${model.supportYear} (${(model.supportPct * 100).toFixed(0)}%)`}
-              value={`-${vnd(model.supportAmount)}`}
-              danger
-            />
-          )}
-          {model.customFees.map((f, i) => (
-            <TotalRow key={i} label={f.label || 'Chi phí khác'} value={vnd(f.amount)} plain />
-          ))}
-          <TotalRow label="Cộng" value={vnd(model.subtotal)} />
-          <TotalRow label={`Tiền Thuế GTGT ${(model.vatPct * 100).toFixed(0)}%`} value={vnd(model.vatAmount)} />
-          <TotalRow
-            label={`Tổng giá trị hợp đồng cho ${model.contractMonths} tháng sử dụng`}
-            value={vnd(model.grandTotal)}
-            emphasis
-          />
           <tr>
-            <td colSpan={2} style={{ border: bd, padding: '5px 6px', fontSize: 12.5, textAlign: 'center', fontStyle: 'italic' }}>
-              (Bằng chữ: {model.amountInWords}./.)
-            </td>
+            <td colSpan={2} style={{ ...td, fontWeight: 700, color: PV.navy, background: PV.band }}>Mức lương cơ sở (MLCS)</td>
+            <td colSpan={2} style={{ ...td, fontWeight: 700, color: PV.input }}>{vnd(model.baseSalary)} đồng</td>
+            <td colSpan={2} style={{ ...td, fontWeight: 700, color: PV.navy, background: PV.band, textAlign: 'right' }}>Thuế GTGT</td>
+            <td style={{ ...td, fontWeight: 700, color: PV.input, textAlign: 'right' }}>{(model.vatPct * 100).toFixed(1)}%</td>
           </tr>
           <tr>
-            <td colSpan={2} style={{ border: bd, padding: '5px 6px', fontSize: 11.5, textAlign: 'center', fontStyle: 'italic', color: C.muted }}>
+            <td colSpan={7} style={{ ...td, fontStyle: 'italic', fontSize: 10, color: PV.gold, background: PV.band }}>
               {model.legalNote}
             </td>
           </tr>
         </tbody>
-      </table>
+      </Grid>
+
+      {/* C. Chi tiết từng lĩnh vực */}
+      <SectionBand>C. CHI TIẾT TIỀN BẢN QUYỀN THEO TỪNG LĨNH VỰC SỬ DỤNG</SectionBand>
+      <p style={{ textAlign: 'center', fontStyle: 'italic', fontSize: 10, color: PV.muted, margin: '4px 0' }}>
+        Thành tiền (tính theo năm) = Mức lương cơ sở × Hệ số điều chỉnh × Số lượng × Tỷ lệ đô thị
+      </p>
+
+      {model.blocks.map((b, bi) => {
+        const perTier = b.urbanMode === 'PER_TIER' && !b.urbanExempt && b.urbanFactor !== 1;
+        const ratePct = Math.round(b.urbanFactor * 100);
+        const urbanName = b.urbanLabel || `${ratePct}%`;
+        const showSubtotal = b.tiers.length > 1 || b.urbanFactor !== 1 || Boolean(b.cappedNote);
+        const showUrbanRow = !b.urbanExempt && b.urbanFactor > 0 && b.urbanFactor !== 1 && !perTier;
+        return (
+          <div key={b.id} style={{ marginTop: 14 }}>
+            <div style={{ background: PV.head, color: PV.headText, fontWeight: 700, fontSize: 11.5, padding: '5px 8px' }}>
+              {bi + 1}. {b.locationName} — {b.fieldName}  ·  Quy mô: {b.scaleText}
+            </div>
+            <Grid>
+              <tbody>
+                <tr>
+                  <td colSpan={7} style={{ ...td, fontStyle: 'italic', fontSize: 10, color: PV.gold, background: PV.band }}>
+                    {b.urbanExempt || b.urbanFactor === 1
+                      ? 'Cách tính: Tiền bản quyền = Tổng thành tiền các bậc (không áp tỷ lệ đô thị).'
+                      : perTier
+                        ? `Cách tính: Thành tiền từng bậc đã nhân tỷ lệ đô thị ${ratePct}% (${urbanName}); Tiền bản quyền = Tổng thành tiền các bậc.`
+                        : `Cách tính: Tiền bản quyền = (Tổng thành tiền các bậc) × tỷ lệ ${ratePct}% (${urbanName}).`}
+                  </td>
+                </tr>
+                <tr>
+                  {['STT', 'Diễn giải bậc biểu mức', 'Số lượng', 'Hệ số/năm', 'Mức lương cơ sở', 'Tỷ lệ đô thị', 'Thành tiền (đồng)'].map((h, i) => (
+                    <th key={h} style={{ ...td, fontWeight: 700, color: PV.navy, background: PV.navySoft, textAlign: i === 1 ? 'left' : 'center' }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+                {b.tiers.map((t, ti) => (
+                  <tr key={ti}>
+                    <td style={{ ...td, textAlign: 'center' }}>{ti + 1}</td>
+                    <td style={td}>{t.label}</td>
+                    {t.hideFormula ? (
+                      <td colSpan={3} style={{ ...td, textAlign: 'center', fontStyle: 'italic', color: PV.muted }}>
+                        Mức trọn gói theo biểu mức
+                      </td>
+                    ) : (
+                      <>
+                        <td style={{ ...td, textAlign: 'center' }}>{t.qty}</td>
+                        <td style={{ ...td, textAlign: 'center' }}>{t.coefText}</td>
+                        <td style={{ ...td, textAlign: 'right', whiteSpace: 'nowrap' }}>{vnd(model.baseSalary)}</td>
+                      </>
+                    )}
+                    <td style={{ ...td, textAlign: 'center', fontWeight: perTier ? 700 : 400, color: perTier ? PV.navy : PV.muted }}>
+                      {b.urbanExempt ? 'Miễn áp dụng' : `${perTier ? ratePct : 100}%`}
+                    </td>
+                    <td style={{ ...td, textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                      {vnd(perTier ? (t.amountAfterUrban ?? t.amount) : t.amount)}
+                    </td>
+                  </tr>
+                ))}
+
+                {showSubtotal && (
+                  <tr>
+                    <td colSpan={6} style={{ ...td, textAlign: 'right', fontWeight: 700, background: PV.band }}>Cộng tiền bản quyền</td>
+                    <td style={{ ...td, textAlign: 'right', fontWeight: 700, background: PV.band, whiteSpace: 'nowrap' }}>
+                      {vnd(perTier ? b.subTotalAfterUrban : b.subTotalRaw)}
+                    </td>
+                  </tr>
+                )}
+
+                {b.cappedNote && (
+                  <tr>
+                    <td colSpan={7} style={{ ...td, textAlign: 'center', fontStyle: 'italic', color: PV.danger }}>{b.cappedNote}</td>
+                  </tr>
+                )}
+
+                {showUrbanRow && (
+                  <tr>
+                    <td colSpan={5} style={{ ...td, textAlign: 'right', fontWeight: 700, background: PV.band }}>
+                      Mức hỗ trợ áp dụng thu {urbanName} (NĐ 134/2026/NĐ-CP)
+                    </td>
+                    <td style={{ ...td, textAlign: 'center', fontWeight: 700, color: PV.navy, background: PV.band }}>{ratePct}%</td>
+                    <td style={{ ...td, textAlign: 'right', fontWeight: 700, background: PV.band, whiteSpace: 'nowrap' }}>
+                      {vnd(b.subTotalAfterUrban)}
+                    </td>
+                  </tr>
+                )}
+
+                <tr>
+                  <td colSpan={5} style={{ ...td, textAlign: 'right', fontWeight: 700, color: PV.navy, background: PV.total }}>
+                    Tiền bản quyền — {b.locationName} · {b.fieldName}
+                  </td>
+                  <td style={{ ...td, textAlign: 'center', fontWeight: 700, color: PV.navy, background: PV.total }}>
+                    {b.urbanExempt ? 'Miễn' : `${ratePct}%`}
+                  </td>
+                  <td style={{ ...td, textAlign: 'right', fontWeight: 700, fontSize: 12.5, color: PV.navy, background: PV.total, whiteSpace: 'nowrap' }}>
+                    {vnd(b.subTotalAfterUrban)}
+                  </td>
+                </tr>
+              </tbody>
+            </Grid>
+          </div>
+        );
+      })}
+
+      {/* D. Tổng hợp theo khu vực */}
+      <div style={{ marginTop: 16 }}>
+        <SectionBand>D. TỔNG HỢP TIỀN BẢN QUYỀN THEO KHU VỰC</SectionBand>
+        <Grid>
+          <tbody>
+            <tr>
+              {[
+                ['STT', 1, 'center'], ['Khu vực sử dụng', 1, 'left'], ['Lĩnh vực áp dụng', 1, 'left'],
+                ['Quy mô', 1, 'center'], ['Tỷ lệ đô thị', 2, 'center'], ['Tiền bản quyền (đồng)', 1, 'center'],
+              ].map(([h, span, al]) => (
+                <th key={String(h)} colSpan={span as number}
+                  style={{ ...td, fontWeight: 700, color: PV.headText, background: PV.head, textAlign: al as 'left' }}>
+                  {h as string}
+                </th>
+              ))}
+            </tr>
+            {model.blocks.map((b, i) => (
+              <tr key={b.id} style={{ background: i % 2 === 1 ? PV.band : undefined }}>
+                <td style={{ ...td, textAlign: 'center' }}>{i + 1}</td>
+                <td style={td}>{b.locationName}</td>
+                <td style={td}>{b.fieldName}</td>
+                <td style={{ ...td, textAlign: 'center' }}>{b.scaleText}</td>
+                <td colSpan={2} style={{ ...td, textAlign: 'center' }}>
+                  {b.urbanExempt
+                    ? 'Miễn áp dụng'
+                    : b.urbanLabel
+                      ? `${b.urbanLabel} (${Math.round(b.urbanFactor * 100)}%)`
+                      : fmtFactor(b.urbanFactor)}
+                </td>
+                <td style={{ ...td, textAlign: 'right', fontWeight: 700, whiteSpace: 'nowrap' }}>{vnd(b.subTotalAfterUrban)}</td>
+              </tr>
+            ))}
+
+            <TotalRow label="Cộng tiền bản quyền" value={vnd(model.royaltyTotal)} />
+            {model.supportPct > 0 && (
+              <TotalRow
+                label={`Mức hỗ trợ năm ${model.supportYear} (${(model.supportPct * 100).toFixed(0)}%)`}
+                value={`-${vnd(model.supportAmount)}`}
+                danger
+              />
+            )}
+            {model.customFees.map((f, i) => (
+              <TotalRow key={i} label={f.label?.trim() || 'Chi phí khác'} value={vnd(f.amount)} plain />
+            ))}
+            <TotalRow label="Cộng" value={vnd(model.subtotal)} />
+            <TotalRow label={`Tiền thuế GTGT ${(model.vatPct * 100).toFixed(0)}%`} value={vnd(model.vatAmount)} />
+            <TotalRow
+              label={`TỔNG GIÁ TRỊ HỢP ĐỒNG (${model.contractMonths} tháng sử dụng)`}
+              value={vnd(model.grandTotal)}
+              emphasis
+            />
+            <tr>
+              <td colSpan={7} style={{ ...td, textAlign: 'center', fontStyle: 'italic', fontWeight: 700, color: PV.navy }}>
+                Bằng chữ: {model.amountInWords}./.
+              </td>
+            </tr>
+          </tbody>
+        </Grid>
+      </div>
+
+      <p style={{ marginTop: 10, fontSize: 10, fontStyle: 'italic', color: PV.muted, lineHeight: 1.5 }}>
+        Ghi chú: Tiền bản quyền được tính theo Phụ lục biểu mức của Nghị định 17/2023/NĐ-CP, trên mức lương cơ sở {vnd(model.baseSalary)} đồng/tháng.
+        Cột “Tỷ lệ đô thị” là tỷ lệ được áp dụng cho khu vực đó; cột “Thành tiền” là số tiền đã áp tỷ lệ này.
+        Ô “Mức lương cơ sở (MLCS)” và ô “Thuế GTGT” là ô nhập (chữ xanh); thay đổi hai ô này, toàn bộ bảng tự tính lại.
+      </p>
     </>
+  );
+}
+
+function Grid({ children }: { children: React.ReactNode }) {
+  return (
+    <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }}>
+      <colgroup>{COL_W.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
+      {children}
+    </table>
+  );
+}
+
+function SectionBand({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        marginTop: 14, background: PV.navySoft, color: PV.navy, fontWeight: 700,
+        fontSize: 11.5, padding: '4px 8px', border: bd,
+      }}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -480,20 +574,21 @@ function TotalRow({
   label, value, emphasis, danger, plain,
 }: { label: string; value: string; emphasis?: boolean; danger?: boolean; plain?: boolean }) {
   const base: React.CSSProperties = {
-    border: '1px solid #9DBE6E',
+    border: emphasis ? `1px solid ${PV.head}` : bd,
     padding: emphasis ? '7px 6px' : '5px 6px',
-    fontSize: emphasis ? 14 : 12.5,
+    fontSize: emphasis ? 13 : 11.5,
     fontWeight: plain ? 400 : 700,
-    color: danger ? C.danger : emphasis ? C.navy : C.ink,
-    background: emphasis ? C.navySoft : undefined,
+    color: danger ? PV.danger : emphasis ? PV.headText : C.ink,
+    background: emphasis ? PV.head : PV.band,
   };
   return (
     <tr>
-      <td style={{ ...base, textAlign: 'right', width: '81%' }}>{label}</td>
+      <td colSpan={6} style={{ ...base, textAlign: 'right' }}>{label}</td>
       <td style={{ ...base, textAlign: 'right', whiteSpace: 'nowrap' }}>{value}</td>
     </tr>
   );
 }
+
 
 /* ── Primitives ──────────────────────────────────────────────────────────── */
 
