@@ -106,9 +106,11 @@ export async function generateContractRoyaltyWorkbook(
   wb.views = [{ activeTab: 0, firstSheet: 0, visibility: 'visible', x: 0, y: 0, width: 0, height: 0 }];
 
   sum.columns = [
-    { key: 'a', width: 5.5 }, { key: 'b', width: 27 }, { key: 'c', width: 24 },
-    { key: 'd', width: 13 }, { key: 'e', width: 12 }, { key: 'f', width: 20 },
+    { key: 'a', width: 5 }, { key: 'b', width: 24 }, { key: 'c', width: 9 },
+    { key: 'd', width: 12 }, { key: 'e', width: 13 }, { key: 'f', width: 15 },
+    { key: 'g', width: 11 }, { key: 'h', width: 16 },
   ];
+
 
   sum.headerFooter.oddFooter =
     `&L&"${FONT},Italic"&8${model.legalBasis}`
