@@ -1045,17 +1045,27 @@ type BreakdownRowView = {
   coefText: string;
   qty: number;
   amount: number;
+  urbanText: string;
   hideFormula: boolean;
 };
 
-function RoyaltyBreakdownTable({ result, baseSalary }: { result: FieldResult; baseSalary: number }) {
+function RoyaltyBreakdownTable({
+  result, baseSalary, urbanFactor = 1, perTierUrban = false, urbanAdjustedAmount,
+}: {
+  result: FieldResult;
+  baseSalary: number;
+  urbanFactor?: number;
+  perTierUrban?: boolean;
+  urbanAdjustedAmount?: number;
+}) {
   const rows: BreakdownRowView[] = result.rows.map((r, i) => ({
     id: `bd-${i}`,
     label: r.label,
     base_salary: baseSalary,
     coefText: r.coefText,
     qty: r.qty,
-    amount: r.amount,
+    amount: perTierUrban ? Math.round(r.amount * urbanFactor) : r.amount,
+    urbanText: perTierUrban ? `${Math.round(urbanFactor * 100)}%` : '—',
     hideFormula: !!r.hideFormula,
   }));
 
