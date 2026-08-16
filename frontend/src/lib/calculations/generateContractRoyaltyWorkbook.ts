@@ -102,28 +102,19 @@ export async function generateContractRoyaltyWorkbook(
   wb.modified = new Date();
   wb.title = model.documentTitle;
 
-  const sum = wb.addWorksheet('Tổng hợp', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  const det = wb.addWorksheet('Chi tiết', { state: 'hidden', pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  const ctr = wb.addWorksheet('Bảng hợp đồng', { state: 'hidden', pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  // Chỉ một sheet "Tổng hợp" hiển thị — sheet mặc định khi mở file.
+  const sum = wb.addWorksheet('Bảng tính', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
   wb.views = [{ activeTab: 0, firstSheet: 0, visibility: 'visible', x: 0, y: 0, width: 0, height: 0 }];
 
   sum.columns = [
     { key: 'a', width: 5.5 }, { key: 'b', width: 27 }, { key: 'c', width: 24 },
     { key: 'd', width: 13 }, { key: 'e', width: 12 }, { key: 'f', width: 20 },
   ];
-  det.columns = [
-    { key: 'a', width: 5.5 }, { key: 'b', width: 34 }, { key: 'c', width: 11 },
-    { key: 'd', width: 14 }, { key: 'e', width: 17 }, { key: 'f', width: 20 },
-  ];
 
-  const footer =
+  sum.headerFooter.oddFooter =
     `&L&"${FONT},Italic"&8${model.legalBasis}`
     + `&C&"${FONT},Italic"&8${VCPMC.shortName} · ${VCPMC.email} · ${VCPMC.website}`
     + `&R&"${FONT},Italic"&8Trang &P/&N`;
-  sum.headerFooter.oddFooter = footer;
-  det.headerFooter.oddFooter = footer;
-  ctr.headerFooter.oddFooter = footer;
+
 
   /* ══════════════ SHEET 1 · TỔNG HỢP ══════════════ */
   let r = 1;
