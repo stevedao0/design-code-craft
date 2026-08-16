@@ -1058,16 +1058,23 @@ function RoyaltyBreakdownTable({
   perTierUrban?: boolean;
   urbanAdjustedAmount?: number;
 }) {
-  const rows: BreakdownRowView[] = result.rows.map((r, i) => ({
-    id: `bd-${i}`,
-    label: r.label,
-    base_salary: baseSalary,
-    coefText: r.coefText,
-    qty: r.qty,
-    amount: perTierUrban ? Math.round(r.amount * urbanFactor) : r.amount,
-    urbanText: perTierUrban ? `${Math.round(urbanFactor * 100)}%` : '—',
-    hideFormula: !!r.hideFormula,
-  }));
+  const rawSum = result.rows.reduce((s, r) => s + r.amount, 0);
+  const needCapScale = perTierUrban && result.capped && rawSum > 0;
+  const rows: BreakdownRowView[] = result.rows.map((r, i) => {
+    const perRow = needCapScale
+      ? Math.round((r.amount / rawSum) * (result.capAmount || result.subTotal) * urbanFactor)
+      : (perTierUrban ? Math.round(r.amount * urbanFactor) : r.amount);
+    return {
+      id: `bd-${i}`,
+      label: r.label,
+      base_salary: baseSalary,
+      coefText: r.coefText,
+      qty: r.qty,
+      amount: perRow,
+      urbanText: perTierUrban ? `${Math.round(urbanFactor * 100)}%` : '—',
+      hideFormula: !!r.hideFormula,
+    };
+  });
 
   const columns: DataTableColumn<BreakdownRowView>[] = [
     {
