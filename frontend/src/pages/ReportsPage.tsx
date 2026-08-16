@@ -875,7 +875,7 @@ function KpiManageTab({ year }: { year: number }) {
 export function ReportsPage() {
   const currentYear = new Date().getFullYear();
   const { currentUser } = useAuth();
-  const { canExport, canViewMoney, canManageKpi, canViewBranch } = useReportsPermissions();
+  const { canExport, canView, canViewMoney, canManageKpi, canViewBranch } = useReportsPermissions();
   const isAdminOrManager = canManageKpi || canViewBranch;
 
   const [year, setYear] = useState<number>(currentYear);
