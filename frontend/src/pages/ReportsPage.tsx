@@ -688,19 +688,10 @@ function RenewalsTab({ year }: { year: number }) {
     unknown: 0,
   }), [data]);
 
-  if (loading) return (
-    <div className="space-y-3">
-      <Skeleton className="h-20 w-full rounded-xl" />
-      <Skeleton className="h-64 w-full rounded-xl" />
-    </div>
-  );
+  if (loading) return <ReportLoading tiles={[3, 3, 3, 3, 12]} />;
 
   if (error) return (
-    <div className="flex items-center gap-3 rounded-xl border p-4" style={{ borderColor: 'var(--accent-danger)' }}>
-      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-danger)' }} />
-      <div className="text-sm flex-1">{error}</div>
-      <Button variant="ghost" size="sm" onClick={load}>Thử lại</Button>
-    </div>
+    <BentoGrid><ReportError message={error} onRetry={load} /></BentoGrid>
   );
 
   if (!data) return null;
@@ -709,97 +700,113 @@ function RenewalsTab({ year }: { year: number }) {
   const rangeFrom = data.total_count ? Math.min((page - 1) * RENEWAL_PAGE_SIZE + 1, data.total_count) : 0;
   const rangeTo = Math.min(page * RENEWAL_PAGE_SIZE, data.total_count || 0);
 
+  const cards: {
+    key: typeof classFilter; label: string; value: number; tone: 'primary' | 'brass' | 'default';
+    numTone?: 'success' | 'warning' | 'danger';
+  }[] = [
+    { key: 'all', label: 'Tổng cần xử lý', value: data.needs_renewal_count + data.expiring_soon_count + data.overdue_count, tone: 'primary' },
+    { key: 'expiring', label: 'Sắp hết hạn (≤30 ngày)', value: stats.expiring, tone: 'default', numTone: 'warning' },
+    { key: 'overdue', label: 'Đã quá hạn', value: stats.overdue, tone: 'default', numTone: 'danger' },
+    { key: 'renewed', label: 'Đã tái ký', value: stats.renewed, tone: 'default', numTone: 'success' },
+  ];
+
   return (
-    <div className="space-y-5">
-      {/* Summary stats — server-side counts */}
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <button type="button" onClick={() => setClassFilter('all')}
-          className={`rounded-xl border p-3.5 text-left transition-colors ${classFilter === 'all' ? 'ring-2 ring-offset-1' : ''}`}
-          style={{ borderColor: classFilter === 'all' ? 'var(--accent-primary)' : 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Tổng cần xử lý</div>
-          <div className="mt-1 text-base font-semibold tabular-nums" style={{ color: 'var(--accent-primary)' }}>{fmtNum(data.needs_renewal_count + data.expiring_soon_count + data.overdue_count)}</div>
-        </button>
-        <button type="button" onClick={() => setClassFilter('expiring')}
-          className={`rounded-xl border p-3.5 text-left transition-colors ${classFilter === 'expiring' ? 'ring-2 ring-offset-1' : ''}`}
-          style={{ borderColor: classFilter === 'expiring' ? 'var(--accent-warning)' : 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Sắp hết hạn (≤30 ngày)</div>
-          <div className="mt-1 text-base font-semibold tabular-nums" style={{ color: stats.expiring ? 'var(--accent-warning)' : 'var(--text-primary)' }}>{fmtNum(stats.expiring)}</div>
-        </button>
-        <button type="button" onClick={() => setClassFilter('overdue')}
-          className={`rounded-xl border p-3.5 text-left transition-colors ${classFilter === 'overdue' ? 'ring-2 ring-offset-1' : ''}`}
-          style={{ borderColor: classFilter === 'overdue' ? 'var(--accent-primary)' : 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Đã quá hạn</div>
-          <div className="mt-1 text-base font-semibold tabular-nums" style={{ color: 'var(--accent-primary)' }}>{fmtNum(stats.overdue)}</div>
-        </button>
-        <button type="button" onClick={() => setClassFilter('renewed')}
-          className={`rounded-xl border p-3.5 text-left transition-colors ${classFilter === 'renewed' ? 'ring-2 ring-offset-1' : ''}`}
-          style={{ borderColor: classFilter === 'renewed' ? 'var(--accent-success)' : 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Đã tái ký</div>
-          <div className="mt-1 text-base font-semibold tabular-nums" style={{ color: 'var(--accent-success)' }}>{fmtNum(stats.renewed)}</div>
-        </button>
-      </div>
-
-      {/* Historical toggle + Filter chips */}
-      <div className="flex flex-wrap items-center gap-2">
-        <label className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
-          <input
-            type="checkbox"
-            checked={includeHistorical}
-            onChange={e => setIncludeHistorical(e.target.checked)}
-            className="h-3.5 w-3.5 accent-[#4A7202]"
-          />
-          Bao gồm tồn đọng trước kỳ
-        </label>
-        <div className="flex-1" />
-        {([
-          ['all', `Tất cả (${data.total_count})`],
-          ['need-renewal', `Cần tái ký (${stats.need})`],
-          ['expiring', `Sắp hết hạn (${stats.expiring})`],
-          ['overdue', `Đã quá hạn (${stats.overdue})`],
-          ['renewed', `Đã tái ký (${stats.renewed})`],
-          ['unassigned', `Chưa gán (${stats.unassigned})`],
-        ] as const).map(([key, label]) => {
-          const active = classFilter === key;
-          return (
-            <button key={key} type="button" onClick={() => setClassFilter(key)}
-              className="rounded-full px-3 py-1 text-[11.5px] font-medium transition-colors"
+    <BentoGrid>
+      {cards.map(c => {
+        const active = classFilter === c.key;
+        return (
+          <div
+            key={c.key}
+            role="button"
+            tabIndex={0}
+            onClick={() => setClassFilter(c.key)}
+            onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') setClassFilter(c.key); }}
+            className={`rp-tile rp-c3${active ? ' rp-tile--hero' : ''}`}
+            style={{ cursor: 'pointer' }}
+          >
+            <div className="rp-tile__label"><span>{c.label}</span></div>
+            <div
+              className="rp-tile__value"
               style={{
-                background: active ? 'var(--accent-primary, #4A7202)' : 'var(--surface)',
-                color: active ? '#fff' : 'var(--text-secondary)',
-                border: `1px solid ${active ? 'var(--accent-primary, #4A7202)' : 'var(--border-default)'}`,
-              }}>
-              {label}
-            </button>
-          );
-        })}
-      </div>
+                color:
+                  c.numTone === 'warning' ? 'var(--accent-warning)'
+                    : c.numTone === 'danger' ? 'var(--accent-danger)'
+                      : c.numTone === 'success' ? 'var(--accent-success)'
+                        : 'var(--accent-primary)',
+              }}
+            >
+              {fmtNum(c.value)}
+            </div>
+          </div>
+        );
+      })}
 
-      {/* Table */}
+      <ReportTile span={12} label="Bộ lọc" labelRight={`${fmtNum(data.total_count)} bản ghi`}>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="flex items-center gap-2 text-[12px]" style={{ color: 'var(--text-secondary)' }}>
+            <input
+              type="checkbox"
+              checked={includeHistorical}
+              onChange={e => setIncludeHistorical(e.target.checked)}
+              className="h-3.5 w-3.5"
+              style={{ accentColor: 'var(--accent-primary)' }}
+            />
+            Bao gồm tồn đọng trước kỳ
+          </label>
+          <div className="flex-1" />
+          {([
+            ['all', `Tất cả (${data.total_count})`],
+            ['need-renewal', `Cần tái ký (${stats.need})`],
+            ['expiring', `Sắp hết hạn (${stats.expiring})`],
+            ['overdue', `Đã quá hạn (${stats.overdue})`],
+            ['renewed', `Đã tái ký (${stats.renewed})`],
+            ['unassigned', `Chưa gán (${stats.unassigned})`],
+          ] as const).map(([key, label]) => {
+            const active = classFilter === key;
+            return (
+              <button key={key} type="button" onClick={() => setClassFilter(key)}
+                className="rounded-full px-3 py-1 text-[11.5px] font-medium transition-colors"
+                style={{
+                  background: active ? 'var(--accent-primary)' : 'var(--surface)',
+                  color: active ? 'var(--fg-inverse)' : 'var(--text-secondary)',
+                  border: `1px solid ${active ? 'var(--accent-primary)' : 'var(--border-default)'}`,
+                }}>
+                {label}
+              </button>
+            );
+          })}
+        </div>
+      </ReportTile>
+
       {filteredItems.length > 0 ? (
-        <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
+        <ReportTile span={12} label={`Tái ký & hết hạn · ${year}`} flush>
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
-              <thead style={{ background: 'var(--surface-muted, #f1ece4)' }}>
+              <thead style={{ background: 'var(--surface-muted)' }}>
                 <tr className="text-left" style={{ color: 'var(--text-secondary)' }}>
-                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>Đơn vị</th>
-                  <th className="sticky top-0 whitespace-nowrap px-4 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>Số HĐ cũ</th>
-                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>Lĩnh vực</th>
-                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>Người thực hiện</th>
-                  <th className="sticky top-0 whitespace-nowrap px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>Ngày hết hạn</th>
-                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>Phân loại</th>
-                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted, #f1ece4)' }}>HĐ tái ký</th>
+                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>Đơn vị</th>
+                  <th className="sticky top-0 whitespace-nowrap px-4 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>Số HĐ cũ</th>
+                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>Lĩnh vực</th>
+                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>Người thực hiện</th>
+                  <th className="sticky top-0 whitespace-nowrap px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>Ngày hết hạn</th>
+                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>Phân loại</th>
+                  <th className="sticky top-0 px-3 py-2.5 font-medium" style={{ background: 'var(--surface-muted)' }}>HĐ tái ký</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredItems.map(item => {
                   const cls = classifyRenewal(item);
-                  const toneStyle = cls.tone === 'success'
-                    ? { background: 'color-mix(in srgb, var(--accent-success) 14%, white)', color: 'var(--accent-success)' }
+                  const toneVar = cls.tone === 'success'
+                    ? 'var(--accent-success)'
                     : cls.tone === 'danger'
-                      ? { background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 12%, white)', color: 'var(--accent-primary, #4A7202)' }
+                      ? 'var(--accent-danger)'
                       : cls.tone === 'warning'
-                        ? { background: 'color-mix(in srgb, var(--accent-warning) 14%, white)', color: 'var(--accent-warning)' }
-                        : { background: 'color-mix(in srgb, var(--accent-brass) 12%, white)', color: 'var(--accent-brass)' };
+                        ? 'var(--accent-warning)'
+                        : 'var(--accent-brass)';
+                  const toneStyle = {
+                    background: `color-mix(in srgb, ${toneVar} 14%, var(--surface))`,
+                    color: toneVar,
+                  };
                   return (
                     <tr key={item.old_contract_id} className="border-t" style={{ borderColor: 'var(--border-default)' }}>
                       <td className="px-3 py-2.5 max-w-[200px] truncate font-medium" style={{ color: 'var(--text-primary)' }}
@@ -813,11 +820,11 @@ function RenewalsTab({ year }: { year: number }) {
                           <span className="block max-w-[200px] truncate text-[11px]" title={item.owner_email}
                             style={{ color: 'var(--text-secondary)' }}>{item.owner_email}</span>
                         ) : (
-                          <span className="text-[10px] font-medium" style={{ color: 'var(--accent-primary)' }}>Chưa gán</span>
+                          <span className="text-[10px] font-medium" style={{ color: 'var(--accent-warning)' }}>Chưa gán</span>
                         )}
                       </td>
                       <td className="whitespace-nowrap px-3 py-2.5 tabular-nums"
-                        style={{ color: item.is_overdue ? 'var(--accent-primary)' : 'var(--text-primary)' }}>
+                        style={{ color: item.is_overdue ? 'var(--accent-danger)' : 'var(--text-primary)' }}>
                         {fmtDate(item.end_date)}
                       </td>
                       <td className="px-3 py-2.5">
@@ -840,16 +847,16 @@ function RenewalsTab({ year }: { year: number }) {
             rangeFrom={rangeFrom} rangeTo={rangeTo}
             onPageChange={setPage}
           />
-        </div>
+        </ReportTile>
       ) : (
-        <div className="rounded-xl border p-6 text-center text-sm"
-          style={{ borderColor: 'var(--border-default)', color: 'var(--text-muted)' }}>
-          {classFilter === 'all'
+        <ReportEmpty
+          title={classFilter === 'all'
             ? `Không có hợp đồng hết hạn nào trong năm ${year}${includeHistorical ? ' (bao gồm tồn đọng)' : ''}.`
             : 'Không có hợp đồng nào khớp với bộ lọc đã chọn.'}
-        </div>
+          hint="Chỉ hiển thị dữ liệu trong phạm vi bạn được phép xem."
+        />
       )}
-    </div>
+    </BentoGrid>
   );
 }
 
