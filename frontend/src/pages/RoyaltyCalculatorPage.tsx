@@ -578,8 +578,9 @@ export function RoyaltyCalculatorPage() {
 
           <footer className="pt-4 pb-1 text-[11px] leading-relaxed" style={{ color: C.mute2 }}>
             {urbanMode === 'BEFORE_TIERING'
-              ? 'Công thức (Cách 2 — áp tỷ lệ đô thị trên từng dòng bậc): Chia bậc theo input gốc → Σ(MLCS × Hệ số × Số lượng) × tỷ lệ đô thị → mức trần → − hỗ trợ → + Thuế GTGT.'
-              : 'Công thức (Cách 1 — áp tỷ lệ đô thị sau khi cộng tiền bậc): Chia bậc theo input gốc → Σ(MLCS × Hệ số × Số lượng) → mức trần → × tỷ lệ đô thị → − hỗ trợ → + Thuế GTGT.'}{' '}
+              ? 'Công thức (Phương thức 2 — áp tỷ lệ đô thị theo từng bậc): Chia bậc theo số liệu gốc → mỗi bậc: MLCS × Hệ số × Số lượng × tỷ lệ đô thị → cộng → mức trần → − hỗ trợ → + Thuế GTGT.'
+              : 'Công thức (Phương thức 1 — áp tỷ lệ đô thị trên tổng tiền bậc): Chia bậc theo số liệu gốc → Σ(MLCS × Hệ số × Số lượng) → mức trần → × tỷ lệ đô thị → − hỗ trợ → + Thuế GTGT.'}{' '}
+
             Căn cứ Phụ lục II ban hành kèm theo Nghị định 17/2023/NĐ-CP, được sửa đổi, bổ sung bởi Nghị định 134/2026/NĐ-CP.
           </footer>
         </div>
