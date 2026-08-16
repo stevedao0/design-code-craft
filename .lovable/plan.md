@@ -1,56 +1,67 @@
-## Hiện trạng (đã kiểm tra trong code)
+# Đơn giản hóa xuất Excel bảng tính tiền bản quyền
 
-Shell thực tế đang dùng là `CommandCenter` = `AppRail` (sidebar dọc) + `CommandRibbon` (topbar), không phải `Sidebar.tsx`/`Topbar.tsx` cũ.
+## Hiện trạng đã kiểm tra
 
-- Kích thước đã dùng chung token `--nav-size: 72px` (rail width = ribbon height) — số liệu đã bằng nhau, nhưng **cảm giác to/nhỏ khác nhau** vì nền khác nhau: rail dùng `--nav-surface-grad` (gradient dọc xanh → trắng ở đáy), ribbon dùng `--nav-ribbon-grad` (gradient ngang xanh → trắng ở phải). Hai bề mặt fade hai hướng nên chỗ giáp nhau lệch tông.
-- Ribbon có thêm hairline gradient xanh 2px (`::after`), rail không có → viền hai thanh không đồng bộ.
-- Góc logo: Orb 48px bo `12px`, nút nav bo `14px`; rail padding `10px 0 12px` (trên/dưới lệch) → 4 góc quanh logo không đều, ô góc rail × ribbon chưa được xử lý thành một khối thương hiệu.
-- Trang login (`LoginPage.tsx`) hiện hardcode rất nhiều mã màu (#76B400, #4A7202, #DCE8CC…) thay vì token, và chưa có link website / Facebook.
+- `frontend/src/lib/exportRoyaltyQuoteDocx.ts` đã bị xóa ở commit trước; trong trang tính tiền bản quyền chỉ còn `ExcelExportButton` + `ContractExcelExportDialog`. Không còn nút Xuất/Tải Word cho báo tiền.
+- Các chỗ còn chữ "Xuất Word" là của **hợp đồng** (`ContractsDesktopTable`, `ContractMobileCard`) và **báo cáo** (`ReportsPage`) — nằm ngoài phạm vi, giữ nguyên.
+- Công thức đã đúng hướng: `pricingSnapshot.ts` không còn nhân diện tích (`effectiveAreaM2 = areaM2`), `RoyaltyCalculatorPage` tính `urbanAdjustedAmount = baseTierAmount × urbanFactor`, `contractRoyaltyModel` có `amountAfterUrban` cho từng bậc. Sẽ chạy kiểm chứng số trước khi sửa.
+- `generateContractRoyaltyWorkbook.ts` hiện tạo **3 sheet** ("Tổng hợp" hiển thị, "Chi tiết" và "Bảng hợp đồng" ẩn) và có "Chưa khai báo", dòng "Cộng" lặp — đây là phần cần dọn.
 
----
+## Việc sẽ làm
 
-## Phần A — Đồng bộ sidebar + topbar
+### 1. Xác minh số liệu trước
+Chạy script tính nhanh trên logic hiện tại:
+- Cà phê 100 m², đô thị I 80% → phải ra 5.566.000đ (bậc 3 phải nhận 50 m²).
+- Nhà hàng 100 m², đô thị II 50% → phải ra 5.692.500đ.
+- Cách 1 và Cách 2 cùng tổng, kể cả khi chạm mức trần.
+Nếu lệch, sửa tại `royaltyCalc`/`RoyaltyCalculatorPage` để tier allocation luôn dùng input gốc và tỷ lệ đô thị chỉ nhân vào tiền.
 
-### A1. Đồng bộ màu hai thanh
-- Thay `--nav-surface-grad` và `--nav-ribbon-grad` bằng **một token nền duy nhất** `--nav-surface`: nền ivory phẳng + tint xanh brand rất nhẹ, không fade theo hướng.
-- Cùng `border-color`, cùng độ dày 1px `--nav-brand-green-border` cho rail (border-right) và ribbon (border-bottom).
-- Bỏ hairline 2px chỉ có ở ribbon; áp một accent hairline **giống nhau cho cả hai** (dọc ở mép trong rail, ngang ở mép dưới ribbon) → hai thanh đọc như một khung chữ L liền mạch.
-- Đồng bộ `backdrop-filter`, `box-shadow`, màu chữ/icon idle (`--vc-text-muted`) và active (`--nav-brand-green`) giữa nút rail và nút ribbon.
+### 2. Viết lại workbook gửi khách
+`generateContractRoyaltyWorkbook.ts` rút gọn còn **một worksheet duy nhất**: "Bảng tính tiền bản quyền". Xóa hai sheet ẩn.
 
-### A2. Góc logo Orb — điểm nhấn chuyên nghiệp
-- Ô góc thương hiệu 72×72 (đúng `--nav-size`) tại giao rail × ribbon: nền đậm hơn nền nav một bậc + viền brand, đóng vai trò "khớp nối" khung chữ L.
-- Orb **giữ nguyên màu và ảnh logo**; chỉ chuẩn hoá hình học:
-  - 48×48, bo `14px` — bằng đúng nút nav rail và nút action ribbon.
-  - Căn giữa tuyệt đối trong ô 72px (padding rail cân đối lại), 4 góc đều nhau.
-  - Ring hover/focus/active cùng offset để vòng sáng đều 4 phía.
-- Nhấn bằng viền brand đậm hơn 1 bậc + inner highlight trắng (không glow loè); khi launcher mở, ô góc sáng đồng bộ với orb.
+Mỗi khu vực gồm: Khu vực/địa điểm · Lĩnh vực áp dụng · Quy mô thực tế · Phân loại đô thị, rồi bảng:
 
-### A3. Bố cục lại rail + ribbon
-- Rail 3 vùng cân đối: góc brand (72px) / nav chính (nút 48px, gap 6px, divider mảnh cùng màu) / cụm hệ thống + đăng xuất, padding trên–dưới bằng nhau.
-- Ribbon 3 zone thẳng baseline: trái (back + breadcrumb) · giữa (command hint) · phải (action + ngày + avatar); mọi control cao 36–40px, bo 12–14px cùng hệ, gap chuẩn hoá; padding trái căn thẳng mép nội dung workspace.
+```text
+Bậc áp dụng | Số lượng thực tế | MLCS | Hệ số điều chỉnh | Tỷ lệ đô thị | Thành tiền
+```
 
----
+- Cột "Tỷ lệ đô thị" ghi tỷ lệ thật (80%, 50%…), không bao giờ ghi 100% khi thực tế khác.
+- Thành tiền dùng công thức Excel tham chiếu MLCS × hệ số × số lượng × tỷ lệ đô thị.
+- Kết toán: Tổng trước VAT → VAT → Tổng thanh toán → Bằng chữ, mỗi dòng chỉ xuất hiện một lần.
+- Dòng mức trần chỉ in khi thực sự áp trần.
 
-## Phần B — Thương hiệu & trang login theo vcpmc.org
+### 3. Dọn nội dung nội bộ khỏi file khách
+Xóa khỏi mọi cell/comment/shared string: "Cách áp dụng đô thị", "Cách 1/Cách 2", "Trước khi chia bậc", "Sau khi cộng tiền bậc", "Diện tích hiệu dụng / tính phí", chú thích ô nhập màu xanh, hướng dẫn khách sửa MLCS/VAT, các đoạn diễn giải văn xuôi. Không xuất `urbanMode`/`urbanModeLabel` — chỉ giữ trong state popup.
 
-### B1. Tên ứng dụng
-- Đổi tên hiển thị toàn hệ thống thành **"VCPMC Licensing Department"**: `frontend/index.html` (`<title>`, meta description), breadcrumb gốc và tooltip Orb, wordmark trên login.
-- Giữ dòng phụ tiếng Việt "Trung tâm Bảo vệ quyền tác giả âm nhạc Việt Nam" (khớp `vcpmcIdentity.ts`).
+Thiếu tên đơn vị hoặc địa chỉ: chặn xuất và báo người dùng nhập, không in "Chưa khai báo".
 
-### B2. Thiết kế lại trang login theo trang "Về VCPMC"
-- Bố cục 2 cột giữ nguyên khung hiện tại nhưng làm lại chỉn chu:
-  - **Cột trái (hero)**: dùng banner chính thức của trang Về VCPMC (`gioithieu-1920x360px`) — tải về `frontend/public/brand/` để không phụ thuộc hotlink; đặt làm ảnh nền có `object-position` an toàn + lớp phủ gradient xanh brand để chữ luôn nổi. Khẩu hiệu chính thức **"Sáng tạo dồi dào, Lợi ích đảm bảo"**, mô tả ngắn về chức năng cấp phép, logo VCPMC trong huy hiệu tròn trắng.
-  - **Cột phải (form)**: card đăng nhập nền `--surface`, viền `--border-default`, tiêu đề "VCPMC Licensing Department", form gọn, nút chính xanh brand.
-  - Mobile: hero thu thành dải banner trên đầu, overlay đủ tối để chữ đọc rõ; form không bao giờ đè lên vùng chữ ảnh.
-- **Tương phản**: thay toàn bộ hex hardcode trong `LoginPage.tsx` bằng token (`--accent-primary`, `--text-primary`, `--border-default`…); chữ trên ảnh dùng nền phủ đảm bảo tối thiểu 4.5:1; placeholder/label đủ đậm.
+Giữ lại: đơn vị, địa chỉ, thời hạn, ngày lập, lĩnh vực, quy mô, phân loại + tỷ lệ đô thị, MLCS, hệ số, số lượng bậc, thành tiền từng dòng, tổng, VAT, tổng thanh toán, bằng chữ, và căn cứ pháp lý ngắn:
 
-### B3. Liên kết ngoài
-- Chân trang login: cụm link **Website** `https://www.vcpmc.org/` và **Facebook** `https://www.facebook.com/profile.php?id=100064603609628` (icon + nhãn, `target="_blank" rel="noopener noreferrer"`, có `aria-label`).
-- Thêm cùng cụm link vào menu/khu vực dưới của rail (hoặc mục "Giới thiệu" trong Command Launcher) để trong app cũng truy cập được.
+```text
+Căn cứ Phụ lục II ban hành kèm theo Nghị định 17/2023/NĐ-CP,
+được sửa đổi, bổ sung bởi Nghị định 134/2026/NĐ-CP.
+Áp dụng tỷ lệ theo phân loại đô thị: Đô thị loại I (80%).
+```
 
----
+### 4. Bảo vệ file
+Bật worksheet protection: khóa cell công thức, MLCS, VAT, tỷ lệ đô thị. Không tạo hidden sheet.
 
-## Chi tiết kỹ thuật
-- File chạm: `frontend/src/theme/command-os.css` (token nav ~2250–2280, rule `.vcpmc-rail*`, `.vcpmc-orb*`, `.vcpmc-ribbon*`), `frontend/src/components/app-ui/{AppRail,CommandRibbon,CommandOrb}.tsx`, `frontend/src/pages/LoginPage.tsx`, `frontend/index.html`, thêm asset vào `frontend/public/brand/`.
-- Không đổi logic nghiệp vụ, không recolor asset logo, không đụng `Sidebar.tsx`/`Topbar.tsx` cũ (shell hiện tại không dùng).
-- Kiểm tra: `npm run build` trong `frontend/`, chụp Playwright ở 390 / 820 / 1440px cho login + shell, soi tương phản chữ và responsive rail ở breakpoint mobile (~dòng 3026 `command-os.css`).
+### 5. Dọn model
+Bỏ các field chỉ phục vụ cách tính cũ (`effectiveAreaM2`, `effectiveArea`, `effectiveQuantity`) khỏi type/adapter/snapshot/export mapping nếu không còn consumer. Export luôn dùng `originalQuantity` · `urbanFactor` · `urbanAdjustedAmount`.
+
+### 6. Kiểm thử
+- Generate workbook rồi **đọc lại bằng script** (exceljs/openpyxl): đúng 1 visible sheet, không chứa text bị cấm, tỷ lệ đô thị đúng, tổng khớp UI, không có #REF!/#VALUE!/#NAME?.
+- Kiểm tra multi-location, multi-field, Karaoke không đổi kết quả.
+- Xác nhận DOCX hợp đồng và payload tạo hợp đồng không bị đụng.
+- Chạy build frontend thực tế của project.
+
+### 7. Commit
+Commit trực tiếp trên `main`, không tạo branch, không force-push:
+
+```text
+fix(pricing): simplify customer excel export
+```
+
+## Ghi chú kỹ thuật
+
+File chạm tới: `generateContractRoyaltyWorkbook.ts` (viết lại phần lớn), `contractRoyaltyModel.ts`, `pricingSnapshot.ts`, `calculationTypes.ts`, `calculationSnapshotAdapter.ts`, `ContractExcelExportDialog.tsx`, `RoyaltyCalculatorPage.tsx`. Không đụng backend, renderer hợp đồng, biểu hệ số/MLCS/VAT.
