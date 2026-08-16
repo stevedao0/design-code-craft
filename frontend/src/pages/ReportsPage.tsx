@@ -993,17 +993,15 @@ export function ReportsPage() {
                 <StaffOverviewTab key={`${refreshTick}-so`} year={year} canViewMoney={canViewMoney} userEmail={userEmail} />
               )}
               {staffTab === 'my-contracts' && (
-                <div className="space-y-4">
-                  <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-                    <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-                      Hợp đồng
-                    </div>
-                    <div className="mt-0.5 text-[10.5px]" style={{ color: 'var(--text-muted)' }}>
-                      Hợp đồng do {userEmail} ký trong năm {year}
-                    </div>
-                  </div>
-                  <ContractTable year={year} canViewMoney={canViewMoney} ownerEmail={userEmail} />
-                </div>
+                <BentoGrid>
+                  <ReportTile
+                    span={12}
+                    label={`Hợp đồng do ${userEmail} ký`}
+                    labelRight={year}
+                  >
+                    <ContractTable year={year} canViewMoney={canViewMoney} ownerEmail={userEmail} />
+                  </ReportTile>
+                </BentoGrid>
               )}
               {staffTab === 'renewals' && (
                 <RenewalsTab key={`${refreshTick}-sr`} year={year} />
