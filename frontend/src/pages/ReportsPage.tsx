@@ -501,49 +501,49 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
     );
   }, [data, search]);
 
-  if (loading) return (
-    <div className="space-y-3">
-      <Skeleton className="h-20 w-full rounded-xl" />
-      <Skeleton className="h-64 w-full rounded-xl" />
-    </div>
-  );
+  if (loading) return <ReportLoading tiles={[4, 4, 4, 12]} />;
 
   if (error) return (
-    <div className="flex items-center gap-3 rounded-xl border p-4"
-      style={{ borderColor: 'var(--accent-danger)' }}>
-      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-danger)' }} />
-      <div className="text-sm flex-1">{error}</div>
-      <Button variant="ghost" size="sm" onClick={load}>Thử lại</Button>
-    </div>
+    <BentoGrid><ReportError message={error} onRetry={load} /></BentoGrid>
   );
 
   if (!data) return null;
 
+  const assignedPct = data.branch.contract_count > 0
+    ? (data.branch.assigned_count / data.branch.contract_count) * 100
+    : 0;
+
   return (
-    <div className="space-y-5">
-      {/* Summary */}
-      <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <SummaryStat label="Tổng hợp đồng" value={fmtNum(data.branch.contract_count)} />
-          <SummaryStat label="Giá trị" value={canViewMoney ? fmtVND(data.branch.actual) : '—'} accent />
-          <SummaryStat label="Đã gán nhân viên" value={fmtNum(data.branch.assigned_count)} />
-          <SummaryStat label="Chưa gán nhân viên" value={fmtNum(data.branch.unassigned_count)} />
-        </div>
-      </div>
+    <BentoGrid>
+      <ReportTile span={4} tone="hero" label="Tổng hợp đồng" labelRight={year}>
+        <TileValue sub={`${fmtNum(data.branch.assigned_count)} đã gán · ${fmtNum(data.branch.unassigned_count)} chưa gán`}>
+          {fmtNum(data.branch.contract_count)}
+        </TileValue>
+        <Meter percent={assignedPct} />
+      </ReportTile>
+
+      <ReportTile span={4} tone="brass" label="Giá trị hợp đồng" labelRight="Chưa GTGT">
+        <TileValue tone="brass">{canViewMoney ? fmtVND(data.branch.actual) : '—'}</TileValue>
+      </ReportTile>
+
+      <ReportTile span={4} label="Phân bổ người thực hiện">
+        <StatList rows={[
+          { label: 'Đã gán', value: fmtNum(data.branch.assigned_count), tone: 'success' },
+          { label: 'Chưa gán', value: fmtNum(data.branch.unassigned_count), tone: 'warning' },
+        ]} />
+        <Meter percent={assignedPct} brass />
+      </ReportTile>
 
       {data.unassigned && (
-        <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-            Hợp đồng chưa gán nhân viên
-          </div>
+        <ReportTile span={12} label="Hợp đồng chưa gán nhân viên">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-            <SummaryStat label="Số hợp đồng" value={fmtNum(data.unassigned.contract_count)} compact />
-            <SummaryStat label="Giá trị" value={canViewMoney ? fmtVND(data.unassigned.actual) : '—'} accent compact />
-            <SummaryStat label="Có giá trị" value={fmtNum(data.unassigned.positive_value_count ?? 0)} compact />
-            <SummaryStat label="Bằng 0" value={fmtNum(data.unassigned.zero_value_count ?? 0)} compact />
-            <SummaryStat label="Chưa có dữ liệu" value={fmtNum(data.unassigned.null_value_count ?? 0)} compact />
+            <StatList rows={[{ label: 'Số hợp đồng', value: fmtNum(data.unassigned.contract_count), tone: 'warning' }]} />
+            <StatList rows={[{ label: 'Giá trị', value: canViewMoney ? fmtVND(data.unassigned.actual) : '—' }]} />
+            <StatList rows={[{ label: 'Có giá trị', value: fmtNum(data.unassigned.positive_value_count ?? 0), tone: 'success' }]} />
+            <StatList rows={[{ label: 'Bằng 0', value: fmtNum(data.unassigned.zero_value_count ?? 0) }]} />
+            <StatList rows={[{ label: 'Chưa có dữ liệu', value: fmtNum(data.unassigned.null_value_count ?? 0), tone: 'warning' }]} />
           </div>
-        </div>
+        </ReportTile>
       )}
 
       {/* Employee table */}
