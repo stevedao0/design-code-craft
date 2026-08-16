@@ -525,16 +525,17 @@ export function RoyaltyCalculatorPage() {
             )}
           </section>
 
-          {/* Cách áp dụng hệ số đô thị */}
+          {/* Phương thức áp dụng tỷ lệ đô thị (nội bộ) */}
           <UrbanModeSelector
             value={urbanMode}
             onChange={setUrbanMode}
             note={
               urbanMode === 'BEFORE_TIERING' && hasNonAreaInstance
-                ? 'Karaoke / khách sạn tính theo số phòng — hai cách cho cùng kết quả do phép nhân tuyến tính.'
+                ? 'Karaoke / khách sạn tính theo số phòng — hai phương thức cho cùng kết quả do phép nhân tuyến tính.'
                 : null
             }
           />
+
 
           {/* Field list */}
           {visibleInstances.length === 0 ? (
