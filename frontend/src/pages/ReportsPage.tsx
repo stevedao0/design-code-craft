@@ -123,32 +123,6 @@ function PeriodToggle({
   );
 }
 
-// ─── Summary stat ───────────────────────────────────────────────────────
-function SummaryStat({
-  label, value, accent, tone, compact,
-}: { label: string; value: string; accent?: boolean; tone?: 'warning' | 'danger'; compact?: boolean }) {
-  const valueColor =
-    tone === 'danger'
-      ? 'var(--accent-danger)'
-      : tone === 'warning'
-        ? 'var(--accent-warning)'
-        : accent
-          ? 'var(--accent-primary, #4A7202)'
-          : 'var(--text-primary)';
-  return (
-    <div className="rounded-xl border px-3.5 py-2.5"
-      style={{
-        borderColor: 'var(--border-default)',
-        background: accent ? 'color-mix(in srgb, var(--accent-primary, #4A7202) 5%, white)' : 'var(--surface)',
-      }}>
-      <div className="text-[10.5px] font-semibold uppercase tracking-wide"
-        style={{ color: 'var(--text-muted)' }}>{label}</div>
-      <div className="mt-1 text-base font-semibold tabular-nums" style={{ color: valueColor }}>
-        {value}
-      </div>
-    </div>
-  );
-}
 
 // ─── Export menu ────────────────────────────────────────────────────────
 function ExportMenu({
