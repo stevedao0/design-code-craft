@@ -174,7 +174,7 @@ function AdminKpiOverview(props: {
           {filteredEmployees.map((emp) => {
             const st = statusLabel(emp);
             const toneStyle = st.tone === 'success'
-              ? { bg: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 12%, white)', color: 'var(--accent-success, #3f8f5b)' }
+              ? { bg: 'color-mix(in srgb, var(--accent-success) 12%, white)', color: 'var(--accent-success)' }
               : st.tone === 'warning'
                 ? { bg: 'color-mix(in srgb, var(--accent-warning, #d99425) 12%, white)', color: 'var(--accent-warning, #d99425)' }
                 : { bg: 'var(--surface)', color: 'var(--text-muted)' };
@@ -240,7 +240,7 @@ function AdminKpiOverview(props: {
                   className="mt-3 w-full rounded-md border py-1.5 text-[11.5px] font-medium transition-colors"
                   style={{
                     borderColor: 'var(--border-soft)',
-                    color: 'var(--accent-plum, #6d365b)',
+                    color: 'var(--accent-brass)',
                     background: 'var(--surface)',
                   }}
                   onClick={(e) => { e.stopPropagation(); props.onSelectEmployee(emp.email); }}>
@@ -391,12 +391,12 @@ function FieldKpiCard({ field }: FieldKpiCardProps) {
   const visualPct = hasTarget ? Math.min(pct, 100) : 0;
   const dash = (visualPct / 100) * circumference;
   const pctColor = pct >= 100
-    ? 'var(--accent-success, #3f8f5b)'
+    ? 'var(--accent-success)'
     : pct >= 75
       ? 'var(--accent-primary, #4A7202)'
       : pct >= 40
         ? 'var(--accent-warning, #d99425)'
-        : 'var(--accent-plum, #6d365b)';
+        : 'var(--accent-brass)';
 
   return (
     <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>

@@ -441,7 +441,7 @@ function BranchOverviewTab({
           <PeriodToggle value={period} onChange={setPeriod} />
         </div>
         <BarChart data={periodData}
-          color={period === 'month' ? 'var(--accent-primary, #4A7202)' : 'var(--accent-plum, #6d365b)'} />
+          color={period === 'month' ? 'var(--accent-primary, #4A7202)' : 'var(--accent-brass)'} />
       </div>
 
       {/* Signing breakdown */}
@@ -458,7 +458,7 @@ function BranchOverviewTab({
                     <span className="font-medium tabular-nums" style={{ color: 'var(--text-secondary)' }}>{fmtNum(r.count)}</span>
                   </div>
                   <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'var(--border-default)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--accent-plum, #6d365b)' }} />
+                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--accent-brass)' }} />
                   </div>
                 </div>
               );
@@ -612,7 +612,7 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
                     <td className="px-3 py-2.5 text-center">
                       {u.configured ? (
                         <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium"
-                          style={{ background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)', color: 'var(--accent-success, #3f8f5b)' }}>
+                          style={{ background: 'color-mix(in srgb, var(--accent-success) 14%, white)', color: 'var(--accent-success)' }}>
                           Đã thiết lập
                         </span>
                       ) : (
@@ -803,12 +803,12 @@ function RenewalsTab({ year }: { year: number }) {
                 {filteredItems.map(item => {
                   const cls = classifyRenewal(item);
                   const toneStyle = cls.tone === 'success'
-                    ? { background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)', color: 'var(--accent-success, #3f8f5b)' }
+                    ? { background: 'color-mix(in srgb, var(--accent-success) 14%, white)', color: 'var(--accent-success)' }
                     : cls.tone === 'danger'
                       ? { background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 12%, white)', color: 'var(--accent-primary, #4A7202)' }
                       : cls.tone === 'warning'
                         ? { background: 'color-mix(in srgb, var(--accent-warning, #d99425) 14%, white)', color: 'var(--accent-warning, #d99425)' }
-                        : { background: 'color-mix(in srgb, var(--accent-plum, #6d365b) 12%, white)', color: 'var(--accent-plum, #6d365b)' };
+                        : { background: 'color-mix(in srgb, var(--accent-brass) 12%, white)', color: 'var(--accent-brass)' };
                   return (
                     <tr key={item.old_contract_id} className="border-t" style={{ borderColor: 'var(--border-default)' }}>
                       <td className="px-3 py-2.5 max-w-[200px] truncate font-medium" style={{ color: 'var(--text-primary)' }}

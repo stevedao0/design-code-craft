@@ -91,8 +91,8 @@ export function YearSelector({ year, onChange, className = '' }: YearSelectorPro
           <span
             className="rounded-full px-1.5 py-px text-[9.5px] font-medium"
             style={{
-              background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)',
-              color: 'var(--accent-success, #3f8f5b)',
+              background: 'color-mix(in srgb, var(--accent-success) 14%, white)',
+              color: 'var(--accent-success)',
             }}
           >
             Hiện tại
@@ -123,8 +123,8 @@ export function YearSelector({ year, onChange, className = '' }: YearSelectorPro
                   <span
                     className="rounded-full px-1.5 py-px text-[9px] font-medium"
                     style={{
-                      background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)',
-                      color: 'var(--accent-success, #3f8f5b)',
+                      background: 'color-mix(in srgb, var(--accent-success) 14%, white)',
+                      color: 'var(--accent-success)',
                     }}
                   >
                     Hiện tại
