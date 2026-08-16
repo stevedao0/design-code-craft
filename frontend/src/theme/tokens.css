@@ -43,6 +43,9 @@
 --accent-danger: #9F1F1F;         /* brick red, never coral/pink */
 --accent-info: #2F6F3E;
 --accent-neutral: #53615C;
+--accent-success: #4A7202;        /* success = VCPMC green */
+--accent-brass: #A16207;          /* vàng đồng phụ trợ cho biểu đồ đối chiếu */
+--accent-brass-strong: #7C5010;
 
 /* Semantic tonal softs (used by badges / chips / focus rings) */
 --accent-primary-soft: rgba(118, 180, 0, 0.12);
@@ -51,6 +54,8 @@
 --accent-danger-soft: rgba(159, 31, 31, 0.10);
 --accent-neutral-soft: rgba(83, 97, 92, 0.10);
 --accent-info-soft: rgba(47, 111, 62, 0.10);
+--accent-success-soft: rgba(74, 114, 2, 0.10);
+--accent-brass-soft: rgba(161, 98, 7, 0.12);
 
 /* Layout rhythm — single source for the Page workspace-frame */
 --space-1: 0.25rem;

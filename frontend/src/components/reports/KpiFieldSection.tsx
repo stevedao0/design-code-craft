@@ -28,8 +28,8 @@ interface KpiFieldSectionProps {
 type ViewMode = 'overview' | 'detail';
 
 const RING_COLORS_ADMIN = [
-  '#c95867', '#6d365b', '#3f8f5b', '#d99425',
-  '#4a7fc1', '#8b6db3', '#2da88f', '#b05a3a',
+  '#4A7202', '#A16207', '#76B400', '#C08A2E',
+  '#2F6F3E', '#7C5010', '#8FB33B', '#D9B166',
 ];
 
 function getEmployeeRingColor(index: number): string {
@@ -174,9 +174,9 @@ function AdminKpiOverview(props: {
           {filteredEmployees.map((emp) => {
             const st = statusLabel(emp);
             const toneStyle = st.tone === 'success'
-              ? { bg: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 12%, white)', color: 'var(--accent-success, #3f8f5b)' }
+              ? { bg: 'color-mix(in srgb, var(--accent-success) 12%, white)', color: 'var(--accent-success)' }
               : st.tone === 'warning'
-                ? { bg: 'color-mix(in srgb, var(--accent-warning, #d99425) 12%, white)', color: 'var(--accent-warning, #d99425)' }
+                ? { bg: 'color-mix(in srgb, var(--accent-warning) 12%, white)', color: 'var(--accent-warning)' }
                 : { bg: 'var(--surface)', color: 'var(--text-muted)' };
             const ringFields = emp.active_count > 0
               ? [{
@@ -240,7 +240,7 @@ function AdminKpiOverview(props: {
                   className="mt-3 w-full rounded-md border py-1.5 text-[11.5px] font-medium transition-colors"
                   style={{
                     borderColor: 'var(--border-soft)',
-                    color: 'var(--accent-plum, #6d365b)',
+                    color: 'var(--accent-brass)',
                     background: 'var(--surface)',
                   }}
                   onClick={(e) => { e.stopPropagation(); props.onSelectEmployee(emp.email); }}>
@@ -325,7 +325,7 @@ function EmployeeKpiDetail(props: {
         <div className="rounded-xl border p-4 text-[12px]"
           style={{
             borderColor: 'var(--accent-warning)',
-            background: 'color-mix(in srgb, var(--accent-warning, #d99425) 6%, white)',
+            background: 'color-mix(in srgb, var(--accent-warning) 6%, white)',
           }}>
           <div className="font-semibold mb-1" style={{ color: 'var(--accent-warning)' }}>
             Thông tin đối soát KPI
@@ -391,12 +391,12 @@ function FieldKpiCard({ field }: FieldKpiCardProps) {
   const visualPct = hasTarget ? Math.min(pct, 100) : 0;
   const dash = (visualPct / 100) * circumference;
   const pctColor = pct >= 100
-    ? 'var(--accent-success, #3f8f5b)'
+    ? 'var(--accent-success)'
     : pct >= 75
       ? 'var(--accent-primary, #4A7202)'
       : pct >= 40
-        ? 'var(--accent-warning, #d99425)'
-        : 'var(--accent-plum, #6d365b)';
+        ? 'var(--accent-warning)'
+        : 'var(--accent-brass)';
 
   return (
     <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>

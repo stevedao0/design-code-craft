@@ -125,9 +125,9 @@ function SummaryStat({
 }: { label: string; value: string; accent?: boolean; tone?: 'warning' | 'danger'; compact?: boolean }) {
   const valueColor =
     tone === 'danger'
-      ? 'var(--accent-primary, #4A7202)'
+      ? 'var(--accent-danger)'
       : tone === 'warning'
-        ? 'var(--accent-warning, #d99425)'
+        ? 'var(--accent-warning)'
         : accent
           ? 'var(--accent-primary, #4A7202)'
           : 'var(--text-primary)';
@@ -266,8 +266,8 @@ function StaffOverviewTab({
 
   if (error) return (
     <div className="flex items-start gap-3 rounded-lg border px-4 py-3"
-      style={{ borderColor: 'var(--accent-primary)', background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 5%, white)' }}>
-      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-primary)' }} />
+      style={{ borderColor: 'var(--accent-danger)', background: 'var(--accent-danger-soft)' }}>
+      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-danger)' }} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Lỗi khi tải dữ liệu</div>
         <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</div>
@@ -337,8 +337,8 @@ function BranchOverviewTab({
 
   if (error) return (
     <div className="flex items-start gap-3 rounded-lg border px-4 py-3"
-      style={{ borderColor: 'var(--accent-primary)', background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 5%, white)' }}>
-      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-primary)' }} />
+      style={{ borderColor: 'var(--accent-danger)', background: 'var(--accent-danger-soft)' }}>
+      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-danger)' }} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Lỗi khi tải dữ liệu</div>
         <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</div>
@@ -373,92 +373,80 @@ function BranchOverviewTab({
     ...(overview.unknown_count > 0 ? [{ label: 'Chưa xác định', count: overview.unknown_count }] : []),
   ].filter(r => r.count > 0);
 
+  const assignedPct = totalCount > 0 ? (overview.assigned_count / totalCount) * 100 : 0;
+  const dataQualityPct = totalCount > 0 ? (revenueCount / totalCount) * 100 : 0;
+
   return (
-    <div className="space-y-5">
-      {/* Ring KPI đa lĩnh vực — toàn đơn vị */}
-      <OrgFieldRings year={year} />
-
-      {/* Primary */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {primary.map(c => (
-          <div key={c.label} className="rounded-xl border p-4"
-            style={{ borderColor: 'var(--border-default)', background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 6%, white)' }}>
-            <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>{c.label}</div>
-            <div className="mt-2 text-2xl font-bold tabular-nums truncate" style={{ color: 'var(--accent-primary, #4A7202)' }}>
-              {c.value}
-            </div>
-            {c.sub && (
-              <div className="mt-1 text-[10.5px]" style={{ color: 'var(--text-muted)' }}>
-                {c.sub}
-              </div>
-            )}
-          </div>
-        ))}
+    <div className="rp-bento">
+      {/* Hàng 1 — hai ô nhấn */}
+      <div className="rp-tile rp-tile--hero rp-c4">
+        <div className="rp-tile__label"><span>{primary[0].label}</span><span>{year}</span></div>
+        <div className="rp-tile__value">{primary[0].value}</div>
+        <div className="rp-tile__sub">{primary[0].sub}</div>
+        <div className="rp-meter"><div className="rp-meter__fill" style={{ width: `${dataQualityPct}%` }} /></div>
       </div>
-
-      {/* Secondary groups */}
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl border p-3" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Chất lượng dữ liệu giá trị</div>
-          <div className="space-y-1.5 text-[12.5px]">
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Có giá trị</span><span className="font-semibold tabular-nums">{fmtNum(overview.positive_value_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Bằng 0</span><span className="font-semibold tabular-nums">{fmtNum(overview.zero_value_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Chưa có dữ liệu</span><span className="font-semibold tabular-nums">{fmtNum(overview.null_value_count)}</span></div>
-          </div>
-        </div>
-        <div className="rounded-xl border p-3" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Tình trạng hiệu lực</div>
-          <div className="space-y-1.5 text-[12.5px]">
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Đang hiệu lực</span><span className="font-semibold tabular-nums">{fmtNum(overview.active_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Sắp hết hạn</span><span className="font-semibold tabular-nums" style={{ color: 'var(--accent-warning)' }}>{fmtNum(overview.expiring_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Hết hạn</span><span className="font-semibold tabular-nums" style={{ color: 'var(--accent-primary)' }}>{fmtNum(overview.expired_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>GCN đã cấp</span><span className="font-semibold tabular-nums" style={{ color: 'var(--accent-success)' }}>{fmtNum(overview.gcn_issued_count)}</span></div>
-          </div>
-        </div>
-        <div className="rounded-xl border p-3" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Phân loại ký</div>
-          <div className="space-y-1.5 text-[12.5px]">
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Ký mới</span><span className="font-semibold tabular-nums">{fmtNum(overview.new_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Tái ký</span><span className="font-semibold tabular-nums">{fmtNum(overview.renewal_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Hợp đồng khung</span><span className="font-semibold tabular-nums">{fmtNum(overview.frame_count)}</span></div>
-          </div>
-        </div>
-        <div className="rounded-xl border p-3" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="mb-2 text-[10.5px] font-semibold uppercase tracking-wide" style={{ color: 'var(--text-muted)' }}>Phân bổ người thực hiện</div>
-          <div className="space-y-1.5 text-[12.5px]">
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Đã gán</span><span className="font-semibold tabular-nums">{fmtNum(overview.assigned_count)}</span></div>
-            <div className="flex justify-between"><span style={{ color: 'var(--text-secondary)' }}>Chưa gán</span><span className="font-semibold tabular-nums" style={{ color: 'var(--accent-warning)' }}>{fmtNum(overview.unassigned_count)}</span></div>
-          </div>
+      <div className="rp-tile rp-tile--brass rp-c5">
+        <div className="rp-tile__label"><span>{primary[1].label}</span><span>Chưa GTGT</span></div>
+        <div className="rp-tile__value rp-tile__value--brass">{primary[1].value}</div>
+        {primary[1].sub && <div className="rp-tile__sub">{primary[1].sub}</div>}
+      </div>
+      <div className="rp-tile rp-c3">
+        <div className="rp-tile__label"><span>Tình trạng hiệu lực</span></div>
+        <div className="rp-list">
+          <div className="rp-list__row"><span>Đang hiệu lực</span><span className="rp-num--success">{fmtNum(overview.active_count)}</span></div>
+          <div className="rp-list__row"><span>Sắp hết hạn</span><span className="rp-num--warning">{fmtNum(overview.expiring_count)}</span></div>
+          <div className="rp-list__row"><span>Hết hạn</span><span className="rp-num--danger">{fmtNum(overview.expired_count)}</span></div>
+          <div className="rp-list__row"><span>GCN đã cấp</span><span className="rp-num--success">{fmtNum(overview.gcn_issued_count)}</span></div>
         </div>
       </div>
 
-      {/* Trend chart */}
-      <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-        <div className="mb-3 flex items-center justify-between gap-2">
-          <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-            {period === 'month' ? 'Doanh thu chưa GTGT theo tháng' : 'Doanh thu chưa GTGT theo quý'} năm {year}
-          </div>
+      {/* Hàng 2 — vòng KPI lĩnh vực chiếm trọn */}
+      <div className="rp-c12" style={{ gridColumn: 'span 12', minWidth: 0 }}>
+        <OrgFieldRings year={year} />
+      </div>
+
+      {/* Hàng 3 — biểu đồ + các ô số liệu đậm đặc */}
+      <div className="rp-tile rp-c8 rp-tile--flush">
+        <div className="rp-tile__label">
+          <span>{period === 'month' ? 'Doanh thu chưa GTGT theo tháng' : 'Doanh thu chưa GTGT theo quý'} · {year}</span>
           <PeriodToggle value={period} onChange={setPeriod} />
         </div>
         <BarChart data={periodData}
-          color={period === 'month' ? 'var(--accent-primary, #4A7202)' : 'var(--accent-plum, #6d365b)'} />
+          color={period === 'month' ? 'var(--accent-primary)' : 'var(--accent-brass)'} />
       </div>
 
-      {/* Signing breakdown */}
+      <div className="rp-tile rp-c4">
+        <div className="rp-tile__label"><span>Chất lượng dữ liệu giá trị</span></div>
+        <div className="rp-list">
+          <div className="rp-list__row"><span>Có giá trị</span><span className="rp-num--success">{fmtNum(overview.positive_value_count)}</span></div>
+          <div className="rp-list__row"><span>Bằng 0</span><span>{fmtNum(overview.zero_value_count)}</span></div>
+          <div className="rp-list__row"><span>Chưa có dữ liệu</span><span className="rp-num--warning">{fmtNum(overview.null_value_count)}</span></div>
+        </div>
+        <div className="rp-tile__label" style={{ marginTop: 4 }}><span>Phân bổ người thực hiện</span></div>
+        <div className="rp-list">
+          <div className="rp-list__row"><span>Đã gán</span><span>{fmtNum(overview.assigned_count)}</span></div>
+          <div className="rp-list__row"><span>Chưa gán</span><span className="rp-num--warning">{fmtNum(overview.unassigned_count)}</span></div>
+        </div>
+        <div className="rp-meter"><div className="rp-meter__fill" style={{ width: `${assignedPct}%` }} /></div>
+      </div>
+
+      {/* Hàng 4 — phân loại ký */}
       {buckets.length > 0 && (
-        <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>Phân loại ký</div>
-          <div className="space-y-3">
-            {buckets.map(r => {
-              const pct = totalCount > 0 ? (r.count / totalCount) * 100 : 0;
+        <div className="rp-tile rp-c12">
+          <div className="rp-tile__label"><span>Phân loại ký · {fmtNum(totalCount)} hợp đồng</span></div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {buckets.map((rw, i) => {
+              const pct = totalCount > 0 ? (rw.count / totalCount) * 100 : 0;
               return (
-                <div key={r.label}>
-                  <div className="mb-1 flex items-center justify-between text-[12.5px]">
-                    <span style={{ color: 'var(--text-primary)' }}>{r.label}</span>
-                    <span className="font-medium tabular-nums" style={{ color: 'var(--text-secondary)' }}>{fmtNum(r.count)}</span>
+                <div key={rw.label} className="min-w-0">
+                  <div className="mb-1 flex items-baseline justify-between gap-2 text-[12.5px]">
+                    <span style={{ color: 'var(--text-primary)' }}>{rw.label}</span>
+                    <span className="font-semibold tabular-nums" style={{ color: 'var(--text-secondary)' }}>
+                      {fmtNum(rw.count)} · {pct.toFixed(1)}%
+                    </span>
                   </div>
-                  <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: 'var(--border-default)' }}>
-                    <div className="h-full rounded-full" style={{ width: `${pct}%`, background: 'var(--accent-plum, #6d365b)' }} />
+                  <div className="rp-meter">
+                    <div className={`rp-meter__fill${i % 2 ? ' rp-meter__fill--brass' : ''}`} style={{ width: `${pct}%` }} />
                   </div>
                 </div>
               );
@@ -467,16 +455,15 @@ function BranchOverviewTab({
         </div>
       )}
 
-      {/* Contract list */}
-      <div className="rounded-xl border p-4" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-        <div className="mb-3 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-          Danh sách hợp đồng ký năm {year}
-        </div>
+      {/* Hàng 5 — bảng hợp đồng */}
+      <div className="rp-tile rp-c12">
+        <div className="rp-tile__label"><span>Danh sách hợp đồng ký năm {year}</span></div>
         <ContractTable year={year} canViewMoney={canViewMoney} />
       </div>
     </div>
   );
 }
+
 
 // ─── Admin: Phân công & khối lượng ─────────────────────────────────────
 function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: boolean }) {
@@ -519,8 +506,8 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
 
   if (error) return (
     <div className="flex items-center gap-3 rounded-xl border p-4"
-      style={{ borderColor: 'var(--accent-primary)' }}>
-      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
+      style={{ borderColor: 'var(--accent-danger)' }}>
+      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-danger)' }} />
       <div className="text-sm flex-1">{error}</div>
       <Button variant="ghost" size="sm" onClick={load}>Thử lại</Button>
     </div>
@@ -612,7 +599,7 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
                     <td className="px-3 py-2.5 text-center">
                       {u.configured ? (
                         <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium"
-                          style={{ background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)', color: 'var(--accent-success, #3f8f5b)' }}>
+                          style={{ background: 'color-mix(in srgb, var(--accent-success) 14%, white)', color: 'var(--accent-success)' }}>
                           Đã thiết lập
                         </span>
                       ) : (
@@ -705,8 +692,8 @@ function RenewalsTab({ year }: { year: number }) {
   );
 
   if (error) return (
-    <div className="flex items-center gap-3 rounded-xl border p-4" style={{ borderColor: 'var(--accent-primary)' }}>
-      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
+    <div className="flex items-center gap-3 rounded-xl border p-4" style={{ borderColor: 'var(--accent-danger)' }}>
+      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-danger)' }} />
       <div className="text-sm flex-1">{error}</div>
       <Button variant="ghost" size="sm" onClick={load}>Thử lại</Button>
     </div>
@@ -803,12 +790,12 @@ function RenewalsTab({ year }: { year: number }) {
                 {filteredItems.map(item => {
                   const cls = classifyRenewal(item);
                   const toneStyle = cls.tone === 'success'
-                    ? { background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)', color: 'var(--accent-success, #3f8f5b)' }
+                    ? { background: 'color-mix(in srgb, var(--accent-success) 14%, white)', color: 'var(--accent-success)' }
                     : cls.tone === 'danger'
                       ? { background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 12%, white)', color: 'var(--accent-primary, #4A7202)' }
                       : cls.tone === 'warning'
-                        ? { background: 'color-mix(in srgb, var(--accent-warning, #d99425) 14%, white)', color: 'var(--accent-warning, #d99425)' }
-                        : { background: 'color-mix(in srgb, var(--accent-plum, #6d365b) 12%, white)', color: 'var(--accent-plum, #6d365b)' };
+                        ? { background: 'color-mix(in srgb, var(--accent-warning) 14%, white)', color: 'var(--accent-warning)' }
+                        : { background: 'color-mix(in srgb, var(--accent-brass) 12%, white)', color: 'var(--accent-brass)' };
                   return (
                     <tr key={item.old_contract_id} className="border-t" style={{ borderColor: 'var(--border-default)' }}>
                       <td className="px-3 py-2.5 max-w-[200px] truncate font-medium" style={{ color: 'var(--text-primary)' }}

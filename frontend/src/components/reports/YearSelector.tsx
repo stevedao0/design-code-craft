@@ -77,7 +77,7 @@ export function YearSelector({ year, onChange, className = '' }: YearSelectorPro
           onClick={() => setOpen(o => !o)}
           className="flex items-center justify-center rounded-md px-3 py-1 text-[13px] font-semibold tabular-nums transition-colors"
           style={{
-            background: '#c95867',
+            background: 'var(--accent-danger)',
             color: '#ffffff',
             minWidth: 72,
           }}
@@ -91,8 +91,8 @@ export function YearSelector({ year, onChange, className = '' }: YearSelectorPro
           <span
             className="rounded-full px-1.5 py-px text-[9.5px] font-medium"
             style={{
-              background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)',
-              color: 'var(--accent-success, #3f8f5b)',
+              background: 'color-mix(in srgb, var(--accent-success) 14%, white)',
+              color: 'var(--accent-success)',
             }}
           >
             Hiện tại
@@ -123,8 +123,8 @@ export function YearSelector({ year, onChange, className = '' }: YearSelectorPro
                   <span
                     className="rounded-full px-1.5 py-px text-[9px] font-medium"
                     style={{
-                      background: 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)',
-                      color: 'var(--accent-success, #3f8f5b)',
+                      background: 'color-mix(in srgb, var(--accent-success) 14%, white)',
+                      color: 'var(--accent-success)',
                     }}
                   >
                     Hiện tại

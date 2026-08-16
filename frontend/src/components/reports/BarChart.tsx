@@ -75,7 +75,7 @@ export function BarChart({
                     height: empty ? '2px' : `${Math.max(h, 4)}%`,
                     background: empty
                       ? 'var(--border-default, #e6e0d7)'
-                      : isHovered ? 'var(--accent-plum, #6d365b)' : color,
+                      : isHovered ? 'var(--accent-brass)' : color,
                     minHeight: '2px',
                     opacity: empty ? 0.6 : 1,
                   }}

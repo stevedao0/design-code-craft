@@ -322,10 +322,10 @@ export function KpiManagementDrawer({
                           className="rounded-full px-2 py-0.5 text-[10px] font-medium"
                           style={{
                             background: a.is_active
-                              ? 'color-mix(in srgb, var(--accent-success, #3f8f5b) 14%, white)'
+                              ? 'color-mix(in srgb, var(--accent-success) 14%, white)'
                               : 'color-mix(in srgb, var(--text-secondary, #6b7280) 14%, white)',
                             color: a.is_active
-                              ? 'var(--accent-success, #3f8f5b)'
+                              ? 'var(--accent-success)'
                               : 'var(--text-secondary, #6b7280)',
                           }}
                         >
@@ -358,7 +358,7 @@ export function KpiManagementDrawer({
                         type="button"
                         title={a.is_active ? 'Ngừng áp dụng' : 'Kích hoạt'}
                         onClick={() => toggleActive(a)}
-                        className="rounded-md p-1.5 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-warning,#d99425)_10%,white)]"
+                        className="rounded-md p-1.5 transition-colors hover:bg-[color-mix(in_srgb,var(--accent-warning)_10%,white)]"
                         style={{ color: 'var(--text-secondary)' }}
                       >
                         <PowerIcon className="h-3.5 w-3.5" />
