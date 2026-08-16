@@ -603,13 +603,13 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
                     <td className="px-3 py-2.5 text-center">
                       {u.configured ? (
                         <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium"
-                          style={{ background: 'color-mix(in srgb, var(--accent-success) 14%, white)', color: 'var(--accent-success)' }}>
+                          style={{ background: 'color-mix(in srgb, var(--accent-success) 14%, var(--surface))', color: 'var(--accent-success)' }}>
                           Đã thiết lập
                         </span>
                       ) : (
                         <span className="inline-block rounded-full px-2 py-0.5 text-[10px] font-medium"
-                          style={{ background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 10%, white)', color: 'var(--accent-primary, #4A7202)' }}>
-                            Chưa thiết lập
+                          style={{ background: 'color-mix(in srgb, var(--accent-warning) 12%, var(--surface))', color: 'var(--accent-warning)' }}>
+                          Chưa thiết lập
                         </span>
                       )}
                     </td>
@@ -626,9 +626,11 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
               </tbody>
             </table>
           </div>
-        </div>
+        </ReportTile>
+      ) : (
+        <ReportEmpty title="Chưa có dữ liệu phân công trong phạm vi bạn được xem." />
       )}
-    </div>
+    </BentoGrid>
   );
 }
 
