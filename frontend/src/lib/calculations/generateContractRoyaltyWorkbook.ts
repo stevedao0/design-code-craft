@@ -102,28 +102,19 @@ export async function generateContractRoyaltyWorkbook(
   wb.modified = new Date();
   wb.title = model.documentTitle;
 
-  const sum = wb.addWorksheet('Tổng hợp', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  const det = wb.addWorksheet('Chi tiết', { state: 'hidden', pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  const ctr = wb.addWorksheet('Bảng hợp đồng', { state: 'hidden', pageSetup: PAGE(), views: [{ showGridLines: false }] });
-  // Chỉ một sheet "Tổng hợp" hiển thị — sheet mặc định khi mở file.
+  const sum = wb.addWorksheet('Bảng tính', { pageSetup: PAGE(), views: [{ showGridLines: false }] });
   wb.views = [{ activeTab: 0, firstSheet: 0, visibility: 'visible', x: 0, y: 0, width: 0, height: 0 }];
 
   sum.columns = [
     { key: 'a', width: 5.5 }, { key: 'b', width: 27 }, { key: 'c', width: 24 },
     { key: 'd', width: 13 }, { key: 'e', width: 12 }, { key: 'f', width: 20 },
   ];
-  det.columns = [
-    { key: 'a', width: 5.5 }, { key: 'b', width: 34 }, { key: 'c', width: 11 },
-    { key: 'd', width: 14 }, { key: 'e', width: 17 }, { key: 'f', width: 20 },
-  ];
 
-  const footer =
+  sum.headerFooter.oddFooter =
     `&L&"${FONT},Italic"&8${model.legalBasis}`
     + `&C&"${FONT},Italic"&8${VCPMC.shortName} · ${VCPMC.email} · ${VCPMC.website}`
     + `&R&"${FONT},Italic"&8Trang &P/&N`;
-  sum.headerFooter.oddFooter = footer;
-  det.headerFooter.oddFooter = footer;
-  ctr.headerFooter.oddFooter = footer;
+
 
   /* ══════════════ SHEET 1 · TỔNG HỢP ══════════════ */
   let r = 1;
@@ -209,32 +200,28 @@ export async function generateContractRoyaltyWorkbook(
   sum.getRow(r).height = 28; r++;
   r++;
 
-  /* ══════════════ SHEET 2 · CHI TIẾT ══════════════ */
-  let d = 1;
-  merge(det, d);
-  det.getCell(`A${d}`).value = `${VCPMC.fullName} (${VCPMC.shortName})`;
-  style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'center', color: C.headText, fill: C.head, border: false });
-  det.getRow(d).height = 20; d++;
-  merge(det, d);
-  det.getCell(`A${d}`).value = 'CHI TIẾT TÍNH TIỀN BẢN QUYỀN THEO BIỂU MỨC';
-  style(det.getCell(`A${d}`), { bold: true, size: 14, align: 'center', color: C.navy, border: false });
-  det.getRow(d).height = 26; d++;
-  merge(det, d);
-  det.getCell(`A${d}`).value =
-    'Số tiền bản quyền (tính theo năm) = Mức lương cơ sở × Hệ số điều chỉnh × Số lượng';
-  style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'center', color: C.muted, border: false });
-  det.getRow(d).height = 17; d++;
-  d++;
+  /* ══════════════ C · CHI TIẾT TỪNG LĨNH VỰC ══════════════ */
+  merge(sum, r);
+  sum.getCell(`A${r}`).value = 'C. CHI TIẾT TIỀN BẢN QUYỀN THEO TỪNG LĨNH VỰC SỬ DỤNG';
+  style(sum.getCell(`A${r}`), { bold: true, size: 11, color: C.navy, fill: C.navySoft, indent: 1, border: box(C.rule) });
+  sum.getRow(r).height = 19; r++;
 
-  const blockTotalRefs: string[] = [];
+  merge(sum, r);
+  sum.getCell(`A${r}`).value =
+    'Số tiền bản quyền (tính theo năm) = Mức lương cơ sở × Hệ số điều chỉnh × Số lượng';
+  style(sum.getCell(`A${r}`), { italic: true, size: 9.5, align: 'center', color: C.muted, border: false });
+  sum.getRow(r).height = 16; r++;
+
+  const blockTotalRows: number[] = [];
 
   model.blocks.forEach((block, bi) => {
-    merge(det, d);
-    det.getCell(`A${d}`).value = `${bi + 1}. ${block.locationName} — ${block.fieldName}  ·  Quy mô: ${block.scaleText}`;
-    style(det.getCell(`A${d}`), {
+    merge(sum, r);
+    sum.getCell(`A${r}`).value =
+      `${bi + 1}. ${block.locationName} — ${block.fieldName}  ·  Quy mô: ${block.scaleText}`;
+    style(sum.getCell(`A${r}`), {
       bold: true, size: 11, color: C.headText, fill: C.head, indent: 1, border: box(C.head),
     });
-    det.getRow(d).height = 21; d++;
+    sum.getRow(r).height = 21; r++;
 
     const heads: Array<[string, string, Align]> = [
       ['A', 'STT', 'center'],
@@ -245,131 +232,106 @@ export async function generateContractRoyaltyWorkbook(
       ['F', 'Thành tiền (đồng)', 'center'],
     ];
     for (const [col, text, al] of heads) {
-      det.getCell(`${col}${d}`).value = text;
-      style(det.getCell(`${col}${d}`), {
+      sum.getCell(`${col}${r}`).value = text;
+      style(sum.getCell(`${col}${r}`), {
         bold: true, size: 10, align: al, wrap: true, color: C.navy, fill: C.navySoft, border: box(C.rule),
       });
     }
-    det.getRow(d).height = 26; d++;
+    sum.getRow(r).height = 26; r++;
 
-    const firstTier = d;
+    const firstTier = r;
     const perTier = block.urbanMode === 'PER_TIER' && !block.urbanExempt && block.urbanFactor !== 1;
-    block.tiers.forEach((t, ti) => {
-      det.getCell(`A${d}`).value = ti + 1;
-      style(det.getCell(`A${d}`), { size: 10, align: 'center', border: box(C.rule) });
 
-      det.getCell(`B${d}`).value = t.label;
-      style(det.getCell(`B${d}`), { size: 10, align: 'left', indent: 1, wrap: true, border: box(C.rule) });
+    block.tiers.forEach((t, ti) => {
+      sum.getCell(`A${r}`).value = ti + 1;
+      style(sum.getCell(`A${r}`), { size: 10, align: 'center', border: box(C.rule) });
+
+      sum.getCell(`B${r}`).value = t.label;
+      style(sum.getCell(`B${r}`), { size: 10, align: 'left', indent: 1, wrap: true, border: box(C.rule) });
 
       if (t.hideFormula) {
-        det.mergeCells(`C${d}:E${d}`);
-        det.getCell(`C${d}`).value = 'Mức trọn gói theo biểu mức';
-        style(det.getCell(`C${d}`), { italic: true, size: 10, align: 'center', color: C.muted, border: box(C.rule) });
-        det.getCell(`F${d}`).value = perTier ? (t.amountAfterUrban ?? t.amount) : t.amount;
+        sum.mergeCells(`C${r}:E${r}`);
+        sum.getCell(`C${r}`).value = 'Mức trọn gói theo biểu mức';
+        style(sum.getCell(`C${r}`), { italic: true, size: 10, align: 'center', color: C.muted, border: box(C.rule) });
+        sum.getCell(`F${r}`).value = perTier ? (t.amountAfterUrban ?? t.amount) : t.amount;
       } else {
-        det.getCell(`C${d}`).value = t.qty;
-        style(det.getCell(`C${d}`), { size: 10, align: 'center', border: box(C.rule) });
-        det.getCell(`D${d}`).value = t.coefText;
-        style(det.getCell(`D${d}`), { size: 10, align: 'center', border: box(C.rule) });
-        det.getCell(`E${d}`).value = { formula: 'MLCS', result: model.baseSalary } as ExcelJS.CellFormulaValue;
-        style(det.getCell(`E${d}`), { size: 10, align: 'right', numFmt: MONEY, border: box(C.rule) });
-        // Cách 2 (per-tier): mỗi dòng tier đã nhân tỷ lệ đô thị trong Excel formula.
-        if (perTier) {
-          det.getCell(`F${d}`).value = {
-            formula: `ROUND(MLCS*${t.coef}*${t.qty}*${block.urbanFactor},0)`,
-            result: t.amountAfterUrban ?? t.amount,
-          } as ExcelJS.CellFormulaValue;
-        } else {
-          det.getCell(`F${d}`).value = {
-            formula: `ROUND(MLCS*${t.coef}*${t.qty},0)`, result: t.amount,
-          } as ExcelJS.CellFormulaValue;
-        }
+        sum.getCell(`C${r}`).value = t.qty;
+        style(sum.getCell(`C${r}`), { size: 10, align: 'center', border: box(C.rule) });
+        sum.getCell(`D${r}`).value = t.coefText;
+        style(sum.getCell(`D${r}`), { size: 10, align: 'center', border: box(C.rule) });
+        sum.getCell(`E${r}`).value = { formula: 'MLCS', result: model.baseSalary } as ExcelJS.CellFormulaValue;
+        style(sum.getCell(`E${r}`), { size: 10, align: 'right', numFmt: MONEY, border: box(C.rule) });
+        sum.getCell(`F${r}`).value = {
+          formula: perTier
+            ? `ROUND(MLCS*${t.coef}*${t.qty}*${block.urbanFactor},0)`
+            : `ROUND(MLCS*${t.coef}*${t.qty},0)`,
+          result: perTier ? (t.amountAfterUrban ?? t.amount) : t.amount,
+        } as ExcelJS.CellFormulaValue;
       }
-      style(det.getCell(`F${d}`), { size: 10, bold: true, align: 'right', numFmt: MONEY, border: box(C.rule) });
-      det.getRow(d).height = 18; d++;
+      style(sum.getCell(`F${r}`), { size: 10, bold: true, align: 'right', numFmt: MONEY, border: box(C.rule) });
+      sum.getRow(r).height = 18; r++;
     });
-    const lastTier = d - 1;
+    const lastTier = r - 1;
 
     let blockRef = `F${lastTier}`;
 
     if (block.tiers.length > 1 || block.urbanFactor !== 1 || block.cappedNote) {
-      det.mergeCells(`A${d}:E${d}`);
-      det.getCell(`A${d}`).value = 'Cộng tiền bản quyền theo khung giá';
-      style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      // Per-tier: SUM từng dòng (đã nhân urbanFactor) = urbanAdjustedAmount
-      // After-subtotal: SUM từng dòng (raw) = baseTierAmount
-      det.getCell(`F${d}`).value = {
+      sum.mergeCells(`A${r}:E${r}`);
+      sum.getCell(`A${r}`).value = 'Cộng tiền bản quyền theo khung giá';
+      style(sum.getCell(`A${r}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      sum.getCell(`F${r}`).value = {
         formula: `SUM(F${firstTier}:F${lastTier})`,
         result: perTier ? block.subTotalAfterUrban : block.subTotalRaw,
       } as ExcelJS.CellFormulaValue;
-      style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'right', numFmt: MONEY, fill: C.band, border: box(C.rule) });
-      blockRef = `F${d}`;
-      det.getRow(d).height = 18; d++;
+      style(sum.getCell(`F${r}`), { bold: true, size: 10, align: 'right', numFmt: MONEY, fill: C.band, border: box(C.rule) });
+      blockRef = `F${r}`;
+      sum.getRow(r).height = 18; r++;
     }
 
     if (block.cappedNote) {
-      det.mergeCells(`A${d}:F${d}`);
-      det.getCell(`A${d}`).value = block.cappedNote;
-      style(det.getCell(`A${d}`), { italic: true, size: 9.5, align: 'center', color: C.danger, border: box(C.rule) });
-      det.getRow(d).height = 16; d++;
+      sum.mergeCells(`A${r}:F${r}`);
+      sum.getCell(`A${r}`).value = block.cappedNote;
+      style(sum.getCell(`A${r}`), { italic: true, size: 9.5, align: 'center', color: C.danger, border: box(C.rule) });
+      sum.getRow(r).height = 16; r++;
     }
 
-    // Tỷ lệ áp dụng theo phân loại đô thị — nội dung trung tính cho file khách.
     if (!block.urbanExempt && block.urbanFactor > 0 && block.urbanFactor !== 1) {
-      const pct = Math.round(block.urbanFactor * 100);
-      const label = block.urbanLabel || '';
-      det.mergeCells(`A${d}:E${d}`);
-      det.getCell(`A${d}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
-      style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      det.getCell(`F${d}`).value = `${label} (${pct}%)`;
-      style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
-      det.getRow(d).height = 16; d++;
+      sum.mergeCells(`A${r}:E${r}`);
+      sum.getCell(`A${r}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
+      style(sum.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      sum.getCell(`F${r}`).value = `${block.urbanLabel || 'Đô thị'} (${Math.round(block.urbanFactor * 100)}%)`;
+      style(sum.getCell(`F${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
+      sum.getRow(r).height = 16; r++;
     }
 
     if (block.urbanFactor !== 1 && !perTier) {
-      det.mergeCells(`A${d}:E${d}`);
-      const urbanText = `Áp dụng tỷ lệ đô thị${block.urbanLabel ? ` — ${block.urbanLabel}` : ''}`;
-      det.getCell(`A${d}`).value = urbanText;
-      style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      det.getCell(`F${d}`).value = {
+      sum.mergeCells(`A${r}:E${r}`);
+      sum.getCell(`A${r}`).value =
+        `Áp dụng tỷ lệ đô thị${block.urbanLabel ? ` — ${block.urbanLabel}` : ''}`;
+      style(sum.getCell(`A${r}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+      sum.getCell(`F${r}`).value = {
         formula: `ROUND(${blockRef}*${block.urbanFactor},0)`, result: block.subTotalAfterUrban,
       } as ExcelJS.CellFormulaValue;
-      style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'right', numFmt: MONEY, fill: C.band, border: box(C.rule) });
-      blockRef = `F${d}`;
-      det.getRow(d).height = 18; d++;
+      style(sum.getCell(`F${r}`), { bold: true, size: 10, align: 'right', numFmt: MONEY, fill: C.band, border: box(C.rule) });
+      blockRef = `F${r}`;
+      sum.getRow(r).height = 18; r++;
     }
 
-    // Dòng kết khối
-    det.mergeCells(`A${d}:E${d}`);
-    det.getCell(`A${d}`).value = `Tiền bản quyền — ${block.locationName}`;
-    style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'right', indent: 1, color: C.navy, fill: C.total, border: box(C.rule) });
-    det.getCell(`F${d}`).value = { formula: `=${blockRef}`, result: block.subTotalAfterUrban } as ExcelJS.CellFormulaValue;
-    style(det.getCell(`F${d}`), { bold: true, size: 11, align: 'right', numFmt: MONEY, color: C.navy, fill: C.total, border: box(C.rule) });
-    blockTotalRefs.push(`'Chi tiết'!$F$${d}`);
-    det.getRow(d).height = 20; d++;
-    d++;
+    sum.mergeCells(`A${r}:E${r}`);
+    sum.getCell(`A${r}`).value = `Tiền bản quyền — ${block.locationName} · ${block.fieldName}`;
+    style(sum.getCell(`A${r}`), { bold: true, size: 10, align: 'right', indent: 1, wrap: true, color: C.navy, fill: C.total, border: box(C.rule) });
+    sum.getCell(`F${r}`).value = { formula: `=${blockRef}`, result: block.subTotalAfterUrban } as ExcelJS.CellFormulaValue;
+    style(sum.getCell(`F${r}`), { bold: true, size: 11, align: 'right', numFmt: MONEY, color: C.navy, fill: C.total, border: box(C.rule) });
+    blockTotalRows.push(r);
+    sum.getRow(r).height = 20; r++;
+    r++;
   });
 
-  det.pageSetup.printTitlesRow = '1:2';
-
-  /* ══════════════ SHEET 1 · BẢNG TỔNG HỢP ══════════════ */
+  /* ══════════════ D · TỔNG HỢP THEO KHU VỰC ══════════════ */
   merge(sum, r);
-  sum.getCell(`A${r}`).value = 'C. TỔNG HỢP TIỀN BẢN QUYỀN THEO KHU VỰC';
+  sum.getCell(`A${r}`).value = 'D. TỔNG HỢP TIỀN BẢN QUYỀN THEO KHU VỰC';
   style(sum.getCell(`A${r}`), { bold: true, size: 11, color: C.navy, fill: C.navySoft, indent: 1, border: box(C.rule) });
   sum.getRow(r).height = 19; r++;
-
-  // Tỷ lệ theo phân loại đô thị: nếu tất cả block cùng urbanFactor thì hiển thị 1 dòng.
-  const allFactors = model.blocks.map((b) => b.urbanFactor).filter((f) => f && f !== 1);
-  if (allFactors.length > 0 && allFactors.every((f) => f === allFactors[0])) {
-    const urbanLabel = model.blocks[0].urbanLabel || 'Đô thị';
-    const pct = Math.round(model.blocks[0].urbanFactor * 100);
-    sum.mergeCells(`A${r}:B${r}`);
-    sum.getCell(`A${r}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
-    style(sum.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-    sum.getCell(`C${r}`).value = `${urbanLabel} (${pct}%)`;
-    style(sum.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
-    sum.getRow(r).height = 16; r++;
-  }
 
   const sHeads: Array<[string, string, Align]> = [
     ['A', 'STT', 'center'],
@@ -398,7 +360,6 @@ export async function generateContractRoyaltyWorkbook(
     style(sum.getCell(`C${r}`), { size: 10, wrap: true, indent: 1, fill: zebra, border: box(C.rule) });
     sum.getCell(`D${r}`).value = b.scaleText;
     style(sum.getCell(`D${r}`), { size: 10, align: 'center', fill: zebra, border: box(C.rule) });
-    // Cột Tỷ lệ đô thị — ưu tiên nhãn + phần trăm, fallback hệ số thập phân.
     sum.getCell(`E${r}`).value = b.urbanExempt
       ? 'Miễn áp dụng'
       : b.urbanLabel
@@ -406,11 +367,12 @@ export async function generateContractRoyaltyWorkbook(
         : fmtFactor(b.urbanFactor);
     style(sum.getCell(`E${r}`), { size: 10, align: 'center', fill: zebra, border: box(C.rule) });
     sum.getCell(`F${r}`).value = {
-      formula: `=${blockTotalRefs[i]}`, result: b.subTotalAfterUrban,
+      formula: `=F${blockTotalRows[i]}`, result: b.subTotalAfterUrban,
     } as ExcelJS.CellFormulaValue;
     style(sum.getCell(`F${r}`), { size: 10, bold: true, align: 'right', numFmt: MONEY, fill: zebra, border: box(C.rule) });
     sum.getRow(r).height = 18; r++;
   });
+
   const lastRow = r - 1;
 
   const line = (
@@ -486,16 +448,13 @@ export async function generateContractRoyaltyWorkbook(
   sum.mergeCells(`A${r}:F${r}`);
   sum.getCell(`A${r}`).value =
     `Ghi chú: Tiền bản quyền được tính theo Phụ lục biểu mức của Nghị định 17/2023/NĐ-CP, trên mức lương cơ sở ${num(model.baseSalary)} đồng/tháng. `
-    + 'Ô "Mức lương cơ sở (MLCS)" và ô "Thuế GTGT" là ô nhập (chữ xanh); thay đổi hai ô này, toàn bộ bảng tự tính lại. '
-    + 'Xem chi tiết từng bậc biểu mức tại sheet "Chi tiết".';
+    + 'Ô "Mức lương cơ sở (MLCS)" và ô "Thuế GTGT" là ô nhập (chữ xanh); thay đổi hai ô này, toàn bộ bảng tự tính lại.';
   style(sum.getCell(`A${r}`), { italic: true, size: 9.5, align: 'left', indent: 1, wrap: true, color: C.muted, border: false });
   sum.getRow(r).height = 40; r += 2;
 
   sum.pageSetup.printArea = `A1:F${r}`;
 
-  // File gửi khách chỉ còn duy nhất sheet "Tổng hợp" — bỏ hẳn các sheet phụ.
-  wb.removeWorksheet(det.id);
-  wb.removeWorksheet(ctr.id);
+
 
 
 
