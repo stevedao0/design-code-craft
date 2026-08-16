@@ -125,7 +125,7 @@ function SummaryStat({
 }: { label: string; value: string; accent?: boolean; tone?: 'warning' | 'danger'; compact?: boolean }) {
   const valueColor =
     tone === 'danger'
-      ? 'var(--accent-primary, #4A7202)'
+      ? 'var(--accent-danger)'
       : tone === 'warning'
         ? 'var(--accent-warning)'
         : accent
@@ -266,8 +266,8 @@ function StaffOverviewTab({
 
   if (error) return (
     <div className="flex items-start gap-3 rounded-lg border px-4 py-3"
-      style={{ borderColor: 'var(--accent-primary)', background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 5%, white)' }}>
-      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-primary)' }} />
+      style={{ borderColor: 'var(--accent-danger)', background: 'var(--accent-danger-soft)' }}>
+      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-danger)' }} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Lỗi khi tải dữ liệu</div>
         <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</div>
@@ -337,8 +337,8 @@ function BranchOverviewTab({
 
   if (error) return (
     <div className="flex items-start gap-3 rounded-lg border px-4 py-3"
-      style={{ borderColor: 'var(--accent-primary)', background: 'color-mix(in srgb, var(--accent-primary, #4A7202) 5%, white)' }}>
-      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-primary)' }} />
+      style={{ borderColor: 'var(--accent-danger)', background: 'var(--accent-danger-soft)' }}>
+      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-danger)' }} />
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Lỗi khi tải dữ liệu</div>
         <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</div>
@@ -506,8 +506,8 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
 
   if (error) return (
     <div className="flex items-center gap-3 rounded-xl border p-4"
-      style={{ borderColor: 'var(--accent-primary)' }}>
-      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
+      style={{ borderColor: 'var(--accent-danger)' }}>
+      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-danger)' }} />
       <div className="text-sm flex-1">{error}</div>
       <Button variant="ghost" size="sm" onClick={load}>Thử lại</Button>
     </div>
@@ -692,8 +692,8 @@ function RenewalsTab({ year }: { year: number }) {
   );
 
   if (error) return (
-    <div className="flex items-center gap-3 rounded-xl border p-4" style={{ borderColor: 'var(--accent-primary)' }}>
-      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-primary)' }} />
+    <div className="flex items-center gap-3 rounded-xl border p-4" style={{ borderColor: 'var(--accent-danger)' }}>
+      <AlertCircleIcon className="h-5 w-5" style={{ color: 'var(--accent-danger)' }} />
       <div className="text-sm flex-1">{error}</div>
       <Button variant="ghost" size="sm" onClick={load}>Thử lại</Button>
     </div>
