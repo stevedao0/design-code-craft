@@ -186,7 +186,7 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         <div className="px-4 py-4 space-y-3" style={{ background: '#fff' }}>
           <SummaryRow label="Số khu vực" value={`${locations.length}`} />
           <SummaryRow label="Tổng diện tích" value={`${snapshot.totalAreaM2.toLocaleString('vi-VN')} m²`} />
-          <SummaryRow label="Cách áp dụng đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
+          <SummaryRow label="Phương thức áp dụng tỷ lệ đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
           <div className="border-t border-zinc-200 pt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-semibold" style={{ color: '#4A7202' }}>Tiền bản quyền trước thuế GTGT</span>
@@ -372,57 +372,59 @@ function LocationCard({
                       <th className="px-3 py-2 text-right font-semibold">Số m²</th>
                       <th className="px-3 py-2 text-right font-semibold">Hệ số diện tích</th>
                       <th className="px-3 py-2 text-right font-semibold">Công thức</th>
+                      <th className="px-3 py-2 text-right font-semibold">Tỷ lệ đô thị</th>
                       <th className="px-3 py-2 text-right font-semibold">Thành tiền/năm</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {snapshot.areaPricingBreakdown.map((row, ri) => (
-                      <tr key={ri} style={{ borderBottom: '1px solid #E7EDE1' }}>
-                        <td className="px-3 py-2">{row.tierName}</td>
-                        <td className="px-3 py-2 text-right font-mono">{row.tierAreaM2.toLocaleString('vi-VN')}</td>
-                        <td className="px-3 py-2 text-right font-mono text-lime-600">{row.areaCoefficient}</td>
-                        <td className="px-3 py-2 text-right text-zinc-500">{row.formula}</td>
-                        <td className="px-3 py-2 text-right font-mono font-semibold">{formatVND(row.amount)}</td>
-                      </tr>
-                    ))}
+                    {snapshot.areaPricingBreakdown.map((row, ri) => {
+                      const perRow = snapshot.urbanMode === 'BEFORE_TIERING';
+                      return (
+                        <tr key={ri} style={{ borderBottom: '1px solid #E7EDE1' }}>
+                          <td className="px-3 py-2">{row.tierName}</td>
+                          <td className="px-3 py-2 text-right font-mono">{row.tierAreaM2.toLocaleString('vi-VN')}</td>
+                          <td className="px-3 py-2 text-right font-mono text-lime-600">{row.areaCoefficient}</td>
+                          <td className="px-3 py-2 text-right text-zinc-500">{row.formula}</td>
+                          <td className="px-3 py-2 text-right font-mono">
+                            {perRow ? `${Math.round(snapshot.urbanCoefficient * 100)}%` : '—'}
+                          </td>
+                          <td className="px-3 py-2 text-right font-mono font-semibold">
+                            {formatVND(perRow ? Math.round(row.amount * snapshot.urbanCoefficient) : row.amount)}
+                          </td>
+                        </tr>
+                      );
+                    })}
                     {snapshot.urbanMode === 'BEFORE_TIERING' ? (
-                      <>
-                        <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
-                          <td className="px-3 py-2" colSpan={4}>
-                            Diện tích gốc {snapshot.areaM2.toLocaleString('vi-VN')} m² — chia bậc theo input gốc, tỷ lệ đô thị áp trên từng dòng tiền.
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono">—</td>
-                        </tr>
-                        <tr style={{ fontWeight: 600 }}>
-                          <td className="px-3 py-2" colSpan={4}>
-                            Cộng tiền các bậc × tỷ lệ đô thị ({Math.round(snapshot.urbanCoefficient * 100)}%)
-                          </td>
-                          <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
-                        </tr>
-                      </>
+                      <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
+                        <td className="px-3 py-2" colSpan={5}>
+                          Cộng tiền các bậc (đã áp tỷ lệ đô thị {Math.round(snapshot.urbanCoefficient * 100)}% theo từng bậc)
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
+                      </tr>
                     ) : (
                       <>
                         <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
-                          <td className="px-3 py-2" colSpan={4}>Cộng tiền các bậc (chưa × tỷ lệ đô thị)</td>
+                          <td className="px-3 py-2" colSpan={5}>Cộng tiền các bậc (chưa áp tỷ lệ đô thị)</td>
                           <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.baseAnnualRoyaltyByArea)}</td>
                         </tr>
                         <tr style={{ fontWeight: 600 }}>
-                          <td className="px-3 py-2" colSpan={4}>
-                            Sau khi áp tỷ lệ đô thị ×{snapshot.urbanCoefficient}
+                          <td className="px-3 py-2" colSpan={5}>
+                            Áp tỷ lệ đô thị {Math.round(snapshot.urbanCoefficient * 100)}% trên tổng tiền bậc
                           </td>
                           <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
                         </tr>
                       </>
                     )}
 
+
                     <tr style={{ fontWeight: 600 }}>
-                      <td className="px-3 py-2" colSpan={4}>
+                      <td className="px-3 py-2" colSpan={5}>
                         Cho {snapshot.durationMonths} tháng (×{snapshot.durationMonths}/{12})
                       </td>
                       <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.royaltyBeforeVat)}</td>
                     </tr>
                     <tr style={{ background: '#E8F5E9', fontWeight: 700, borderTop: '2px solid #E7EDE1' }}>
-                      <td className="px-3 py-2" colSpan={4}>Tổng khu vực {index + 1}</td>
+                      <td className="px-3 py-2" colSpan={5}>Tổng khu vực {index + 1}</td>
                       <td className="px-3 py-2 text-right font-mono text-lime-700">{formatVND(snapshot.royaltyBeforeVat)} đ/năm</td>
                     </tr>
                   </tbody>

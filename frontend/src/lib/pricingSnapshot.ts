@@ -119,20 +119,21 @@ export const KARAOKE_AREA_LABEL: Record<KaraokeAreaGroup, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Cách áp dụng hệ số đô thị (urban application mode)
+// Phương thức áp dụng tỷ lệ đô thị (urban application mode) — nghiệp vụ nội bộ
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * Cách 1 — áp dụng tỷ lệ đô thị sau khi cộng tiền các bậc (mặc định):
+ * Phương thức 1 — áp tỷ lệ đô thị trên tổng tiền bậc (mặc định):
  *   input gốc → phân bổ số lượng vào từng bậc → tính tiền từng bậc
- *   → cộng → × tỷ lệ đô thị → VAT
+ *   → cộng → × tỷ lệ đô thị → thuế GTGT
  *
- * Cách 2 — áp dụng tỷ lệ đô thị trên từng dòng bậc:
+ * Phương thức 2 — áp tỷ lệ đô thị theo từng bậc:
  *   input gốc → phân bổ số lượng vào từng bậc → tính tiền từng bậc
- *   → × tỷ lệ đô thị từng dòng → cộng → VAT
+ *   → × tỷ lệ đô thị trên từng dòng → cộng → thuế GTGT
  *
- * Cả hai cách dùng input gốc để chia bậc và cho cùng tổng tiền vì phép nhân
- * tuyến tính. Tỷ lệ đô thị KHÔNG được nhân vào input gốc.
+ * Cả hai phương thức dùng input gốc để chia bậc và cho cùng tổng tiền vì phép
+ * nhân tuyến tính. Tỷ lệ đô thị KHÔNG bao giờ nhân vào input gốc.
+ * Đây là thông tin nội bộ — không xuất ra tài liệu gửi khách.
  */
 export type UrbanApplicationMode = 'AFTER_SUBTOTAL' | 'BEFORE_TIERING';
 
@@ -146,15 +147,15 @@ export const URBAN_MODE_OPTIONS: ReadonlyArray<{
 }> = [
   {
     id: 'AFTER_SUBTOTAL',
-    short: 'Cách 1',
-    label: 'Áp dụng tỷ lệ đô thị sau khi cộng tiền bậc',
-    hint: 'Chia bậc theo input gốc, cộng tiền các bậc, nhân tỷ lệ đô thị ở cuối.',
+    short: 'Phương thức 1',
+    label: 'Áp dụng trên tổng tiền bậc',
+    hint: 'Cộng tiền các bậc trước, sau đó nhân tỷ lệ đô thị cho tổng.',
   },
   {
     id: 'BEFORE_TIERING',
-    short: 'Cách 2',
-    label: 'Áp dụng tỷ lệ đô thị trên từng dòng bậc',
-    hint: 'Chia bậc theo input gốc, nhân tỷ lệ đô thị trên tiền từng dòng, rồi cộng.',
+    short: 'Phương thức 2',
+    label: 'Áp dụng theo từng bậc',
+    hint: 'Nhân tỷ lệ đô thị vào tiền của từng bậc, sau đó cộng lại.',
   },
 ];
 
@@ -162,6 +163,7 @@ export function urbanModeLabel(mode: UrbanApplicationMode): string {
   const o = URBAN_MODE_OPTIONS.find((x) => x.id === mode);
   return o ? `${o.short} — ${o.label}` : mode;
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // FAB Area Tier Row (for breakdown display)

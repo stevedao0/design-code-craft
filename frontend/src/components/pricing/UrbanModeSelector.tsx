@@ -1,15 +1,16 @@
 /**
- * UrbanModeSelector — chọn cách áp dụng hệ số đô thị trong bảng tính tiền
- * bản quyền âm nhạc.
+ * UrbanModeSelector — chọn phương thức áp dụng tỷ lệ đô thị trong bảng tính
+ * tiền bản quyền âm nhạc (nghiệp vụ nội bộ, không xuất ra file gửi khách).
  *
- *  Cách 1 (mặc định): input gốc → chia bậc → cộng tiền bậc → × hệ số đô thị → VAT
- *  Cách 2:            input gốc × hệ số đô thị → chia bậc → cộng tiền → VAT
+ *  Phương thức 1 (mặc định): cộng tiền các bậc → × tỷ lệ đô thị → thuế GTGT
+ *  Phương thức 2:            × tỷ lệ đô thị trên từng bậc → cộng → thuế GTGT
  *
- * Chỉ tạo khác biệt với các lĩnh vực tính theo bậc diện tích (cà phê, nhà hàng,
- * FAB…). Với Karaoke tính theo số phòng, hai cách cho cùng kết quả.
+ * Tỷ lệ đô thị luôn nhân vào TIỀN, không bao giờ nhân vào diện tích/số lượng,
+ * nên hai phương thức cho cùng một tổng.
  */
 import React from 'react';
 import { URBAN_MODE_OPTIONS, type UrbanApplicationMode } from '../../lib/pricingSnapshot';
+
 
 const LINE = '#E7EDE1';
 const BRAND = '#4A7202';

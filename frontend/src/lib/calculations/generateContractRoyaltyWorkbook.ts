@@ -164,9 +164,9 @@ export async function generateContractRoyaltyWorkbook(
   sum.getRow(r).height = 19; r++;
 
   const info: Array<[string, string]> = [
-    ['Đơn vị sử dụng', model.orgName || 'Chưa khai báo'],
-    ['Địa chỉ', model.orgAddress || 'Chưa khai báo'],
-    ['Người đại diện', model.orgRepresentative || 'Chưa khai báo'],
+    ['Đơn vị sử dụng', model.orgName || ''],
+    ['Địa chỉ', model.orgAddress || ''],
+    ['Người đại diện', model.orgRepresentative || ''],
     ['Thời hạn hợp đồng', `${model.contractMonths} tháng`],
     ['Ngày lập bảng tính', model.quoteDate],
   ];
@@ -493,221 +493,14 @@ export async function generateContractRoyaltyWorkbook(
 
   sum.pageSetup.printArea = `A1:F${r}`;
 
-  /* ══════════════ SHEET 3 · BẢNG HỢP ĐỒNG (bố cục 3 cột như mẫu Word) ══════════════ */
-  buildContractTableSheet(ctr, model);
+  // File gửi khách chỉ còn duy nhất sheet "Tổng hợp" — bỏ hẳn các sheet phụ.
+  wb.removeWorksheet(det.id);
+  wb.removeWorksheet(ctr.id);
+
+
 
   const buf = await wb.xlsx.writeBuffer();
   return new Blob([buf], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
-}
-
-/**
- * Bảng tiền bản quyền theo đúng bố cục bảng trong mẫu hợp đồng Word:
- *   cột 1 "Số lượng …" | cột 2 "Mức tiền bản quyền chưa bao gồm thuế GTGT" | cột 3 "Thành tiền (đồng)"
- * Số liệu vẫn lấy nguyên từ model; ô thành tiền dùng công thức tham chiếu MLCS / THUEGTGT.
- */
-function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyModel) {
-  ws.columns = [
-    { key: 'a', width: 22 },
-    { key: 'b', width: 52 },
-    { key: 'c', width: 22 },
-  ];
-  const M = (row: number, from = 'A', to = 'C') => ws.mergeCells(`${from}${row}:${to}${row}`);
-  let r = 1;
-
-  M(r);
-  ws.getCell(`A${r}`).value = `${VCPMC.fullName} (${VCPMC.shortName})`;
-  style(ws.getCell(`A${r}`), { bold: true, size: 10, align: 'center', color: C.headText, fill: C.head, border: false });
-  ws.getRow(r).height = 20; r++;
-
-  M(r);
-  ws.getCell(`A${r}`).value = VCPMC_HEAD_CONTACT_LINE;
-  style(ws.getCell(`A${r}`), { size: 8.5, align: 'center', wrap: true, color: C.muted, border: false });
-  ws.getRow(r).height = 24; r++;
-
-  M(r);
-  ws.getCell(`A${r}`).value = 'BẢNG TIỀN BẢN QUYỀN ÂM NHẠC';
-  style(ws.getCell(`A${r}`), { bold: true, size: 15, align: 'center', color: C.navy, border: false });
-  ws.getRow(r).height = 28; r++;
-
-  M(r);
-  ws.getCell(`A${r}`).value = `(Kèm theo hợp đồng — căn cứ ${model.legalBasis})`;
-  style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'center', color: C.muted, border: false });
-  ws.getRow(r).height = 17; r += 2;
-
-  const headerRow = r;
-  const firstBlock = model.blocks[0];
-  const heads: Array<[string, string]> = [
-    ['A', firstBlock ? firstBlock.quantityHeader : 'Số lượng'],
-    ['B', 'Mức tiền bản quyền chưa bao gồm thuế GTGT'],
-    ['C', 'Thành tiền\n(đồng)'],
-  ];
-  for (const [col, text] of heads) {
-    ws.getCell(`${col}${r}`).value = text;
-    style(ws.getCell(`${col}${r}`), {
-      bold: true, size: 10.5, align: 'center', wrap: true,
-      color: C.headText, fill: C.head, border: box(C.head),
-    });
-  }
-  ws.getRow(r).height = 34; r++;
-
-  const amountRefs: string[] = [];
-
-  model.blocks.forEach((block) => {
-    // Dòng công thức (in nghiêng, gộp 3 cột) — như mẫu Word
-    M(r);
-    ws.getCell(`A${r}`).value =
-      `${block.locationName} — ${block.fieldName}: Số tiền bản quyền/năm = Mức lương cơ sở × Hệ số điều chỉnh × Số lượng`;
-    style(ws.getCell(`A${r}`), {
-      italic: true, size: 9.5, align: 'center', wrap: true, color: C.navy, fill: C.band, border: box(C.rule),
-    });
-    ws.getRow(r).height = 18; r++;
-
-    const firstTierRow = r;
-    const perTier = block.urbanMode === 'PER_TIER' && !block.urbanExempt && block.urbanFactor !== 1;
-    block.tiers.forEach((t, ti) => {
-      ws.getCell(`A${r}`).value = ti === 0 ? block.scaleText : '';
-      style(ws.getCell(`A${r}`), { bold: ti === 0, size: 10.5, align: 'center', wrap: true, border: box(C.rule) });
-
-      const coefTxt = (t.coefText || fmtFactor(t.coef)).trim();
-      const rateTxt = /\//.test(coefTxt) ? coefTxt : `${coefTxt}/${block.unit}`;
-      ws.getCell(`B${r}`).value = t.hideFormula
-        ? `${t.label}: mức trọn gói theo biểu mức`
-        : `${t.label}: ${num(model.baseSalary)} đồng x ${rateTxt}/năm x ${num(t.qty)}`;
-      style(ws.getCell(`B${r}`), { size: 10.5, align: 'left', indent: 1, wrap: true, border: box(C.rule) });
-
-      if (t.hideFormula) {
-        ws.getCell(`C${r}`).value = perTier ? Math.round(t.amountAfterUrban ?? t.amount) : Math.round(t.amount);
-      } else if (perTier) {
-        ws.getCell(`C${r}`).value = {
-          formula: `ROUND(MLCS*${t.coef}*${t.qty}*${block.urbanFactor},0)`,
-          result: t.amountAfterUrban ?? t.amount,
-        } as ExcelJS.CellFormulaValue;
-      } else {
-        ws.getCell(`C${r}`).value = {
-          formula: `ROUND(MLCS*${t.coef}*${t.qty},0)`, result: t.amount,
-        } as ExcelJS.CellFormulaValue;
-      }
-      style(ws.getCell(`C${r}`), { size: 10.5, align: 'right', numFmt: MONEY, border: box(C.rule) });
-      ws.getRow(r).height = 18; r++;
-    });
-    const lastTierRow = r - 1;
-
-    let ref = `C${lastTierRow}`;
-    if (block.tiers.length > 1) {
-      ref = `SUM(C${firstTierRow}:C${lastTierRow})`;
-    } else if (perTier) {
-      ref = `C${lastTierRow}`;
-    }
-
-    if (block.cappedNote) {
-      M(r);
-      ws.getCell(`A${r}`).value = block.cappedNote;
-      style(ws.getCell(`A${r}`), { italic: true, size: 9.5, align: 'center', wrap: true, color: C.danger, border: box(C.rule) });
-      ws.getRow(r).height = 16; r++;
-    }
-
-    if (!block.urbanExempt && block.urbanFactor > 0 && block.urbanFactor !== 1) {
-      const pct = Math.round(block.urbanFactor * 100);
-      const label = block.urbanLabel || '';
-      ws.mergeCells(`A${r}:B${r}`);
-      ws.getCell(`A${r}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
-      style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      ws.getCell(`C${r}`).value = `${label} (${pct}%)`;
-      style(ws.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
-      ws.getRow(r).height = 16; r++;
-    }
-
-    ws.mergeCells(`A${r}:B${r}`);
-    ws.getCell(`A${r}`).value = `Cộng — ${block.locationName}`;
-    style(ws.getCell(`A${r}`), { bold: true, size: 10.5, align: 'right', indent: 1, wrap: true, color: C.navy, fill: C.navySoft, border: box(C.rule) });
-    ws.getCell(`C${r}`).value = { formula: `=${ref}`, result: block.subTotalAfterUrban } as ExcelJS.CellFormulaValue;
-    style(ws.getCell(`C${r}`), { bold: true, size: 10.5, align: 'right', numFmt: MONEY, color: C.navy, fill: C.navySoft, border: box(C.rule) });
-    amountRefs.push(`C${r}`);
-    ws.getRow(r).height = 19; r++;
-  });
-
-  const totalLine = (
-    label: string, formula: string, result: number,
-    o: { emphasis?: boolean; danger?: boolean } = {},
-  ) => {
-    ws.mergeCells(`A${r}:B${r}`);
-    ws.getCell(`A${r}`).value = label;
-    style(ws.getCell(`A${r}`), {
-      bold: true, size: o.emphasis ? 12 : 11, align: 'right', indent: 1, wrap: true,
-      color: o.danger ? C.danger : o.emphasis ? C.headText : C.ink,
-      fill: o.emphasis ? C.head : C.total,
-      border: box(o.emphasis ? C.head : C.rule),
-    });
-    ws.getCell(`C${r}`).value = { formula, result } as ExcelJS.CellFormulaValue;
-    style(ws.getCell(`C${r}`), {
-      bold: true, size: o.emphasis ? 12 : 11, align: 'right', numFmt: MONEY,
-      color: o.danger ? C.danger : o.emphasis ? C.headText : C.ink,
-      fill: o.emphasis ? C.head : C.total,
-      border: box(o.emphasis ? C.head : C.rule),
-    });
-    ws.getRow(r).height = o.emphasis ? 24 : 20;
-    const ref = `C${r}`;
-    r++;
-    return ref;
-  };
-
-  const needsRoyaltyLine =
-    model.supportPct > 0 || model.customFees.length > 0 || amountRefs.length !== 1;
-  const royaltyRef = needsRoyaltyLine
-    ? totalLine(
-        'Cộng tiền bản quyền trước thuế',
-        amountRefs.length ? `=${amountRefs.join('+')}` : '=0',
-        model.royaltyTotal,
-      )
-    : amountRefs[0];
-
-  let expr = royaltyRef;
-
-  if (model.supportPct > 0) {
-    const supRef = totalLine(
-      `Mức hỗ trợ cho năm ${model.supportYear} (${(model.supportPct * 100).toFixed(0)}%)`,
-      `=-ROUND(${royaltyRef}*${model.supportPct},0)`,
-      -model.supportAmount,
-      { danger: true },
-    );
-    expr = `${expr}+${supRef}`;
-  }
-
-  for (const fee of model.customFees) {
-    ws.mergeCells(`A${r}:B${r}`);
-    ws.getCell(`A${r}`).value = fee.label?.trim() || 'Chi phí khác';
-    style(ws.getCell(`A${r}`), { size: 10.5, align: 'right', indent: 1, wrap: true, border: box(C.rule) });
-    ws.getCell(`C${r}`).value = Math.round(fee.amount);
-    style(ws.getCell(`C${r}`), { size: 10.5, align: 'right', numFmt: MONEY, border: box(C.rule) });
-    expr = `${expr}+C${r}`;
-    ws.getRow(r).height = 18; r++;
-  }
-
-  const congRef = totalLine('Cộng', `=${expr}`, model.subtotal);
-  const gtgtRef = totalLine(
-    `Tiền thuế GTGT ${(model.vatPct * 100).toFixed(0)}%`,
-    `=ROUND(${congRef}*THUEGTGT,0)`,
-    model.vatAmount,
-  );
-  totalLine(
-    `Tổng giá trị hợp đồng cho ${model.contractMonths} tháng sử dụng`,
-    `=${congRef}+${gtgtRef}`,
-    model.grandTotal,
-    { emphasis: true },
-  );
-
-  M(r);
-  ws.getCell(`A${r}`).value = `(Bằng chữ: ${model.amountInWords}/.)`;
-  style(ws.getCell(`A${r}`), { italic: true, bold: true, size: 11, align: 'center', wrap: true, color: C.navy, border: box(C.rule) });
-  ws.getRow(r).height = 22; r++;
-
-  M(r);
-  ws.getCell(`A${r}`).value = model.legalNote;
-  style(ws.getCell(`A${r}`), { italic: true, size: 9.5, align: 'left', indent: 1, wrap: true, color: C.gold, border: box(C.rule) });
-  ws.getRow(r).height = 30; r++;
-
-  ws.pageSetup.printTitlesRow = `${headerRow}:${headerRow}`;
-  ws.pageSetup.printArea = `A1:C${r}`;
 }

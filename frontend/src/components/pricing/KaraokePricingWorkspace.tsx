@@ -136,7 +136,7 @@ export function KaraokePricingWorkspace({ context, onConfirmAmounts }: Props) {
   };
 
   const URBAN_MODE_NOTE =
-    'Karaoke tính theo số phòng nên hai cách áp dụng đô thị (Cách 1 — sau khi cộng tiền bậc, Cách 2 — trước khi chia bậc) cho cùng kết quả; bảng này dùng Cách 1.';
+    'Karaoke tính theo số phòng nên hai phương thức áp dụng tỷ lệ đô thị cho cùng một kết quả.';
 
   const handleCopyTable = async () => {
     const ok = await copyRichAndPlain(
