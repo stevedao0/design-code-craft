@@ -560,6 +560,7 @@ export function RoyaltyCalculatorPage() {
                   vals={vals}
                   result={result}
                   urbanFactor={urbanFactor}
+                  urbanMode={urbanMode}
                   baseTierAmount={baseTierAmount}
                   urbanAdjustedAmount={urbanAdjustedAmount}
                   expanded={expandedInstanceId === item.instanceId}
@@ -748,9 +749,10 @@ function WRow({ label, value, tone }: { label: string; value: string; tone?: 'po
 function FieldBlock({
   field, vals, result, expanded, onToggleExpand, onChange, onRemove, baseSalary,
   item, onLocationChange, onUrbanChange, onDisplayNameChange,
-  urbanFactor, baseTierAmount, urbanAdjustedAmount,
+  urbanFactor, urbanMode, baseTierAmount, urbanAdjustedAmount,
 }: {
   urbanFactor: number;
+  urbanMode: UrbanApplicationMode;
   baseTierAmount: number;
   urbanAdjustedAmount: number;
   field: FieldDef;
@@ -927,6 +929,11 @@ function FieldBlock({
               {item.urbanLabel} ({Math.round(urbanFactor * 100)}%)
             </b>
           </span>
+          <span>
+            {urbanMode === 'BEFORE_TIERING'
+              ? 'Phương thức 2 — nhân tỷ lệ đô thị vào tiền từng bậc'
+              : 'Phương thức 1 — nhân tỷ lệ đô thị vào tổng tiền bậc'}
+          </span>
         </div>
       )}
 
@@ -1015,7 +1022,13 @@ function FieldBlock({
             Diễn giải báo khách
           </div>
           <div className="p-3">
-            <RoyaltyBreakdownTable result={result} baseSalary={baseSalary} />
+            <RoyaltyBreakdownTable
+              result={result}
+              baseSalary={baseSalary}
+              urbanFactor={urbanFactor}
+              perTierUrban={urbanMode === 'BEFORE_TIERING' && !result.urbanExempt && urbanFactor !== 1}
+              urbanAdjustedAmount={urbanAdjustedAmount}
+            />
           </div>
         </div>
       )}
@@ -1032,17 +1045,27 @@ type BreakdownRowView = {
   coefText: string;
   qty: number;
   amount: number;
+  urbanText: string;
   hideFormula: boolean;
 };
 
-function RoyaltyBreakdownTable({ result, baseSalary }: { result: FieldResult; baseSalary: number }) {
+function RoyaltyBreakdownTable({
+  result, baseSalary, urbanFactor = 1, perTierUrban = false, urbanAdjustedAmount,
+}: {
+  result: FieldResult;
+  baseSalary: number;
+  urbanFactor?: number;
+  perTierUrban?: boolean;
+  urbanAdjustedAmount?: number;
+}) {
   const rows: BreakdownRowView[] = result.rows.map((r, i) => ({
     id: `bd-${i}`,
     label: r.label,
     base_salary: baseSalary,
     coefText: r.coefText,
     qty: r.qty,
-    amount: r.amount,
+    amount: perTierUrban ? Math.round(r.amount * urbanFactor) : r.amount,
+    urbanText: perTierUrban ? `${Math.round(urbanFactor * 100)}%` : '—',
     hideFormula: !!r.hideFormula,
   }));
 
@@ -1084,9 +1107,20 @@ function RoyaltyBreakdownTable({ result, baseSalary }: { result: FieldResult; ba
       headerClassName: 'bg-[color:var(--vcpmc-table-header-bg)] text-[color:var(--vcpmc-table-header-fg)] text-right',
       render: (row) => (row.hideFormula ? '-' : formatCoef(row.qty, 2)),
     },
+    ...(perTierUrban
+      ? [{
+          key: 'urbanText' as const,
+          header: 'Tỷ lệ đô thị',
+          align: 'right' as const,
+          wrap: 'nowrap' as const,
+          cellClassName: 'text-[12px]',
+          headerClassName: 'bg-[color:var(--vcpmc-table-header-bg)] text-[color:var(--vcpmc-table-header-fg)] text-right',
+          render: (row: BreakdownRowView) => row.urbanText,
+        }]
+      : []),
     {
       key: 'amount',
-      header: 'Thành tiền',
+      header: perTierUrban ? 'Thành tiền (đã áp đô thị)' : 'Thành tiền',
       align: 'right',
       wrap: 'nowrap',
       meta: { kind: 'currency', tone: 'strong' },
@@ -1096,12 +1130,16 @@ function RoyaltyBreakdownTable({ result, baseSalary }: { result: FieldResult; ba
     },
   ];
 
+  const congTotal = perTierUrban
+    ? (urbanAdjustedAmount ?? Math.round(result.subTotal * urbanFactor))
+    : result.subTotal;
+
   const summaryRows: DataTableSummaryRow[] = [
     {
       id: 'cong',
       cells: [
-        { id: 'cong-label', content: 'Cộng', align: 'right', colSpan: 4, tone: 'strong' },
-        { id: 'cong-value', content: formatVND(result.subTotal), align: 'right', tone: 'strong' },
+        { id: 'cong-label', content: 'Cộng', align: 'right', colSpan: perTierUrban ? 5 : 4, tone: 'strong' },
+        { id: 'cong-value', content: formatVND(congTotal), align: 'right', tone: 'strong' },
       ],
     },
   ];
