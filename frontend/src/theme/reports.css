@@ -1,0 +1,134 @@
+/* ============================================================================
+   Reports workspace — bento grid (dense)
+   Chỉ dùng token trong tokens.css. Không hardcode màu.
+   ========================================================================== */
+
+.rp-bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.rp-tile {
+  position: relative;
+  grid-column: span 12;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--surface);
+}
+
+.rp-tile--flush { padding: var(--space-3) var(--space-4) var(--space-4); }
+
+/* Ô nhấn: nền xanh nhạt, viền đậm hơn */
+.rp-tile--hero {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-primary) 9%, var(--surface)),
+    var(--surface) 72%
+  );
+  border-color: color-mix(in srgb, var(--accent-primary) 26%, var(--border-default));
+}
+
+.rp-tile--brass {
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent-brass) 9%, var(--surface)),
+    var(--surface) 72%
+  );
+  border-color: color-mix(in srgb, var(--accent-brass) 26%, var(--border-default));
+}
+
+/* Nhãn tiêu đề ô */
+.rp-tile__label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rp-tile__value {
+  font-size: clamp(1.25rem, 1rem + 0.9vw, 1.875rem);
+  font-weight: 700;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent-primary);
+  overflow-wrap: anywhere;
+}
+
+.rp-tile__value--brass { color: var(--accent-brass-strong); }
+.rp-tile__value--plain { color: var(--text-primary); }
+
+.rp-tile__sub {
+  font-size: 10.5px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+/* Danh sách số liệu đậm đặc trong ô */
+.rp-list { display: grid; gap: 4px; }
+.rp-list__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 3px 0;
+  font-size: 12.5px;
+  border-bottom: 1px dashed var(--border-subtle);
+}
+.rp-list__row:last-child { border-bottom: 0; }
+.rp-list__row > span:first-child { color: var(--text-secondary); }
+.rp-list__row > span:last-child {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+.rp-num--warning { color: var(--accent-warning) !important; }
+.rp-num--danger { color: var(--accent-danger) !important; }
+.rp-num--success { color: var(--accent-success) !important; }
+
+/* Thanh tỷ trọng */
+.rp-meter {
+  height: 6px;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-muted);
+}
+.rp-meter__fill { height: 100%; border-radius: 999px; background: var(--accent-primary); }
+.rp-meter__fill--brass { background: var(--accent-brass); }
+
+/* Spans — desktop */
+@media (min-width: 1200px) {
+  .rp-c3 { grid-column: span 3; }
+  .rp-c4 { grid-column: span 4; }
+  .rp-c5 { grid-column: span 5; }
+  .rp-c6 { grid-column: span 6; }
+  .rp-c7 { grid-column: span 7; }
+  .rp-c8 { grid-column: span 8; }
+  .rp-c9 { grid-column: span 9; }
+  .rp-c12 { grid-column: span 12; }
+}
+
+/* Tablet */
+@media (min-width: 720px) and (max-width: 1199.98px) {
+  .rp-c3, .rp-c4, .rp-c5 { grid-column: span 6; }
+  .rp-c6, .rp-c7, .rp-c8, .rp-c9, .rp-c12 { grid-column: span 12; }
+}
+
+/* Mobile: mọi ô full width, giảm padding */
+@media (max-width: 719.98px) {
+  .rp-tile { padding: var(--space-3); border-radius: 12px; }
+  .rp-bento { gap: var(--space-2); }
+}
