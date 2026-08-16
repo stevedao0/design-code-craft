@@ -186,7 +186,7 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
         <div className="px-4 py-4 space-y-3" style={{ background: '#fff' }}>
           <SummaryRow label="Số khu vực" value={`${locations.length}`} />
           <SummaryRow label="Tổng diện tích" value={`${snapshot.totalAreaM2.toLocaleString('vi-VN')} m²`} />
-          <SummaryRow label="Cách áp dụng đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
+          <SummaryRow label="Phương thức áp dụng tỷ lệ đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
           <div className="border-t border-zinc-200 pt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-semibold" style={{ color: '#4A7202' }}>Tiền bản quyền trước thuế GTGT</span>
