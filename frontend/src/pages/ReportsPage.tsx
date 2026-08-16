@@ -43,6 +43,10 @@ import { KpiFieldSection } from '@/components/reports/KpiFieldSection';
 import { ContractTable } from '@/components/reports/ContractTable';
 import { ContractExportDialog } from '@/components/reports/ContractExportDialog';
 import { KpiManagementDrawer } from '@/components/reports/KpiManagementDrawer';
+import {
+  BentoGrid, ReportTile, TileValue, StatList, Meter,
+  ReportLoading, ReportEmpty, ReportError, ReportDenied,
+} from '@/components/reports/bento';
 
 // ─── Role detection ────────────────────────────────────────────────────────
 function useReportsPermissions() {
