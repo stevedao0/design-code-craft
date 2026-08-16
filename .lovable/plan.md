@@ -25,10 +25,13 @@ Mỗi khu vực gồm: Khu vực/địa điểm · Lĩnh vực áp dụng · Quy
 Bậc áp dụng | Số lượng thực tế | MLCS | Hệ số điều chỉnh | Tỷ lệ đô thị | Thành tiền
 ```
 
-- Cột "Tỷ lệ đô thị" ghi tỷ lệ thật (80%, 50%…), không bao giờ ghi 100% khi thực tế khác.
+- Cột "Tỷ lệ đô thị" (đầy đủ: "Tỷ lệ áp dụng theo phân loại đô thị") ghi tỷ lệ thật (80%, 50%…), không bao giờ ghi 100% khi thực tế khác.
 - Thành tiền dùng công thức Excel tham chiếu MLCS × hệ số × số lượng × tỷ lệ đô thị.
 - Kết toán: Tổng trước VAT → VAT → Tổng thanh toán → Bằng chữ, mỗi dòng chỉ xuất hiện một lần.
 - Dòng mức trần chỉ in khi thực sự áp trần.
+- **Khối "Hướng dẫn đọc bảng tính"** cuối sheet: giải thích ngắn gọn theo ngôn ngữ khách hàng — thành tiền mỗi bậc = MLCS × hệ số biểu mức × số lượng × tỷ lệ đô thị; cộng các bậc ra tiền trước thuế; cộng thuế GTGT ra tổng thanh toán. Tuyệt đối không nhắc thứ tự xử lý nội bộ.
+- **Letterhead & chân trang**: dùng `vcpmcIdentity.ts` — tên đầy đủ VCPMC, website vcpmc.org, và thông tin **Chi nhánh phía Nam** (địa chỉ, điện thoại, email) vì app phục vụ chi nhánh phía Nam.
+
 
 ### 3. Dọn nội dung nội bộ khỏi file khách
 Xóa khỏi mọi cell/comment/shared string: "Cách áp dụng đô thị", "Cách 1/Cách 2", "Trước khi chia bậc", "Sau khi cộng tiền bậc", "Diện tích hiệu dụng / tính phí", chú thích ô nhập màu xanh, hướng dẫn khách sửa MLCS/VAT, các đoạn diễn giải văn xuôi. Không xuất `urbanMode`/`urbanModeLabel` — chỉ giữ trong state popup.
