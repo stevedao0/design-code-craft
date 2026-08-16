@@ -258,51 +258,58 @@ function StaffOverviewTab({
 
   const handleRefresh = () => setRefreshTick(t => t + 1);
 
-  if (loading) return (
-    <div className="space-y-4">
-      <div className="rounded-xl border p-6" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-        <div className="space-y-3">
-          {[1,2,3,4].map(i => <Skeleton key={i} className="h-8 w-full rounded-lg" />)}
-        </div>
-      </div>
-    </div>
-  );
+  if (loading) return <ReportLoading tiles={[4, 4, 4, 12]} />;
 
   if (error) return (
-    <div className="flex items-start gap-3 rounded-lg border px-4 py-3"
-      style={{ borderColor: 'var(--accent-danger)', background: 'var(--accent-danger-soft)' }}>
-      <AlertCircleIcon className="h-4 w-4 shrink-0 mt-0.5" style={{ color: 'var(--accent-danger)' }} />
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Lỗi khi tải dữ liệu</div>
-        <div className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>{error}</div>
-      </div>
-      <Button variant="secondary" size="sm" onClick={handleRefresh} className="shrink-0 rounded-lg">Thử lại</Button>
-    </div>
+    <BentoGrid><ReportError message={error} onRetry={handleRefresh} /></BentoGrid>
   );
 
   const fields = fieldKpi?.fields ?? [];
   const hasKpi = fields.length > 0;
+  const totals = fieldKpi?.totals ?? null;
+  const progress = totals && totals.target > 0 ? (totals.actual / totals.target) * 100 : 0;
 
   return (
-    <div className="space-y-5">
+    <BentoGrid>
       {hasKpi ? (
-        <KpiCompositionCard
-          year={year}
-          fields={fields}
-          totals={fieldKpi?.totals ?? null}
-          canViewMoney={canViewMoney}
-          subject={userEmail}
-        />
+        <>
+          <ReportTile span={4} tone="hero" label="KPI của tôi" labelRight={year}>
+            <TileValue sub={`Tiến độ ${progress.toFixed(1)}%`}>
+              {canViewMoney && totals ? fmtVND(totals.actual) : fmtNum(fields.length)}
+            </TileValue>
+            <Meter percent={progress} />
+          </ReportTile>
+
+          <ReportTile span={4} tone="brass" label="Chỉ tiêu năm">
+            <TileValue tone="brass">
+              {canViewMoney && totals ? fmtVND(totals.target) : '—'}
+            </TileValue>
+          </ReportTile>
+
+          <ReportTile span={4} label="Lĩnh vực được giao">
+            <StatList rows={fields.slice(0, 5).map(f => ({
+              label: f.field_label ?? f.field,
+              value: canViewMoney ? fmtVND(f.actual) : fmtNum(f.contract_count ?? 0),
+            }))} />
+          </ReportTile>
+
+          <ReportTile span={12} label="Cơ cấu KPI theo lĩnh vực" flush>
+            <KpiCompositionCard
+              year={year}
+              fields={fields}
+              totals={totals}
+              canViewMoney={canViewMoney}
+              subject={userEmail}
+            />
+          </ReportTile>
+        </>
       ) : (
-        <div className="rounded-xl border border-dashed p-8 text-center"
-          style={{ borderColor: 'var(--border-default)', background: 'var(--surface)', color: 'var(--text-muted)' }}>
-          <div className="text-sm">Chưa được giao KPI theo lĩnh vực trong năm {year}.</div>
-          <div className="mt-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-            Liên hệ quản trị để được phân công KPI lĩnh vực.
-          </div>
-        </div>
+        <ReportEmpty
+          title={`Chưa được giao KPI theo lĩnh vực trong năm ${year}.`}
+          hint="Liên hệ quản trị để được phân công KPI lĩnh vực."
+        />
       )}
-    </div>
+    </BentoGrid>
   );
 }
 
