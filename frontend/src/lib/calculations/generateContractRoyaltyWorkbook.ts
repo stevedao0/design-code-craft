@@ -283,7 +283,7 @@ export async function generateContractRoyaltyWorkbook(
 
     if (block.tiers.length > 1 || block.urbanFactor !== 1 || block.cappedNote) {
       det.mergeCells(`A${d}:E${d}`);
-      det.getCell(`A${d}`).value = 'Cộng tiền bản quyền';
+      det.getCell(`A${d}`).value = 'Cộng tiền bản quyền theo khung giá';
       style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
       det.getCell(`F${d}`).value = {
         formula: `SUM(F${firstTier}:F${lastTier})`, result: block.subTotalRaw,
@@ -300,32 +300,22 @@ export async function generateContractRoyaltyWorkbook(
       det.getRow(d).height = 16; d++;
     }
 
-    // Cách áp dụng đô thị — luôn hiển thị để file Excel thể hiện rõ Cách 1/Cách 2
-    if (typeof block.urbanModeLabel === 'string' && block.urbanModeLabel) {
+    // Tỷ lệ áp dụng theo phân loại đô thị — nội dung trung tính cho file khách.
+    if (!block.urbanExempt && block.urbanFactor > 0 && block.urbanFactor !== 1) {
+      const pct = Math.round(block.urbanFactor * 100);
+      const label = block.urbanLabel || '';
       det.mergeCells(`A${d}:E${d}`);
-      det.getCell(`A${d}`).value = 'Cách áp dụng đô thị:';
+      det.getCell(`A${d}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
       style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      det.getCell(`F${d}`).value = block.urbanModeLabel;
-      style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
-      det.getRow(d).height = 16; d++;
-    }
-
-    // Option 2 + lĩnh vực m²: hiển thị công thức diện tích gốc × hệ số = diện tích tính phí
-    if (block.applyUrbanBefore && Number.isFinite(block.rawArea) && Number.isFinite(block.effectiveArea) && block.rawArea! > 0) {
-      const displayedPct = Math.round((block.effectiveArea! / block.rawArea!) * 100);
-      det.mergeCells(`A${d}:E${d}`);
-      det.getCell(`A${d}`).value = 'Diện tích gốc → tính phí:';
-      style(det.getCell(`A${d}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      det.getCell(`F${d}`).value =
-        `${block.rawArea!.toLocaleString('vi-VN')} m² × ${displayedPct}% = ${block.effectiveArea!.toLocaleString('vi-VN')} m²`;
+      det.getCell(`F${d}`).value = `${label} (${pct}%)`;
       style(det.getCell(`F${d}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
       det.getRow(d).height = 16; d++;
     }
 
     if (block.urbanFactor !== 1) {
       det.mergeCells(`A${d}:E${d}`);
-      det.getCell(`A${d}`).value =
-        `Hệ số khu vực đô thị${block.urbanLabel ? ` — ${block.urbanLabel}` : ''} (× ${fmtFactor(block.urbanFactor)})`;
+      const urbanText = `Áp dụng tỷ lệ đô thị${block.urbanLabel ? ` — ${block.urbanLabel}` : ''}`;
+      det.getCell(`A${d}`).value = urbanText;
       style(det.getCell(`A${d}`), { bold: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
       det.getCell(`F${d}`).value = {
         formula: `ROUND(${blockRef}*${block.urbanFactor},0)`, result: block.subTotalAfterUrban,
@@ -354,15 +344,15 @@ export async function generateContractRoyaltyWorkbook(
   style(sum.getCell(`A${r}`), { bold: true, size: 11, color: C.navy, fill: C.navySoft, indent: 1, border: box(C.rule) });
   sum.getRow(r).height = 19; r++;
 
-  // Cách áp dụng đô thị ở mức bảng tính: nếu tất cả block cùng mode thì hiển thị 1 dòng.
-  const allModes = model.blocks.map((b) => b.urbanMode).filter(Boolean);
-  if (allModes.length > 0 && allModes.every((m) => m === allModes[0])) {
-    const firstLabel = model.blocks[0].urbanModeLabel;
-    const sharedLabel = typeof firstLabel === 'string' && firstLabel ? firstLabel : '—';
+  // Tỷ lệ theo phân loại đô thị: nếu tất cả block cùng urbanFactor thì hiển thị 1 dòng.
+  const allFactors = model.blocks.map((b) => b.urbanFactor).filter((f) => f && f !== 1);
+  if (allFactors.length > 0 && allFactors.every((f) => f === allFactors[0])) {
+    const urbanLabel = model.blocks[0].urbanLabel || 'Đô thị';
+    const pct = Math.round(model.blocks[0].urbanFactor * 100);
     sum.mergeCells(`A${r}:B${r}`);
-    sum.getCell(`A${r}`).value = 'Cách áp dụng đô thị:';
+    sum.getCell(`A${r}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
     style(sum.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-    sum.getCell(`C${r}`).value = sharedLabel;
+    sum.getCell(`C${r}`).value = `${urbanLabel} (${pct}%)`;
     style(sum.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
     sum.getRow(r).height = 16; r++;
   }
@@ -587,39 +577,15 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
       ws.getRow(r).height = 16; r++;
     }
 
-    if (typeof block.urbanModeLabel === 'string' && block.urbanModeLabel) {
-      // Merge A:B (label), ghi value độc lập ở C.
-      // Không merge A:C vì sẽ không ghi được value riêng ở C.
+    if (!block.urbanExempt && block.urbanFactor > 0 && block.urbanFactor !== 1) {
+      const pct = Math.round(block.urbanFactor * 100);
+      const label = block.urbanLabel || '';
       ws.mergeCells(`A${r}:B${r}`);
-      ws.getCell(`A${r}`).value = 'Cách áp dụng đô thị:';
+      ws.getCell(`A${r}`).value = 'Tỷ lệ áp dụng theo phân loại đô thị:';
       style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      ws.getCell(`C${r}`).value = block.urbanModeLabel;
+      ws.getCell(`C${r}`).value = `${label} (${pct}%)`;
       style(ws.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
       ws.getRow(r).height = 16; r++;
-    }
-
-    if (block.applyUrbanBefore && Number.isFinite(block.rawArea) && Number.isFinite(block.effectiveArea) && block.rawArea! > 0) {
-      const displayedPct = Math.round((block.effectiveArea! / block.rawArea!) * 100);
-      ws.mergeCells(`A${r}:B${r}`);
-      ws.getCell(`A${r}`).value = 'Diện tích gốc → tính phí:';
-      style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
-      ws.getCell(`C${r}`).value =
-        `${block.rawArea!.toLocaleString('vi-VN')} m² × ${displayedPct}% = ${block.effectiveArea!.toLocaleString('vi-VN')} m²`;
-      style(ws.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
-      ws.getRow(r).height = 16; r++;
-    }
-
-    if (block.urbanFactor !== 1) {
-      ws.mergeCells(`A${r}:B${r}`);
-      ws.getCell(`A${r}`).value =
-        `Hệ số khu vực đô thị${block.urbanLabel ? ` — ${block.urbanLabel}` : ''} (x ${fmtFactor(block.urbanFactor)})`;
-      style(ws.getCell(`A${r}`), { size: 10.5, align: 'right', indent: 1, wrap: true, fill: C.band, border: box(C.rule) });
-      ws.getCell(`C${r}`).value = {
-        formula: `ROUND((${ref})*${block.urbanFactor},0)`, result: block.subTotalAfterUrban,
-      } as ExcelJS.CellFormulaValue;
-      style(ws.getCell(`C${r}`), { bold: true, size: 10.5, align: 'right', numFmt: MONEY, fill: C.band, border: box(C.rule) });
-      ref = `C${r}`;
-      ws.getRow(r).height = 18; r++;
     }
 
     ws.mergeCells(`A${r}:B${r}`);

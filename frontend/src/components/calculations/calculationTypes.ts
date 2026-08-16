@@ -53,16 +53,6 @@ export type CalculationLocationSnapshot = {
   termDisplay: string;
   urbanType: string;
   urbanCoefficient: string;
-  /** Cách áp dụng hệ số đô thị: AFTER_SUBTOTAL (Cách 1) hoặc BEFORE_TIERING (Cách 2). */
-  urbanMode?: string | null;
-  /** Label dễ đọc của urbanMode (vd "Cách 1 — Sau khi cộng tiền bậc"). */
-  urbanModeLabel?: string | null;
-  /** Đô thị đã được áp vào diện tích trước khi chia bậc — chỉ true khi urbanMode=BEFORE_TIERING với lĩnh vực m². */
-  applyUrbanBefore?: boolean | null;
-  /** Diện tích gốc (m²) khi lĩnh vực dùng diện tích bậc thang; null nếu không phải. */
-  rawAreaM2?: number | null;
-  /** Diện tích tính phí (= rawAreaM2 × hệ số đô thị nếu applyUrbanBefore; ngược lại = rawAreaM2). */
-  effectiveAreaM2?: number | null;
   supportDisplay: string;
   royaltyBeforeVatDisplay: string;
   vatDisplay: string;

@@ -216,48 +216,35 @@ export function RoyaltyCalculatorPage() {
       const field = FIELDS.find((f) => f.id === item.fieldId)!;
       const vals = inputsByInstance[item.instanceId] || {};
 
-      // Cách 2 chỉ tạo khác biệt với lĩnh vực tính theo bậc diện tích (m²).
-      // Karaoke/khách sạn tính tuyến tính theo phòng nên giữ nguyên Cách 1.
-      const isAreaTiered = field.unit === 'm²' && !field.urbanExempt;
-      const applyUrbanBefore =
-        urbanMode === 'BEFORE_TIERING' && isAreaTiered && (vals.area ?? 0) > 0;
+      // Luôn chia bậc bằng input gốc (vals). Tỷ lệ đô thị được áp lên TIỀN bậc,
+      // không áp lên input. Hai mode (AFTER_SUBTOTAL / PER_TIER) đều cho cùng t�ng tiền
+      // vì phép nhân tuyến tính.
+      const result = field.compute(vals, baseSalary);
 
-      const rawArea = Number(vals.area ?? 0) || 0;
-      const effectiveArea = applyUrbanBefore ? rawArea * item.urbanFactor : rawArea;
-      const computeVals = applyUrbanBefore ? { ...vals, area: effectiveArea } : vals;
-      const result = field.compute(computeVals, baseSalary);
+      // Hệ số đô thị thực của địa điểm. urbanExempt → 1 (mục 5.3 & 5.4 NĐ 17).
+      const urbanFactor = item.urbanFactor ?? 1;
+      const baseTierAmount = result.subTotal;
+      // Sau đô thị — không phụ thuộc mode (cộng dồn linear).
+      const urbanAdjustedAmount = result.urbanExempt ? baseTierAmount : baseTierAmount * urbanFactor;
 
-      // Khi đô thị đã áp vào đầu vào thì không nhân lại ở bước cộng tiền.
-      const effectiveUrbanFactor = applyUrbanBefore ? 1 : item.urbanFactor;
-      // exportItem đã được gắn nhãn "Cách 2" vào urbanLabel, nhưng Word/Excel
-      // cần field urbanMode rõ ràng để hiển thị "Cách áp dụng đô thị".
-      const exportItem = applyUrbanBefore
-        ? {
-            ...item,
-            urbanFactor: 1,
-            urbanLabel: `${item.urbanLabel} · Cách 2 (đã áp trước khi chia bậc)`,
-            urbanMode,
-            urbanModeLabel: currentUrbanModeLabel,
-          }
-        : {
-            ...item,
-            urbanMode,
-            urbanModeLabel: currentUrbanModeLabel,
-          };
+      const exportItem = {
+        ...item,
+        urbanMode,
+        urbanModeLabel: currentUrbanModeLabel,
+      };
 
       return {
         item,
         exportItem,
         field,
         vals,
-        computeVals,
         result,
-        applyUrbanBefore,
-        rawArea,
-        effectiveArea,
-        effectiveUrbanFactor,
         urbanMode,
         urbanModeLabel: currentUrbanModeLabel,
+        urbanFactor,
+        baseTierAmount,
+        urbanAdjustedAmount,
+        rawArea: Number(vals.area ?? 0) || 0,
       };
     });
     },
@@ -286,19 +273,16 @@ export function RoyaltyCalculatorPage() {
   // Compute totals — each instance applies its own urban coefficient.
   // urbanExempt items (flat-fee) are never multiplied by urbanFactor.
   const totals = useMemo(() => {
-    let totalBeforeVat = 0;
-    for (const p of perInstance) {
-      const ex = p.result.urbanExempt;
-      totalBeforeVat += ex ? p.result.subTotal : p.result.subTotal * p.effectiveUrbanFactor;
-    }
-    const vat = totalBeforeVat * vatPct;
-    const afterSupport = totalBeforeVat; // support applied in pricing snapshot only; here just base royalty
+    const rawSubTotal = perInstance.reduce((s, p) => s + p.baseTierAmount, 0);
+    const afterUrban = perInstance.reduce((s, p) => s + p.urbanAdjustedAmount, 0);
+    const afterSupport = afterUrban; // support applied in pricing snapshot only; here just base royalty
+    const vat = afterSupport * vatPct;
     return {
-      rawSubTotal: perInstance.reduce((s, p) => s + p.result.subTotal, 0),
-      afterUrban: totalBeforeVat,
+      rawSubTotal,
+      afterUrban,
       afterSupport,
       vat,
-      grandTotal: totalBeforeVat + vat,
+      grandTotal: afterSupport + vat,
     };
   }, [perInstance, vatPct]);
 
@@ -310,10 +294,9 @@ export function RoyaltyCalculatorPage() {
     try {
       await exportRoyaltyQuoteDocx({
         customer, contractMonths, baseSalary,
-        // Global urban kept for backward compat / default reference; not used for per-instance calc
         urbanLabel, urbanFactor,
         supportPct, vatPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result, urbanFactor, urbanAdjustedAmount }) => ({
           fieldId: field.id,
           vals,
           result,
@@ -325,12 +308,9 @@ export function RoyaltyCalculatorPage() {
           locationNote: item.locationNote,
           urbanId: item.urbanId,
           urbanLabel: item.urbanLabel,
-          urbanFactor: item.urbanFactor,
-          urbanMode,
-          urbanModeLabel: currentUrbanModeLabel,
-          applyUrbanBefore,
-          rawArea,
-          effectiveArea,
+          urbanFactor,
+          baseTierAmount: result.subTotal,
+          urbanAdjustedAmount,
         })),
         totals, quoteDate: new Date().toLocaleDateString('vi-VN'),
       });
@@ -354,7 +334,7 @@ export function RoyaltyCalculatorPage() {
         baseSalary,
         vatPct,
         supportPct,
-        perField: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, effectiveArea, urbanMode }) => ({
+        perField: activeInstances.map(({ exportItem: item, field, vals, result, urbanFactor, urbanAdjustedAmount }) => ({
           item,
           fieldId: field.id,
           vals,
@@ -370,10 +350,8 @@ export function RoyaltyCalculatorPage() {
           durationMonths: contractMonths,
           areaM2: (vals.area ?? 0) > 0 ? (vals.area as number) : undefined,
           urbanMode,
-          urbanModeLabel: currentUrbanModeLabel,
-          applyUrbanBefore,
-          rawArea: (vals.area ?? 0) > 0 ? (vals.area as number) : null,
-          effectiveArea: applyUrbanBefore ? effectiveArea : null,
+          urbanFactor,
+          urbanAdjustedAmount,
         })),
       });
       recordSnapshot(snapshot);
@@ -385,7 +363,7 @@ export function RoyaltyCalculatorPage() {
 
   // Nguồn dữ liệu cho hộp thoại xuất Excel — bố cục bảng tính hợp đồng.
   const excelSource = useMemo(() => ({
-    instances: activeInstances.map(({ exportItem: item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea, urbanMode }) => ({
+    instances: activeInstances.map(({ exportItem: item, field, vals, result, urbanFactor, urbanAdjustedAmount, baseTierAmount }) => ({
       instanceId: item.instanceId,
       field,
       result,
@@ -393,12 +371,9 @@ export function RoyaltyCalculatorPage() {
       locationName: item.locationName,
       displayName: item.displayName,
       urbanLabel: item.urbanLabel,
-      urbanFactor: item.urbanFactor,
-      urbanMode,
-      urbanModeLabel: currentUrbanModeLabel,
-      applyUrbanBefore,
-      rawArea,
-      effectiveArea,
+      urbanFactor,
+      baseTierAmount,
+      urbanAdjustedAmount,
     })),
     customer,
     baseSalary,
@@ -406,7 +381,7 @@ export function RoyaltyCalculatorPage() {
     supportPct,
     contractMonths,
     quoteDate: new Date().toLocaleDateString('vi-VN'),
-  }), [activeInstances, customer, baseSalary, vatPct, supportPct, contractMonths, currentUrbanModeLabel]);
+  }), [activeInstances, customer, baseSalary, vatPct, supportPct, contractMonths]);
 
   const handleExportExcel = () => {
     if (activeInstances.length === 0) return;
@@ -591,7 +566,7 @@ export function RoyaltyCalculatorPage() {
             onChange={setUrbanMode}
             note={
               urbanMode === 'BEFORE_TIERING' && hasNonAreaInstance
-                ? 'Karaoke / khách sạn tính theo số phòng nên hai cách cho cùng kết quả — chỉ các lĩnh vực tính theo bậc diện tích (m²) mới thay đổi.'
+                ? 'Karaoke / khách sạn tính theo số phòng — hai cách cho cùng kết quả do phép nhân tuyến tính.'
                 : null
             }
           />
@@ -612,15 +587,15 @@ export function RoyaltyCalculatorPage() {
             </div>
           ) : (
             <section id="vcpmc-usage-instances" className="space-y-3">
-              {visibleInstances.map(({ item, field, vals, result, applyUrbanBefore, rawArea, effectiveArea }) => (
+              {visibleInstances.map(({ item, field, vals, result, urbanFactor, baseTierAmount, urbanAdjustedAmount }) => (
                 <FieldBlock
                   key={item.instanceId}
-                  applyUrbanBefore={applyUrbanBefore}
-                  rawArea={rawArea}
-                  effectiveArea={effectiveArea}
                   field={field}
                   vals={vals}
                   result={result}
+                  urbanFactor={urbanFactor}
+                  baseTierAmount={baseTierAmount}
+                  urbanAdjustedAmount={urbanAdjustedAmount}
                   expanded={expandedInstanceId === item.instanceId}
                   onToggleExpand={() => setExpandedInstanceId(expandedInstanceId === item.instanceId ? null : item.instanceId)}
                   onChange={(k, v) => setInstanceInput(item.instanceId, k, v)}
@@ -637,9 +612,9 @@ export function RoyaltyCalculatorPage() {
 
           <footer className="pt-4 pb-1 text-[11px] leading-relaxed" style={{ color: C.mute2 }}>
             {urbanMode === 'BEFORE_TIERING'
-              ? 'Công thức (Cách 2): Quy mô × hệ số đô thị → chia bậc → Σ(MLCS × Hệ số × Số lượng) → mức trần → − hỗ trợ → + Thuế GTGT.'
-              : 'Công thức (Cách 1): Σ(MLCS × Hệ số × Số lượng) → mức trần → × hệ số đô thị → − hỗ trợ → + Thuế GTGT.'}{' '}
-            Căn cứ Phụ lục biểu mức tiền bản quyền — Nghị định 17/2023/NĐ-CP ngày 26/4/2023.
+              ? 'Công thức (Cách 2 — áp tỷ lệ đô thị trên từng dòng bậc): Chia bậc theo input gốc → Σ(MLCS × Hệ số × Số lượng) × tỷ lệ đô thị → mức trần → − hỗ trợ → + Thuế GTGT.'
+              : 'Công thức (Cách 1 — áp tỷ lệ đô thị sau khi cộng tiền bậc): Chia bậc theo input gốc → Σ(MLCS × Hệ số × Số lượng) → mức trần → × tỷ lệ đô thị → − hỗ trợ → + Thuế GTGT.'}{' '}
+            Căn cứ Phụ lục II ban hành kèm theo Nghị định 17/2023/NĐ-CP, được sửa đổi, bổ sung bởi Nghị định 134/2026/NĐ-CP.
           </footer>
         </div>
 
@@ -694,10 +669,7 @@ export function RoyaltyCalculatorPage() {
                 <div className="mt-5 space-y-2.5 text-[13px]">
                   <WRow label="Cách áp dụng đô thị" value={getUrbanModeLabel(urbanMode)} />
                   <WRow label="Tổng cộng định mức" value={formatVND(totals.rawSubTotal)} />
-                  <WRow
-                    label={urbanMode === 'BEFORE_TIERING' ? 'Tổng (đô thị áp trước khi chia bậc)' : 'Tổng sau đô thị'}
-                    value={formatVND(totals.afterUrban)}
-                  />
+                  <WRow label="Tổng sau đô thị" value={formatVND(totals.afterUrban)} />
                   {supportPct > 0 && (
                     <WRow
                       label={`Hỗ trợ (-${(supportPct * 100).toFixed(0)}%)`}
@@ -820,11 +792,11 @@ function WRow({ label, value, tone }: { label: string; value: string; tone?: 'po
 function FieldBlock({
   field, vals, result, expanded, onToggleExpand, onChange, onRemove, baseSalary,
   item, onLocationChange, onUrbanChange, onDisplayNameChange,
-  applyUrbanBefore, rawArea, effectiveArea,
+  urbanFactor, baseTierAmount, urbanAdjustedAmount,
 }: {
-  applyUrbanBefore: boolean;
-  rawArea: number;
-  effectiveArea: number;
+  urbanFactor: number;
+  baseTierAmount: number;
+  urbanAdjustedAmount: number;
   field: FieldDef;
   vals: Record<string, number>;
   result: FieldResult;
@@ -987,32 +959,17 @@ function FieldBlock({
         </div>
       </div>
 
-      {/* Cách 2 — quy mô tính phí sau khi áp hệ số đô thị */}
-      {applyUrbanBefore && (
+      {/* Tỷ lệ áp dụng theo phân loại đô thị — hiển thị trung tính, không phụ thuộc mode */}
+      {item.urbanId && (
         <div
           className="rounded-lg border px-3 py-2 text-[11.5px] flex flex-wrap items-center gap-x-4 gap-y-1"
           style={{ borderColor: '#D6E1C7', background: '#F6FAF0', color: C.muted }}
         >
           <span>
-            Diện tích gốc:{' '}
+            Tỷ lệ áp dụng theo phân loại đô thị:{' '}
             <b className="font-mono tabular-nums" style={{ color: C.ink }}>
-              {rawArea.toLocaleString('vi-VN')} m²
+              {item.urbanLabel} ({Math.round(urbanFactor * 100)}%)
             </b>
-          </span>
-          <span>
-            Hệ số đô thị:{' '}
-            <b className="font-mono tabular-nums" style={{ color: C.ink }}>
-              {Math.round(item.urbanFactor * 100)}%
-            </b>
-          </span>
-          <span>
-            Diện tích tính phí:{' '}
-            <b className="font-mono tabular-nums" style={{ color: C.navy }}>
-              {effectiveArea.toLocaleString('vi-VN')} m²
-            </b>
-          </span>
-          <span className="text-[10.5px]" style={{ color: C.mute2 }}>
-            (Cách 2 — áp đô thị trước khi chia bậc)
           </span>
         </div>
       )}

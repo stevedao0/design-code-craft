@@ -113,15 +113,6 @@ export type ExportData = {
     urbanId: string;
     urbanLabel: string;
     urbanFactor: number;
-    /** Cách áp dụng đô thị cho instance này (AFTER_SUBTOTAL hoặc BEFORE_TIERING). */
-    urbanMode?: string;
-    urbanModeLabel?: string;
-    /** True khi đô thị đã được áp vào diện tích trước khi chia bậc (Option 2 + lĩnh vực m²). */
-    applyUrbanBefore?: boolean;
-    /** Diện tích gốc (m²) khi lĩnh vực dùng diện tích bậc thang. */
-    rawArea?: number;
-    /** Diện tích tính phí (m²). Với Option 2 = rawArea × hệ số đô thị; Option 1 = rawArea. */
-    effectiveArea?: number;
   }[];
   totals: QuoteTotals;
   quoteNo?: string;
@@ -207,27 +198,12 @@ function fieldSection(item: ExportData['perField'][number], baseSalary: number, 
       cell(`${(item.urbanFactor * 100).toFixed(0)}%`, { color: '#1F2937', width: 6000 }),
     ]}),
   ];
-  // Cách áp dụng đô thị: luôn hiển thị để người đọc biết bảng tính dùng cách nào.
-  if (typeof item.urbanModeLabel === 'string' && item.urbanModeLabel) {
+  // Tỷ lệ áp dụng theo phân loại đô thị — nội dung trung tính cho file khách.
+  if (!result.urbanExempt && item.urbanLabel && item.urbanFactor && item.urbanFactor !== 1) {
+    const pct = Math.round(item.urbanFactor * 100);
     urbanRows.push(new TableRow({ children: [
-      cell('Cách áp dụng đô thị:', { bold: true, color: '#334155', width: 2200 }),
-      cell(item.urbanModeLabel, { color: '#1F2937', width: 6000, bold: true }),
-    ]}));
-  }
-  // Với Option 2 (applyUrbanBefore=true) và lĩnh vực dùng m²: hiển thị công thức
-  // diện tích gốc × hệ số = diện tích tính phí để khách hiểu cách chia bậc.
-  if (item.applyUrbanBefore && Number.isFinite(item.rawArea) && Number.isFinite(item.effectiveArea)) {
-    // urbanFactor đã được set = 1 khi applyUrbanBefore=true (đô thị đã nhân trong diện tích).
-    // Lấy lại hệ số gốc từ rawArea/effectiveArea nếu có thể (để hiển thị công thức).
-    const displayedPct = item.rawArea && item.rawArea > 0
-      ? Math.round((item.effectiveArea! / item.rawArea) * 100)
-      : null;
-    const formulaText = displayedPct != null
-      ? `${item.rawArea!.toLocaleString('vi-VN')} m² × ${displayedPct}% = ${item.effectiveArea!.toLocaleString('vi-VN')} m²`
-      : `${item.rawArea!.toLocaleString('vi-VN')} m² → ${item.effectiveArea!.toLocaleString('vi-VN')} m²`;
-    urbanRows.push(new TableRow({ children: [
-      cell('Diện tích gốc → tính phí:', { bold: true, color: '#334155', width: 2200 }),
-      cell(formulaText, { color: '#1F2937', width: 6000, bold: true }),
+      cell('Tỷ lệ áp dụng theo phân loại đô thị:', { bold: true, color: '#334155', width: 2200 }),
+      cell(`${item.urbanLabel} (${pct}%)`, { color: '#1F2937', width: 6000, bold: true }),
     ]}));
   }
   out.push(new Table({
@@ -359,22 +335,15 @@ function fieldSection(item: ExportData['perField'][number], baseSalary: number, 
   const urbanExempt = result.urbanExempt;
   if (urbanExempt) {
     out.push(p([
-      txt('⇒ Sau áp đô thị: ', { bold: true, size: 22 }),
+      txt('⇒ Áp dụng tỷ lệ đô thị: ', { bold: true, size: 22 }),
       txt('Không áp dụng (phí trọn gói)', { bold: true, size: 22, color: COLOR.mute }),
-    ], { spacing: 120 }));
-  } else if (item.applyUrbanBefore) {
-    // Option 2: đô thị đã được nhân vào diện tích trước khi chia bậc.
-    // Thành tiền đã bao gồm đô thị → không nhân lại.
-    out.push(p([
-      txt('⇒ Sau áp đô thị: ', { bold: true, size: 22 }),
-      txt(`${formatVND(result.subTotal)} (đã áp đô thị trước khi chia bậc)`, { bold: true, size: 22, color: COLOR.ok }),
     ], { spacing: 120 }));
   } else {
     const afterUrban = result.subTotal * item.urbanFactor;
     out.push(p([
-      txt('⇒ Sau áp đô thị (', { bold: true, size: 22 }),
-      txt(`${item.urbanLabel} ${(item.urbanFactor * 100).toFixed(0)}%`, { bold: true, size: 22, color: COLOR.accent }),
-      txt(`): `, { bold: true, size: 22 }),
+      txt('⇒ Áp dụng tỷ lệ theo phân loại đô thị — ', { bold: true, size: 22 }),
+      txt(`${item.urbanLabel} `, { bold: true, size: 22, color: COLOR.accent }),
+      txt(`(${(item.urbanFactor * 100).toFixed(0)}%): `, { bold: true, size: 22 }),
       txt(`${formatVND(afterUrban)}`, { bold: true, size: 22, color: COLOR.ok }),
     ], { spacing: 120 }));
   }
@@ -508,7 +477,7 @@ function collectContent(data: ExportData): (Paragraph | Table)[] {
   out.push(p([txt(`VP Đà Nẵng: ${VCPMC.daNang} – ĐT: ${VCPMC.daNangPhone}`, { size: 18, color: COLOR.mute })], { align: AlignmentType.CENTER, spacing: 200 }));
 
   out.push(p([txt('BẢNG TÍNH TIỀN BẢN QUYỀN ÂM NHẠC', { bold: true, size: 32, color: COLOR.ink })], { align: AlignmentType.CENTER, spacing: 40 }));
-  out.push(p([txt('Căn cứ Nghị định 17/2023/NĐ-CP ngày 26/4/2023 — Phụ lục biểu mức tiền bản quyền', { italic: true, color: COLOR.mute, size: 20 })], { align: AlignmentType.CENTER, spacing: 240 }));
+  out.push(p([txt('Căn cứ Phụ lục II ban hành kèm theo Nghị định 17/2023/NĐ-CP, được sửa đổi, bổ sung bởi Nghị định 134/2026/NĐ-CP', { italic: true, color: COLOR.mute, size: 20 })], { align: AlignmentType.CENTER, spacing: 240 }));
 
   if (data.quoteNo || data.quoteDate) {
     out.push(p([
@@ -527,14 +496,7 @@ function collectContent(data: ExportData): (Paragraph | Table)[] {
   } else if (data.perField.length === 1) {
     out.push(p([txt('Phân loại đô thị: ', { bold: true }), txt(`${data.perField[0].urbanLabel} (${(data.perField[0].urbanFactor * 100).toFixed(0)}% khung giá)`)]));
   }
-  // Cách áp dụng đô thị ở mức bảng tính — dùng mode của instance đầu tiên nếu có,
-  // fallback về data.urbanMode. Option 2 với lĩnh vực m² sẽ hiển thị "Cách 2".
-  const headerUrbanModeLabel =
-    (typeof data.perField[0]?.urbanModeLabel === 'string' && data.perField[0].urbanModeLabel) ||
-    (typeof data.urbanModeLabel === 'string' ? data.urbanModeLabel : null);
-  if (headerUrbanModeLabel) {
-    out.push(p([txt('Cách áp dụng đô thị: ', { bold: true }), txt(headerUrbanModeLabel)]));
-  }
+  // Căn cứ pháp lý + thời hạn
   out.push(p([txt('Thời hạn hợp đồng: ', { bold: true }), txt(`${data.contractMonths} tháng`)]));
   out.push(p([txt('Mức lương cơ sở áp dụng: ', { bold: true }), txt(formatVND(data.baseSalary))], { spacing: 200 }));
 
@@ -645,7 +607,7 @@ function collectContent(data: ExportData): (Paragraph | Table)[] {
 
   out.push(p([], { spacing: 200 }));
   out.push(p([txt('GHI CHÚ', { bold: true, color: COLOR.accent })], { spacing: 60 }));
-  out.push(p([txt('• Bảng tính lập theo Nghị định 17/2023/NĐ-CP ngày 26/4/2023 — Phụ lục biểu mức tiền bản quyền.', { size: 20, color: COLOR.mute })]));
+  out.push(p([txt('• Bảng tính lập căn cứ Phụ lục II ban hành kèm theo Nghị định 17/2023/NĐ-CP, được sửa đổi, bổ sung bởi Nghị định 134/2026/NĐ-CP.', { size: 20, color: COLOR.mute })]));
   out.push(p([txt('• Tỷ lệ áp dụng theo phân loại đô thị từng khu vực/địa điểm (NĐ 134/2026/NĐ-CP): HN/TP.HCM 100%; loại I 80%; loại II 50%; loại III 20% (vùng sâu, vùng xa, vùng ĐB khó khăn 10%).', { size: 20, color: COLOR.mute })]));
   out.push(p([txt('• Bảng tính có hiệu lực 30 ngày kể từ ngày phát hành.', { size: 20, color: COLOR.mute })]));
   out.push(p([txt('• Mức lương cơ sở thay đổi theo quy định của Chính phủ tại từng thời điểm.', { size: 20, color: COLOR.mute })]));

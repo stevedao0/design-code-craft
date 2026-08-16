@@ -187,12 +187,6 @@ export function FabPricingWorkspace({ initialLocations = [], initialVatRate = 8,
           <SummaryRow label="Số khu vực" value={`${locations.length}`} />
           <SummaryRow label="Tổng diện tích" value={`${snapshot.totalAreaM2.toLocaleString('vi-VN')} m²`} />
           <SummaryRow label="Cách áp dụng đô thị" value={urbanModeLabel(snapshot.urbanMode)} />
-          {snapshot.urbanMode === 'BEFORE_TIERING' && (
-            <SummaryRow
-              label="Tổng diện tích tính phí"
-              value={`${snapshot.locations.reduce((s, l) => s + l.effectiveAreaM2, 0).toLocaleString('vi-VN')} m²`}
-            />
-          )}
           <div className="border-t border-zinc-200 pt-3 space-y-2">
             <div className="flex items-center justify-between">
               <span className="text-[12px] font-semibold" style={{ color: '#4A7202' }}>Tiền bản quyền trước thuế GTGT</span>
@@ -395,15 +389,13 @@ function LocationCard({
                       <>
                         <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
                           <td className="px-3 py-2" colSpan={4}>
-                            Diện tích gốc {snapshot.areaM2.toLocaleString('vi-VN')} m² × hệ số đô thị{' '}
-                            {Math.round(snapshot.urbanCoefficient * 100)}% ={' '}
-                            {snapshot.effectiveAreaM2.toLocaleString('vi-VN')} m² (diện tích tính phí)
+                            Diện tích gốc {snapshot.areaM2.toLocaleString('vi-VN')} m² — chia bậc theo input gốc, tỷ lệ đô thị áp trên từng dòng tiền.
                           </td>
                           <td className="px-3 py-2 text-right font-mono">—</td>
                         </tr>
                         <tr style={{ fontWeight: 600 }}>
                           <td className="px-3 py-2" colSpan={4}>
-                            Cộng tiền bậc trên diện tích tính phí (đô thị đã áp trước khi chia bậc)
+                            Cộng tiền các bậc × tỷ lệ đô thị ({Math.round(snapshot.urbanCoefficient * 100)}%)
                           </td>
                           <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
                         </tr>
@@ -411,12 +403,12 @@ function LocationCard({
                     ) : (
                       <>
                         <tr style={{ background: '#f5f5f5', fontWeight: 700 }}>
-                          <td className="px-3 py-2" colSpan={4}>Base theo diện tích (chưa × hệ số đô thị)</td>
+                          <td className="px-3 py-2" colSpan={4}>Cộng tiền các bậc (chưa × tỷ lệ đô thị)</td>
                           <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.baseAnnualRoyaltyByArea)}</td>
                         </tr>
                         <tr style={{ fontWeight: 600 }}>
                           <td className="px-3 py-2" colSpan={4}>
-                            Sau hệ số đô thị ×{snapshot.urbanCoefficient}
+                            Sau khi áp tỷ lệ đô thị ×{snapshot.urbanCoefficient}
                           </td>
                           <td className="px-3 py-2 text-right font-mono">{formatVND(snapshot.annualRoyaltyAfterUrban)}</td>
                         </tr>

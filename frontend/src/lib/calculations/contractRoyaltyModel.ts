@@ -14,7 +14,7 @@ import type { FieldDef, FieldResult } from '../royaltyCalc';
 import { numberToVietnameseWords } from '../numberToVietnameseWords';
 
 export const DEFAULT_LEGAL_BASIS =
-  'Phụ lục biểu mức tiền bản quyền — Nghị định 17/2023/NĐ-CP ngày 26/4/2023';
+  'Căn cứ Phụ lục II ban hành kèm theo Nghị định 17/2023/NĐ-CP, được sửa đổi, bổ sung bởi Nghị định 134/2026/NĐ-CP';
 
 export function defaultLegalNote(baseSalary: number): string {
   const s = new Intl.NumberFormat('vi-VN').format(Math.round(baseSalary || 0));
@@ -38,7 +38,7 @@ export type ContractTierLine = {
 
 export type ContractBlock = {
   id: string;
-  /** Tên lĩnh vực theo NĐ 17 */
+  /** Tên lĩnh vực theo N� 17 */
   fieldName: string;
   /** Tên khu vực / địa điểm do người lập đặt */
   locationName: string;
@@ -53,21 +53,17 @@ export type ContractBlock = {
   cappedNote?: string;
   urbanLabel: string;
   urbanFactor: number;
+  /** Tỷ lệ đô thị hiển thị % cho khách — lấy từ urbanFactor. */
+  urbanRatePercent?: number;
   urbanExempt: boolean;
-  /** Cộng theo định mức (trước hệ số đô thị) */
+  /** Tiền cộng theo định mức (chưa nhân tỷ lệ đô thị) */
+  baseTierAmount: number;
+  /** Tiền sau khi áp tỷ lệ đô thị */
+  urbanAdjustedAmount: number;
+  /** Alias cũ để tương thích — trùng baseTierAmount. */
   subTotalRaw: number;
-  /** Cộng sau hệ số đô thị */
+  /** Alias cũ để tương thích — trùng urbanAdjustedAmount. */
   subTotalAfterUrban: number;
-  /** Cách áp dụng đô thị cho block này (AFTER_SUBTOTAL hoặc BEFORE_TIERING). */
-  urbanMode?: string;
-  /** Label dễ đọc của urbanMode. */
-  urbanModeLabel?: string;
-  /** True khi đô thị đã được áp vào diện tích trước khi chia bậc. */
-  applyUrbanBefore?: boolean;
-  /** Diện tích gốc (m²) khi dùng diện tích bậc thang. */
-  rawArea?: number;
-  /** Diện tích tính phí (m²). */
-  effectiveArea?: number;
 };
 
 export type ContractCustomFee = { label: string; amount: number };
@@ -110,15 +106,6 @@ export type BuildContractModelInput = {
     displayName?: string;
     urbanLabel?: string;
     urbanFactor?: number;
-    /** Cách áp dụng đô thị: AFTER_SUBTOTAL hoặc BEFORE_TIERING. */
-    urbanMode?: string;
-    urbanModeLabel?: string;
-    /** Đô thị đã áp vào diện tích trước khi chia bậc. */
-    applyUrbanBefore?: boolean;
-    /** Diện tích gốc (m²) khi lĩnh vực dùng m². */
-    rawArea?: number;
-    /** Diện tích tính phí (m²). */
-    effectiveArea?: number;
   }>;
   customer?: { name?: string; address?: string; representative?: string };
   customFees?: ContractCustomFee[];
@@ -157,9 +144,8 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
     .filter((i) => i.result.hasInput && i.result.rows.length > 0)
     .map((i, idx) => {
       const urbanFactor = i.result.urbanExempt ? 1 : (i.urbanFactor ?? 1);
-      const subTotalRaw = r0(i.result.subTotal);
-      const safeUrbanModeLabel =
-        typeof i.urbanModeLabel === 'string' ? i.urbanModeLabel : undefined;
+      const baseTierAmount = r0(i.result.subTotal);
+      const urbanAdjustedAmount = r0(baseTierAmount * urbanFactor);
       return {
         id: i.instanceId,
         fieldName: i.field.name,
@@ -180,16 +166,12 @@ export function buildContractRoyaltyModel(input: BuildContractModelInput): Contr
           : undefined,
         urbanLabel: i.urbanLabel ?? '',
         urbanFactor,
+        urbanRatePercent: Math.round(urbanFactor * 100),
         urbanExempt: Boolean(i.result.urbanExempt),
-        subTotalRaw,
-        // Option 2 (applyUrbanBefore=true) đã bao gồm đô thị trong bậc thang,
-        // không nhân lại ở đây. urbanFactor đã được set = 1 ở dòng trên.
-        subTotalAfterUrban: r0(subTotalRaw * urbanFactor),
-        urbanMode: i.urbanMode,
-        urbanModeLabel: safeUrbanModeLabel,
-        applyUrbanBefore: i.applyUrbanBefore,
-        rawArea: i.rawArea,
-        effectiveArea: i.effectiveArea,
+        baseTierAmount,
+        urbanAdjustedAmount,
+        subTotalRaw: baseTierAmount,
+        subTotalAfterUrban: urbanAdjustedAmount,
       };
     });
 

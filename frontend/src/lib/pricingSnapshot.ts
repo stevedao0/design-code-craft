@@ -123,11 +123,16 @@ export const KARAOKE_AREA_LABEL: Record<KaraokeAreaGroup, string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 /**
- * AFTER_SUBTOTAL (Option 1 — mặc định, giữ nguyên hành vi cũ):
- *   input gốc → chia bậc → tính tiền từng bậc → cộng → × hệ số đô thị → VAT
+ * Cách 1 — áp dụng tỷ lệ đô thị sau khi cộng tiền các bậc (mặc định):
+ *   input gốc → phân bổ số lượng vào từng bậc → tính tiền từng bậc
+ *   → cộng → × tỷ lệ đô thị → VAT
  *
- * BEFORE_TIERING (Option 2 — mới):
- *   input gốc × hệ số đô thị → input hiệu dụng → chia bậc → tính tiền → cộng → VAT
+ * Cách 2 — áp dụng tỷ lệ đô thị trên từng dòng bậc:
+ *   input gốc → phân bổ số lượng vào từng bậc → tính tiền từng bậc
+ *   → × tỷ lệ đô thị từng dòng → cộng → VAT
+ *
+ * Cả hai cách dùng input gốc để chia bậc và cho cùng tổng tiền vì phép nhân
+ * tuyến tính. Tỷ lệ đô thị KHÔNG được nhân vào input gốc.
  */
 export type UrbanApplicationMode = 'AFTER_SUBTOTAL' | 'BEFORE_TIERING';
 
@@ -142,30 +147,20 @@ export const URBAN_MODE_OPTIONS: ReadonlyArray<{
   {
     id: 'AFTER_SUBTOTAL',
     short: 'Cách 1',
-    label: 'Sau khi cộng tiền bậc',
-    hint: 'Tính đủ quy mô gốc theo bậc rồi mới nhân hệ số đô thị.',
+    label: 'Áp dụng tỷ lệ đô thị sau khi cộng tiền bậc',
+    hint: 'Chia bậc theo input gốc, cộng tiền các bậc, nhân tỷ lệ đô thị ở cuối.',
   },
   {
     id: 'BEFORE_TIERING',
     short: 'Cách 2',
-    label: 'Trước khi chia bậc',
-    hint: 'Nhân hệ số đô thị vào quy mô trước, rồi mới chia bậc.',
+    label: 'Áp dụng tỷ lệ đô thị trên từng dòng bậc',
+    hint: 'Chia bậc theo input gốc, nhân tỷ lệ đô thị trên tiền từng dòng, rồi cộng.',
   },
 ];
 
 export function urbanModeLabel(mode: UrbanApplicationMode): string {
   const o = URBAN_MODE_OPTIONS.find((x) => x.id === mode);
   return o ? `${o.short} — ${o.label}` : mode;
-}
-
-/** Quy mô (m²) thực tế dùng để chia bậc theo mode. */
-export function effectiveAreaForMode(
-  areaM2: number,
-  urbanCoefficient: number,
-  mode: UrbanApplicationMode
-): number {
-  const a = Math.max(0, Number(areaM2) || 0);
-  return mode === 'BEFORE_TIERING' ? a * (urbanCoefficient ?? 1) : a;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,11 +183,12 @@ export type FabLocationSnapshot = {
   id: string;
   name: string;
   areaM2: number;
-  /** Diện tích thực tế dùng để chia bậc (bằng areaM2 với Cách 1). */
+  /** Diện tích dùng để chia bậc (= areaM2; giữ để tương thích cũ). */
   effectiveAreaM2: number;
   durationMonths: number;
   urbanClass: FabUrbanOptionId;
   urbanCoefficient: number;
+  /** Legacy field — mode nội bộ; export/file khách không nhận. */
   urbanMode: UrbanApplicationMode;
   areaPricingBreakdown: FabAreaTierRow[];
   baseAnnualRoyaltyByArea: number;
@@ -200,6 +196,8 @@ export type FabLocationSnapshot = {
   royaltyBeforeVat: number;
   vatAmount: number;
   totalAfterVat: number;
+  /** Tỷ lệ đô thị áp dụng (%) vd 80 cho "Đô thị loại I". */
+  urbanRatePercent?: number;
 };
 
 export type FabPricingSnapshot = {
@@ -280,14 +278,10 @@ export function buildFabAreaPricing(opts: BuildFabAreaPricingOpts): FabPricingSn
   const locationSnapshots: FabLocationSnapshot[] = opts.locations.map((loc) => {
     const urbanCoeff = FAB_URBAN_MAP[loc.urbanClass] ?? 1.0;
     const durationMonths = Math.max(1, Math.floor(loc.durationMonths ?? 12));
-    const effectiveAreaM2 = effectiveAreaForMode(loc.areaM2, urbanCoeff, urbanMode);
-    const breakdown = buildLocationTierBreakdown(effectiveAreaM2);
+    // Chia bậc bằng input gốc (loc.areaM2). Tỷ lệ đô thị áp lên tiền, không áp lên diện tích.
+    const breakdown = buildLocationTierBreakdown(loc.areaM2);
     const baseAnnualRoyaltyByArea = breakdown.reduce((s, r) => s + r.amount, 0);
-    // Cách 2: hệ số đô thị đã nằm trong diện tích hiệu dụng → không nhân lại.
-    const annualRoyaltyAfterUrban =
-      urbanMode === 'BEFORE_TIERING'
-        ? baseAnnualRoyaltyByArea
-        : Math.round(baseAnnualRoyaltyByArea * urbanCoeff);
+    const annualRoyaltyAfterUrban = Math.round(baseAnnualRoyaltyByArea * urbanCoeff);
     const royaltyBeforeVat = Math.round(annualRoyaltyAfterUrban * durationMonths / 12);
     const vatAmount = Math.round(royaltyBeforeVat * vatMultiplier);
     const totalAfterVat = royaltyBeforeVat + vatAmount;
@@ -296,7 +290,9 @@ export function buildFabAreaPricing(opts: BuildFabAreaPricingOpts): FabPricingSn
       id: loc.id,
       name: loc.name,
       areaM2: loc.areaM2,
-      effectiveAreaM2,
+      // effectiveAreaM2 hiện bằng areaM2 (chia bậc bằng input gốc).
+      effectiveAreaM2: loc.areaM2,
+      urbanRatePercent: Math.round(urbanCoeff * 100),
       durationMonths,
       urbanClass: loc.urbanClass,
       urbanCoefficient: urbanCoeff,
