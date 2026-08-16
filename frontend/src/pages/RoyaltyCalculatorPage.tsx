@@ -1022,7 +1022,13 @@ function FieldBlock({
             Diễn giải báo khách
           </div>
           <div className="p-3">
-            <RoyaltyBreakdownTable result={result} baseSalary={baseSalary} />
+            <RoyaltyBreakdownTable
+              result={result}
+              baseSalary={baseSalary}
+              urbanFactor={urbanFactor}
+              perTierUrban={urbanMode === 'BEFORE_TIERING' && !result.urbanExempt && urbanFactor !== 1}
+              urbanAdjustedAmount={urbanAdjustedAmount}
+            />
           </div>
         </div>
       )}
