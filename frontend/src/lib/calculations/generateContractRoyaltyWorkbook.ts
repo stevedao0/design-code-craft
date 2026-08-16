@@ -354,6 +354,18 @@ export async function generateContractRoyaltyWorkbook(
   style(sum.getCell(`A${r}`), { bold: true, size: 11, color: C.navy, fill: C.navySoft, indent: 1, border: box(C.rule) });
   sum.getRow(r).height = 19; r++;
 
+  // Cách áp dụng đô thị ở mức bảng tính: nếu tất cả block cùng mode thì hiển thị 1 dòng.
+  const allModes = model.blocks.map((b) => b.urbanMode).filter(Boolean);
+  if (allModes.length > 0 && allModes.every((m) => m === allModes[0])) {
+    const sharedLabel = model.blocks[0].urbanModeLabel || '—';
+    sum.mergeCells(`A${r}:B${r}`);
+    sum.getCell(`A${r}`).value = 'Cách áp dụng đô thị:';
+    style(sum.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
+    sum.getCell(`C${r}`).value = sharedLabel;
+    style(sum.getCell(`C${r}`), { bold: true, size: 10, align: 'left', indent: 1, fill: C.band, border: box(C.rule) });
+    sum.getRow(r).height = 16; r++;
+  }
+
   const sHeads: Array<[string, string, Align]> = [
     ['A', 'STT', 'center'],
     ['B', 'Khu vực sử dụng', 'left'],
@@ -575,7 +587,9 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
     }
 
     if (block.urbanModeLabel) {
-      M(r);
+      // Merge A:B (label), ghi value độc lập ở C.
+      // Không merge A:C vì sẽ không ghi được value riêng ở C.
+      ws.mergeCells(`A${r}:B${r}`);
       ws.getCell(`A${r}`).value = 'Cách áp dụng đô thị:';
       style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
       ws.getCell(`C${r}`).value = block.urbanModeLabel;
@@ -585,7 +599,7 @@ function buildContractTableSheet(ws: ExcelJS.Worksheet, model: ContractRoyaltyMo
 
     if (block.applyUrbanBefore && Number.isFinite(block.rawArea) && Number.isFinite(block.effectiveArea) && block.rawArea! > 0) {
       const displayedPct = Math.round((block.effectiveArea! / block.rawArea!) * 100);
-      M(r);
+      ws.mergeCells(`A${r}:B${r}`);
       ws.getCell(`A${r}`).value = 'Diện tích gốc → tính phí:';
       style(ws.getCell(`A${r}`), { italic: true, size: 10, align: 'right', indent: 1, fill: C.band, border: box(C.rule) });
       ws.getCell(`C${r}`).value =
