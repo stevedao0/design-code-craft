@@ -448,16 +448,13 @@ export async function generateContractRoyaltyWorkbook(
   sum.mergeCells(`A${r}:F${r}`);
   sum.getCell(`A${r}`).value =
     `Ghi chú: Tiền bản quyền được tính theo Phụ lục biểu mức của Nghị định 17/2023/NĐ-CP, trên mức lương cơ sở ${num(model.baseSalary)} đồng/tháng. `
-    + 'Ô "Mức lương cơ sở (MLCS)" và ô "Thuế GTGT" là ô nhập (chữ xanh); thay đổi hai ô này, toàn bộ bảng tự tính lại. '
-    + 'Xem chi tiết từng bậc biểu mức tại sheet "Chi tiết".';
+    + 'Ô "Mức lương cơ sở (MLCS)" và ô "Thuế GTGT" là ô nhập (chữ xanh); thay đổi hai ô này, toàn bộ bảng tự tính lại.';
   style(sum.getCell(`A${r}`), { italic: true, size: 9.5, align: 'left', indent: 1, wrap: true, color: C.muted, border: false });
   sum.getRow(r).height = 40; r += 2;
 
   sum.pageSetup.printArea = `A1:F${r}`;
 
-  // File gửi khách chỉ còn duy nhất sheet "Tổng hợp" — bỏ hẳn các sheet phụ.
-  wb.removeWorksheet(det.id);
-  wb.removeWorksheet(ctr.id);
+
 
 
 
