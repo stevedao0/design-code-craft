@@ -28,8 +28,8 @@ interface KpiFieldSectionProps {
 type ViewMode = 'overview' | 'detail';
 
 const RING_COLORS_ADMIN = [
-  '#c95867', '#6d365b', '#3f8f5b', '#d99425',
-  '#4a7fc1', '#8b6db3', '#2da88f', '#b05a3a',
+  '#4A7202', '#A16207', '#76B400', '#C08A2E',
+  '#2F6F3E', '#7C5010', '#8FB33B', '#D9B166',
 ];
 
 function getEmployeeRingColor(index: number): string {

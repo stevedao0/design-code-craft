@@ -29,14 +29,8 @@ interface MultiRingKpiProps {
 }
 
 const RING_COLORS = [
-  '#4A7202',
-  '#76B400',
-  '#2da88f',
-  '#4a7fc1',
-  '#8b6db3',
-  '#d99425',
-  '#c95867',
-  '#6d365b',
+  '#4A7202', '#A16207', '#76B400', '#C08A2E',
+  '#2F6F3E', '#7C5010', '#8FB33B', '#D9B166',
 ];
 
 function getRingColor(index: number): string {
