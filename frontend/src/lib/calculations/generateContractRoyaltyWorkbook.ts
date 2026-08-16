@@ -164,9 +164,9 @@ export async function generateContractRoyaltyWorkbook(
   sum.getRow(r).height = 19; r++;
 
   const info: Array<[string, string]> = [
-    ['Đơn vị sử dụng', model.orgName || 'Chưa khai báo'],
-    ['Địa chỉ', model.orgAddress || 'Chưa khai báo'],
-    ['Người đại diện', model.orgRepresentative || 'Chưa khai báo'],
+    ['Đơn vị sử dụng', model.orgName || ''],
+    ['Địa chỉ', model.orgAddress || ''],
+    ['Người đại diện', model.orgRepresentative || ''],
     ['Thời hạn hợp đồng', `${model.contractMonths} tháng`],
     ['Ngày lập bảng tính', model.quoteDate],
   ];
