@@ -547,20 +547,20 @@ function AssignmentsTab({ year, canViewMoney }: { year: number; canViewMoney: bo
       )}
 
       {/* Employee table */}
-      {data.users.length > 0 && (
-        <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'var(--border-default)', background: 'var(--surface)' }}>
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b"
-            style={{ borderColor: 'var(--border-default)' }}>
-            <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-secondary)' }}>
-              Phân công & khối lượng
-            </div>
+      {data.users.length > 0 ? (
+        <ReportTile
+          span={12}
+          flush
+          label="Phân công & khối lượng"
+          labelRight={
             <input
               type="search" placeholder="Tìm email hoặc tên…" value={search}
               onChange={e => setSearch(e.target.value)}
-              className="rounded-md border px-2 py-1 text-[12px] w-56"
+              className="w-56 rounded-md border px-2 py-1 text-[12px] normal-case tracking-normal"
               style={{ borderColor: 'var(--border-default)', background: 'var(--surface)', color: 'var(--text-primary)' }}
             />
-          </div>
+          }
+        >
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead style={{ background: 'var(--surface-muted, #f1ece4)' }}>
