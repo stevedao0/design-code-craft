@@ -37,6 +37,7 @@ log = logging.getLogger("kpi_field")
 
 router = APIRouter(prefix="/api/kpi", tags=["kpi_field"])
 
+
 # =============================================================================
 # KPI group configuration — single source of truth
 # =============================================================================
@@ -884,6 +885,31 @@ def get_field_kpi(
     fields = []
     known_groups = list(group_assignments.keys())
 
+    has_any_assignment = bool(assignments)
+
+    # If the user has no assignment for this year, return an empty fields
+    # list. Otherwise admins see the full KPI group structure for context.
+    if not has_any_assignment:
+        return {
+            "year": year,
+            "user_email": target_email,
+            "managed_field_count": 0,
+            "fields": [],
+            "totals": _empty_totals(),
+            "reconciliation": {
+                "unit_revenue_year": 0,
+                "unit_contract_count": 0,
+                "kpi_field_revenue_year": 0,
+                "kpi_field_contract_count": 0,
+                "non_kpi_field_revenue_year": 0,
+                "non_kpi_field_contract_count": 0,
+                "reason_breakdown": (
+                    "User chua duoc giao linh vuc KPI nao trong nam. "
+                    "KPI nhom chi tinh khi co assignment active."
+                ),
+            },
+        }
+
     # Make sure all configured KPI groups appear, even if no assignment row
     # exists yet for the user (so admins can see the structure).
     for group_code in KPI_FIELD_GROUPS:
@@ -907,12 +933,17 @@ def get_field_kpi(
         target_amount = bucket["target_amount"]
         is_active = bucket["is_active"]
         actual = agg["actual"]
+        # Only count this group's actual toward the user's KPI total when the
+        # user actually has an assignment for this group. Otherwise an
+        # unassigned staff user would see the org-wide sum and not an empty
+        # state.
+        contributes_to_total = bool(target_amount and target_amount > 0)
         progress = (
             round(actual / target_amount * 100, 1)
-            if target_amount and target_amount > 0
+            if contributes_to_total
             else None
         )
-        gap = (target_amount - actual) if target_amount and target_amount > 0 else None
+        gap = (target_amount - actual) if contributes_to_total else None
         remaining = gap if gap is not None and gap > 0 else 0
         exceeded = (-gap) if gap is not None and gap < 0 else 0
 
@@ -965,8 +996,11 @@ def get_field_kpi(
 
     totals = {
         "target_amount": sum(f["target"] for f in fields if f["has_target"]),
-        "actual_amount": sum(f["actual"] for f in fields),
-        "contract_count": sum(f["contract_count"] for f in fields),
+        # Only sum the actual of groups the user is actually assigned to.
+        # Otherwise non-assigned KPI groups would leak org-wide totals into
+        # the user's "KPI của tôi" view.
+        "actual_amount": sum(f["actual"] for f in fields if f["has_target"]),
+        "contract_count": sum(f["contract_count"] for f in fields if f["has_target"]),
         "completion_percent": None,
         "missing_amount": None,
         "exceeded_amount": None,

@@ -22,7 +22,7 @@ from ..models.contracts import ContractRecordRow
 from ..models.certificates import CertificateRecordRow
 from ..models.user import UserRow
 from ..services.report_excel_exporter import export_period_xlsx as build_period_excel
-from ..services.revenue_resolver import get_before_vat_revenue, get_signed_actual
+from ..services.revenue_resolver import get_before_vat_revenue, get_signed_actual, normalize_contract_revenue
 from ..services.kpi_employee_portfolio import get_employee_kpi_portfolio
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -236,53 +236,18 @@ def _compute_user_kpi_totals(
     user_id: int,
     user_email: str,
     year: int,
-    personal_scope: bool = False,
 ) -> tuple[int, int]:
     """
     Compute user KPI totals.
 
-    personal_scope=False (default):
-      KPI by linh_vuc: sum revenue across ALL contracts whose linh_vuc matches
-      the user's assigned fields — regardless of who owns the contract.
-      → Returns branch-level KPI totals for the user's assigned fields.
-
-    personal_scope=True:
-      Personal revenue: sum revenue for contracts whose nguoi_thuc_hien_email
-      matches the logged-in user.
-      → Returns personal revenue (Dashboard cá nhân, Reports cá nhân).
+    Field-based KPI scope (branch-wide, filtered by linh_vuc):
+      Sum revenue across ALL contracts whose linh_vuc matches the user's
+      assigned fields — regardless of who owns or performs the contract.
+      KPIs are unit-wide aggregates per assigned field, not per performer.
 
     Both paths use the shared BEFORE_VAT revenue chain.
     Returns (actual_amount, contract_count).
     """
-    if personal_scope:
-        # Personal scope: filter by nguoi_thuc_hien_email
-        rows = (
-            db.query(
-                ContractRecordRow.id,
-                ContractRecordRow.linh_vuc,
-                ContractRecordRow.royalty_amount_after_vat,
-                ContractRecordRow.royalty_amount_before_vat,
-                ContractRecordRow.so_tien_value,
-            )
-            .filter(ContractRecordRow.annex_no.is_(None))
-            .filter(ContractRecordRow.contract_year == year)
-            .filter(func.lower(func.coalesce(ContractRecordRow.nguoi_thuc_hien_email, "")) == user_email.lower())
-            .all()
-        )
-        total = 0
-        count = 0
-        for cid, lv, after, before, so_tien in rows:
-            sentinel = ContractRecordRow(
-                royalty_amount_after_vat=after,
-                royalty_amount_before_vat=before,
-                so_tien_value=so_tien,
-            )
-            val = get_before_vat_revenue(sentinel)
-            if val > 0:
-                total += val
-                count += 1
-        return total, count
-
     # Field-based KPI scope (branch-wide, filtered by linh_vuc)
     assignment_rows = db.execute(
         text("""
@@ -515,15 +480,6 @@ def get_reports_summary(
     rp = revenue_by_year.get(prev_year, {"count": 0, "total": 0})
     rev_year = ry["total"] if ry["total"] > 0 else None
     rev_prev = rp["total"] if rp["total"] > 0 else None
-    import logging as _log4; _log4.getLogger("reports").info(
-        "DEBUG_C968D0|fn=get_reports_summary|summary_result|rev_year=%s|rev_prev=%s|selected_year=%s|count_year=%s|count_prev=%s",
-        rev_year, rev_prev, selected_year, ry["count"], rp["count"],
-    )
-    for m_item in monthly_trend:
-        import logging as _log5; _log5.getLogger("reports").debug(
-            "DEBUG_C968D0|fn=get_reports_summary|monthly|month=%s|total=%s|count=%s",
-            m_item.month, m_item.total_revenue, m_item.contract_count,
-        )
     if rev_prev and rev_prev > 0:
         rev_growth = round((rev_year - rev_prev) / rev_prev * 100, 1) if rev_year else None
     else:
@@ -624,41 +580,6 @@ def get_reports_summary(
         certificates_draft=certs_draft,
         certificates_pending_print=0,
     )
-    """
-    Compute real-time report statistics from the database.
-
-    This is a READ-ONLY endpoint — no DB writes, no file generation, no GCN.
-
-    Returns:
-    - Contract KPI counts (total, active, expiring, expired, etc.)
-    - Revenue by year (with cumulative flag for current year)
-    - Expiring contracts (next 60 days)
-    - Field category breakdown
-    - Signed contracts (all, for filtering)
-    - Certificate stats and recent list
-    """
-    today = date.today()
-    today60 = today + timedelta(days=60)
-    today30 = today + timedelta(days=30)
-
-    # Fetch all non-annex contracts (for in-memory computation)
-    rows = (
-        db.query(ContractRecordRow)
-        .filter(ContractRecordRow.annex_no.is_(None))
-        .all()
-    )
-
-    # Pre-fetch all certificate records and build a map: contract_id -> latest cert status
-    cert_map: dict[int, str] = {}
-    cert_all = (
-        db.query(CertificateRecordRow.contract_id, CertificateRecordRow.status, CertificateRecordRow.created_at)
-        .order_by(CertificateRecordRow.contract_id, CertificateRecordRow.created_at.desc())
-        .all()
-    )
-    for cid, cstatus, cdate in cert_all:
-        if cid not in cert_map:
-            cert_map[cid] = str(cstatus or "draft").lower() if cstatus else "draft"
-
 
 
 # =============================================================================
