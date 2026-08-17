@@ -14,6 +14,20 @@ Mọi file xuất ra là **văn bản đối ngoại của VCPMC** — phải đ
 - Luôn viết **“Thuế GTGT”**, tuyệt đối không “VAT”.
 - Nhãn tổng: “Cộng tiền bản quyền”, “Thuế GTGT 8%”, “Tổng cộng”, “Bằng chữ”.
 
+## Quy tắc khi xuất KPI
+
+- File xuất KPI phải dùng số liệu lĩnh vực từ **backend** (resolver +
+  endpoint KPI). Generator **không tính lại KPI theo user** trong file.
+- `Karaoke` trong báo cáo phải phản ánh tổng `KARAOKE + PHONG_THU_AM`
+  đúng như backend đã gộp; không tách Phòng thu âm thành dòng riêng.
+- Tên lĩnh vực và mapping domain phải đồng nhất với báo cáo trên UI và
+  với `FIELD_DOMAIN_MAP` (xem skill `vcpmc-page-scaffold`).
+- Không suy ra target từ actual, không cộng mọi target active thành
+  target của một user. Target trong file xuất lấy từ cấu hình đã
+  được phê duyệt của lĩnh vực / năm, đúng cùng nguồn với API.
+- Nếu lĩnh vực không có target hợp lệ, cột “Tiến độ” để trống / `—`,
+  không hiển thị `0%`.
+
 ## Theme dùng chung
 
 `frontend/src/lib/reports/workbookTheme.ts` giữ toàn bộ token ARGB + helper (`WB`, `WB_FONT`, `WB_FMT`, `wbStyle`, `wbBox`, `wbBarText`, `wbPageSetup`, `wbToneColors`, `wbSafeName`).
