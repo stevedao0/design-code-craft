@@ -806,7 +806,7 @@ def delete_field_assignment(
 @router.get("/field-kpi")
 def get_field_kpi(
     year: int = Query(..., ge=2000, le=2100),
-    user_email: str = Query(..., description="User email"),
+    user_email: str | None = Query(None, description="User email; defaults to current user"),
     credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
     db: Session = Depends(get_db),
 ):
@@ -814,9 +814,21 @@ def get_field_kpi(
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    user_id = _resolve_email(db, user_email)
+    # Determine the effective target email.
+    # - If the caller did not pass user_email, default to the current user
+    #   so callers without an /api/me response ready do not get a 422.
+    # - If the caller passed another user's email, only allow it for
+    #   admin / manager (these roles already have org-wide KPI scope).
+    requested = (user_email or "").strip() or str(user.username or "")
+    is_self = requested.lower() == str(user.username or "").lower()
+    privileged = user.role in ("admin", "manager", "mod")
+    if not is_self and not privileged:
+        raise HTTPException(status_code=403, detail="Forbidden: cannot view other user's KPI")
+    target_email = requested
+
+    user_id = _resolve_email(db, target_email)
     if not user_id:
-        return {"year": year, "user_email": user_email, "managed_field_count": 0, "fields": [], "totals": _empty_totals(), "reconciliation": _empty_reconciliation()}
+        return {"year": year, "user_email": target_email, "managed_field_count": 0, "fields": [], "totals": _empty_totals(), "reconciliation": _empty_reconciliation()}
 
     # Get assignments for this user/year. `field_code` here is the
     # assignment_field_code from KPI_FIELD_GROUPS (the lead member field).
@@ -967,7 +979,7 @@ def get_field_kpi(
 
     return {
         "year": year,
-        "user_email": user_email,
+        "user_email": target_email,
         "managed_field_count": sum(1 for f in fields if f["has_target"]),
         "fields": fields,
         "totals": totals,
