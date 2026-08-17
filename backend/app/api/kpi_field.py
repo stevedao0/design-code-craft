@@ -1140,7 +1140,8 @@ def get_field_kpi_org(
     # Sum active assignment targets and count users per group.
     rows = db.execute(
         text("""
-            SELECT a.field_code, a.target_amount,
+            SELECT a.field_code,
+                   COALESCE(SUM(a.target_amount), 0) AS total_target,
                    COUNT(DISTINCT a.user_id) FILTER (WHERE a.is_active = true) AS user_count
             FROM kpi_field_assignments a
             WHERE a.reporting_year = :yr AND a.is_active = true
