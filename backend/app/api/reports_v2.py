@@ -1,15 +1,7 @@
 """
 Reports V2 + KPI endpoints — Phase 6 role-adaptive frontend.
 
-NOTE: These endpoints were previously missing from the backend.
-This module adds the minimum read-only endpoints that the React
-ReportsPage (frontend/src/pages/ReportsPage.tsx) calls via
-frontend/src/components/reports/kpiClient.ts:
-
-  GET  /api/kpi/annual-target?year=YYYY
-  PUT  /api/kpi/annual-target
-  GET  /api/kpi/annual-summary?year=YYYY
-  GET  /api/kpi/annual-overview?year=YYYY
+Endpoints (read-only except where noted):
   GET  /api/reports/v2/overview?year=YYYY[&field=...]
   GET  /api/reports/v2/contracts?year=YYYY[&field=...&owner_user_id=...]
   GET  /api/reports/v2/users?year=YYYY
@@ -17,23 +9,30 @@ frontend/src/components/reports/kpiClient.ts:
   GET  /api/reports/v2/gcn?year=YYYY[&page=1&page_size=20]
   POST /api/reports/v2/export
 
-All endpoints are READ-ONLY except /kpi/annual-target (PUT)
-which stores per-user annual target in a simple JSON config table
-shared with /api/reports/summary logic.
+Legacy endpoints removed in Phase 1.7:
+  /api/kpi/annual-target        → use /api/kpi-v2/targets (DB-backed)
+  /api/kpi/annual-summary       → use /api/kpi-v2/snapshot
+  /api/kpi/annual-overview     → use /api/kpi/field-kpi-org
 
-No business formulas were changed. Royalty values reuse
-ContractRecordRow.royalty_amount_before_vat + royalty_amount_after_vat.
+Per-year user target is now stored ONLY in ``kpi_group_targets``
+(rows = one per (year, kpi_group_code)). User-visible "KPI của tôi"
+target = sum of all group targets whose group the user is assigned to
+in that year (resolved via ``kpi_group_assignments``). No in-process
+state is used.
+
+All revenue totals use the canonical ``normalize_contract_revenue``
+resolver. The contract year window is the *signed_date* interval
+``[year-01-01, year+1-01-01)`` (NOT ``contract_year``).
 """
 from __future__ import annotations
 
-import json
 import logging
 from datetime import date, datetime, timedelta
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.security import HTTPAuthorizationCredentials
-from sqlalchemy import and_, func
+from sqlalchemy import and_, func, text
 from sqlalchemy.orm import Session
 
 from ..core.database import get_db
@@ -51,6 +50,10 @@ from ..services.revenue_resolver import (
     get_before_vat_revenue,
     get_normalized_before_vat,
     normalize_contract_revenue,
+)
+from ..services.kpi_snapshot_service import (
+    get_user_year_snapshot,
+    get_unit_year_snapshot,
 )
 
 log = logging.getLogger("reports_v2")
@@ -130,6 +133,55 @@ def _resolve_linh_vuc(code: str) -> str:
     """Normalize a field code to contract_records.linh_vuc value."""
     return LINH_VUC_MAP.get(code, code)
 
+
+def _resolve_target(db: Session, year: int, user_id: int) -> tuple[int | None, bool]:
+    """
+    Resolve the target for a given user/year by joining group targets with
+    the user's active assignments. Returns (target, target_zero). When the
+    user has no assignment, returns (None, False) so callers can show an
+    empty state instead of fabricating a number.
+    """
+    row = db.execute(
+        text(
+            """
+            SELECT COALESCE(SUM(t.target_amount_before_tax), 0) AS total_target,
+                   BOOL_OR(t.is_active IS NULL OR t.is_active = FALSE) AS inactive
+            FROM kpi_group_assignments a
+            JOIN kpi_group_targets t
+              ON t.reporting_year = a.reporting_year
+             AND t.kpi_group_code = a.kpi_group_code
+            WHERE a.user_id = :uid
+              AND a.reporting_year = :yr
+              AND a.is_active = TRUE
+            """
+        ),
+        {"uid": user_id, "yr": year},
+    ).fetchone()
+    if not row:
+        return None, False
+    total = int(row[0] or 0)
+    return total, total == 0
+
+
+def _resolve_user_id(db: Session, email: str) -> int | None:
+    u = db.query(UserRow).filter(UserRow.username == email).one_or_none()
+    return u.id if u else None
+
+
+def _query_canonical_year(scope, year: int):
+    """Apply the canonical year filter on top of ``scope`` (a SQLAlchemy
+    Query). Uses ``ngay_lap_hop_dong`` in the [year-01-01, year+1-01-01)
+    half-open window. NEVER falls back to ``contract_year`` when the
+    signed date is missing — such rows are out of scope on purpose.
+    """
+    win_start = date(year, 1, 1)
+    win_end = date(year + 1, 1, 1)
+    return scope.filter(
+        (ContractRecordRow.ngay_lap_hop_dong >= win_start)
+        & (ContractRecordRow.ngay_lap_hop_dong < win_end)
+    )
+
+
 def _has_gcn(cert_map: dict[int, tuple[str, str | None]], contract_id: int | None) -> bool:
     """
     Return True if the contract has a certificate record WITH a certificate_number.
@@ -172,13 +224,12 @@ def _build_cert_map(db: Session) -> dict[int, tuple[str, str | None]]:
 
 
 # =============================================================================
-# KPI: annual-target (per-user)
+# KPI endpoints — DB-backed (Phase 1.7+)
+#
+# These were previously implemented against an in-process `_KPI_TARGETS` map.
+# That map is gone: every read now goes through `kpi_group_targets` joined
+# with `kpi_group_assignments`. No module-level state remains.
 # =============================================================================
-
-# Simple in-process store: {year: {username: target}}
-# Persists within a single uvicorn process; not shared across workers.
-# This is sufficient for the local dev workflow described in the brief.
-_KPI_TARGETS: dict[int, dict[str, dict[str, Any]]] = {}
 
 
 @kpi_router.get("/annual-target")
@@ -187,59 +238,31 @@ def get_annual_target(
     credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
     db: Session = Depends(get_db),
 ):
+    """Backward-compat shim: returns the user's annual target (sum of group
+    targets for groups they are assigned to in ``year``). When the user has
+    no assignment, returns ``None`` so the UI can show "Chưa được giao".
+
+    Prefer ``GET /api/kpi-v2/targets`` for the canonical surface.
+    """
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    year_map = _KPI_TARGETS.get(year, {})
-    entry = year_map.get(user.username)
-    if not entry:
+    target, _zero = _resolve_target(db, year, user.id)
+    if target is None:
         return None
     return {
         "year": year,
-        "annual_target": entry.get("annual_target", 0),
-        "note": entry.get("note", ""),
-        "updated_at": entry.get("updated_at"),
-    }
-
-
-@kpi_router.put("/annual-target")
-def put_annual_target(
-    body: dict[str, Any],
-    credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
-    db: Session = Depends(get_db),
-):
-    user = _current_user(db, credentials)
-    if not user:
-        raise HTTPException(status_code=401, detail="Unauthorized")
-    year = int(body.get("year") or 0)
-    target = int(body.get("annual_target") or 0)
-    note = str(body.get("note") or "")
-    if not year:
-        raise HTTPException(status_code=400, detail="year is required")
-    year_map = _KPI_TARGETS.setdefault(year, {})
-    year_map[user.username] = {
         "annual_target": target,
-        "note": note,
-        "updated_at": datetime.utcnow().isoformat() + "Z",
+        "note": "",
+        "updated_at": None,
     }
-    return {
-        "year": year,
-        "annual_target": target,
-        "note": note,
-        "updated_at": year_map[user.username]["updated_at"],
-    }
-
-
-def _resolve_target(year: int, username: str) -> tuple[int | None, bool]:
-    entry = _KPI_TARGETS.get(year, {}).get(username)
-    if not entry:
-        return None, False
-    target = int(entry.get("annual_target") or 0)
-    return target, target == 0
 
 
 # =============================================================================
 # KPI: annual-summary (per-user) — for tab "Tổng quan của tôi"
+#
+# Backed by the shared `kpi_snapshot_service.get_user_year_snapshot`
+# computation so this endpoint stays consistent with `field-kpi`.
 # =============================================================================
 
 @kpi_router.get("/annual-summary")
@@ -248,36 +271,40 @@ def get_annual_summary(
     credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
     db: Session = Depends(get_db),
 ):
+    """
+    Staff self-scoped summary. Uses the shared KPI computation:
+    - actual comes from kpi_snapshot_service → canonical contracts in the
+      signed-date window, normalized before-VAT revenue.
+    - target is the sum of group targets from kpi_group_targets (over the
+      user's assignments). No contract_year fallback.
+    - Reports only contracts the user has explicit ownership rights over
+      (Reports cá nhân scope) — keeps the personal-revenue scope rule.
+    """
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
-    # Filter contracts in year owned by this user (by email match)
+    snap = get_user_year_snapshot(db, user.id, year)
+    actual = int(snap["total_actual"] or 0)
+    target = int(snap["total_target"] or 0) if snap["total_target"] is not None else None
+
     email = (user.username or "").strip().lower()
-    rows = (
+    win_start, win_end = date(year, 1, 1), date(year + 1, 1, 1)
+    own_rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+        .filter(
+            (ContractRecordRow.ngay_lap_hop_dong >= win_start)
+            & (ContractRecordRow.ngay_lap_hop_dong < win_end)
+        )
         .filter(ContractRecordRow.nguoi_thuc_hien_email.ilike(email))
         .all()
     )
-    user_contract_ids = [r.id for r in rows if r.id is not None]
-    cert_map = _build_cert_map(db) if user_contract_ids else {}
-    gcn_issued_count = 0
-    gcn_missing_count = 0
-    for cid in user_contract_ids:
-        if _has_gcn(cert_map, cid):
-            gcn_issued_count += 1
-        else:
-            gcn_missing_count += 1
-
-    target, target_zero = _resolve_target(year, user.username)
 
     today = date.today()
     today60 = today + timedelta(days=60)
-
-    actual = 0
-    contract_count = 0
+    gcn_issued_count = 0
+    gcn_missing_count = 0
     bucket = {"new": [0, 0], "renewal": [0, 0], "frame": [0, 0], "unknown": [0, 0]}
     monthly_actual = [0] * 12
     monthly_count = [0] * 12
@@ -287,10 +314,20 @@ def get_annual_summary(
     expired_count = 0
     expiring_count = 0
 
-    for row in rows:
+    rows_list = list(own_rows)
+    user_contract_ids = [r.id for r in rows_list if r.id is not None]
+    cert_map = _build_cert_map(db) if user_contract_ids else {}
+    for cid in user_contract_ids:
+        if _has_gcn(cert_map, cid):
+            gcn_issued_count += 1
+        else:
+            gcn_missing_count += 1
+
+    # Per-row personal metrics (used for buckets/monthly/quarterly only).
+    personal_actual = 0
+    for row in rows_list:
         val = get_normalized_before_vat(row)
-        actual += val
-        contract_count += 1
+        personal_actual += val
         b = _renewal_bucket(row.renewal_status)
         bucket[b][0] += 1
         bucket[b][1] += val
@@ -305,7 +342,6 @@ def get_annual_summary(
                 quarterly_count[q] += 1
             except Exception:
                 pass
-        # State classification — same rule as overview (end_date → active/expiring/expired).
         end = row.ngay_ket_thuc
         if end:
             try:
@@ -333,9 +369,10 @@ def get_annual_summary(
         "year": year,
         "configured": target is not None,
         "annual_target": target,
-        "target_zero": target_zero,
+        "target_zero": target == 0,
         "actual": actual,
-        "contract_count": contract_count,
+        "personal_contract_value": personal_actual,
+        "contract_count": len(rows_list),
         "active_count": active_count,
         "expiring_count": expiring_count,
         "expired_count": expired_count,
@@ -344,6 +381,7 @@ def get_annual_summary(
         "remaining": remaining,
         "exceeded": exceeded,
         "progress_percent": progress,
+        "unassigned": bool(snap.get("unassigned")),
         "buckets": {
             "new_count": bucket["new"][0],
             "new_actual": bucket["new"][1],
@@ -387,12 +425,10 @@ def get_annual_overview(
         raise HTTPException(status_code=403, detail="Forbidden")
 
     cert_map = _build_cert_map(db)
-    rows = (
-        db.query(ContractRecordRow)
-        .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
-        .all()
-    )
+    rows = _query_canonical_year(
+        db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+        year,
+    ).all()
     users = db.query(UserRow).all()
     user_by_email = {(u.username or "").strip().lower(): u for u in users}
 
@@ -461,8 +497,13 @@ def get_annual_overview(
     unconfigured = 0
     sum_targets = 0
     user_rows: list[dict[str, Any]] = []
+    # Build a username→uid map once so per-user target resolution is DB-driven.
+    uid_by_email = {(u.username or "").strip().lower(): u.id for u in users}
     for key, u in per_user.items():
-        target, target_zero = _resolve_target(year, key)
+        uid = uid_by_email.get(key)
+        target, target_zero = (
+            _resolve_target(db, year, uid) if uid else (None, False)
+        )
         u["annual_target"] = target
         u["target_zero"] = target_zero
         u["configured"] = target is not None
@@ -521,10 +562,9 @@ def get_v2_overview(
         raise HTTPException(status_code=401, detail="Unauthorized")
     cert_map = _build_cert_map(db)
 
-    q = (
-        db.query(ContractRecordRow)
-        .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+    q = _query_canonical_year(
+        db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+        year,
     )
     if field:
         canon = _resolve_linh_vuc(field)
@@ -736,10 +776,9 @@ def get_v2_contracts(
     users = db.query(UserRow).all()
     user_by_email = {(u.username or "").strip().lower(): u for u in users}
 
-    q = (
-        db.query(ContractRecordRow)
-        .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+    q = _query_canonical_year(
+        db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+        year,
     )
     if field:
         canon = _resolve_linh_vuc(field)
@@ -886,12 +925,10 @@ def get_v2_users_report(
         raise HTTPException(status_code=401, detail="Unauthorized")
     users = db.query(UserRow).filter(UserRow.is_active == True).all()  # noqa: E712
     user_by_email = {(u.username or "").strip().lower(): u for u in users}
-    rows = (
-        db.query(ContractRecordRow)
-        .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
-        .all()
-    )
+    rows = _query_canonical_year(
+        db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+        year,
+    ).all()
 
     user_rows: list[dict[str, Any]] = []
     unassigned = {
@@ -992,8 +1029,13 @@ def get_v2_users_report(
         target_idx[f"{b}_count"] += 1
         target_idx[f"{b}_actual"] += val
 
+    uid_idx = {u.id: u for u in users}
+    email_idx = {(u.username or "").strip().lower(): u for u in users}
     for key, entry in per_user_idx.items():
-        target, target_zero = _resolve_target(year, key)
+        u = email_idx.get(key)
+        target, target_zero = (
+            _resolve_target(db, year, u.id) if u else (None, False)
+        )
         entry["annual_target"] = target
         entry["target_zero"] = target_zero
         entry["configured"] = target is not None
@@ -1198,10 +1240,12 @@ def get_v2_gcn_report(
     contract_ids = [
         cid
         for (cid,) in (
-            db.query(ContractRecordRow.id)
-            .filter(ContractRecordRow.contract_year == year)
-            .filter(ContractRecordRow.annex_no.is_(None))
-            .all()
+            _query_canonical_year(
+                db.query(ContractRecordRow.id).filter(
+                    ContractRecordRow.annex_no.is_(None)
+                ),
+                year,
+            ).all()
         )
     ]
     if not contract_ids:
@@ -1392,15 +1436,12 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
             rows = []
             from sqlalchemy import func as _f
             email = (user.username or "").strip().lower()
-            c_rows = (
-                db.query(ContractRecordRow)
-                .filter(ContractRecordRow.annex_no.is_(None))
-                .filter(ContractRecordRow.contract_year == year)
-                .filter(_f.lower(ContractRecordRow.nguoi_thuc_hien_email) == email)
-                .all()
-            )
+            c_rows = _query_canonical_year(
+                db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+                year,
+            ).filter(_f.lower(ContractRecordRow.nguoi_thuc_hien_email) == email).all()
             actual = sum(get_normalized_before_vat(r) for r in c_rows)
-            target, target_zero = _resolve_target(year, user.username)
+            target, target_zero = _resolve_target(db, year, user.id)
             rows.append({
                 "username": user.username,
                 "display_name": user.display_name or "",
@@ -1415,12 +1456,10 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
         # Admin: call /users logic
         users = db.query(UserRow).filter(UserRow.is_active == True).all()  # noqa: E712
         user_by_email = {(u.username or "").strip().lower(): u for u in users}
-        c_rows = (
-            db.query(ContractRecordRow)
-            .filter(ContractRecordRow.annex_no.is_(None))
-            .filter(ContractRecordRow.contract_year == year)
-            .all()
-        )
+        c_rows = _query_canonical_year(
+            db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+            year,
+        ).all()
         per_user_idx: dict[str, dict[str, Any]] = {}
         for u in users:
             per_user_idx[(u.username or "").strip().lower()] = {
@@ -1449,8 +1488,12 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
             elif b == "renewal":
                 target_idx["renewal_count"] += 1
         rows: list[dict[str, Any]] = []
+        email_idx = {(u.username or "").strip().lower(): u for u in users}
         for key, entry in per_user_idx.items():
-            target, _ = _resolve_target(year, key)
+            u = email_idx.get(key)
+            target, _ = (
+                _resolve_target(db, year, u.id) if u else (None, False)
+            )
             entry["annual_target"] = target
             entry["configured"] = target is not None
             rows.append(entry)
@@ -1462,12 +1505,10 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
     if is_admin:
         # Reuse /overview logic via internal call
         cert_map = _build_cert_map(db)
-        c_rows = (
-            db.query(ContractRecordRow)
-            .filter(ContractRecordRow.annex_no.is_(None))
-            .filter(ContractRecordRow.contract_year == year)
-            .all()
-        )
+        c_rows = _query_canonical_year(
+            db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+            year,
+        ).all()
         users = db.query(UserRow).all()
         user_by_email = {(u.username or "").strip().lower(): u for u in users}
         bucket = {"new": [0, 0], "renewal": [0, 0], "frame": [0, 0], "unknown": [0, 0]}
@@ -1488,13 +1529,10 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
     # Staff: personal overview
     from sqlalchemy import func as _f
     email = (user.username or "").strip().lower()
-    c_rows = (
-        db.query(ContractRecordRow)
-        .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
-        .filter(_f.lower(ContractRecordRow.nguoi_thuc_hien_email) == email)
-        .all()
-    )
+    c_rows = _query_canonical_year(
+        db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None)),
+        year,
+    ).filter(_f.lower(ContractRecordRow.nguoi_thuc_hien_email) == email).all()
     bucket = {"new": [0, 0], "renewal": [0, 0], "frame": [0, 0], "unknown": [0, 0]}
     actual = 0
     for row in c_rows:
@@ -1503,7 +1541,7 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
         b = _renewal_bucket(row.renewal_status)
         bucket[b][0] += 1
         bucket[b][1] += val
-    target, _ = _resolve_target(year, user.username)
+    target, _ = _resolve_target(db, year, user.id)
     rows = [
         {"label": "Tổng hợp đồng của tôi", "count": len(c_rows), "value": actual},
         {"label": "Ký mới", "count": bucket["new"][0], "value": bucket["new"][1]},

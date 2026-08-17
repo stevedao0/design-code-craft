@@ -31,7 +31,11 @@ from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 from ..core.database import get_db
-from ..core.security import decode_access_token, security_scheme
+from ..core.security import (
+    decode_access_token,
+    get_user_permissions,
+    security_scheme,
+)
 from ..models.user import UserRow
 from ..services.domain_registry import (
     canonicalize_domain,
@@ -46,8 +50,24 @@ from ..services.kpi_snapshot_service import (
 
 router = APIRouter(prefix="/api/kpi-v2", tags=["kpi_v2"])
 
+# ---------------------------------------------------------------------------
+# Permission policy
+#
+# READ /snapshot, /targets, /assignments
+#   - Any authenticated user with `kpi.view`.
+#
+# MUTATE targets (PUT, DELETE targets)
+#   - Requires `kpi.manage`. Staff can NEVER self-allocate a target.
+#
+# MUTATE assignments (POST, PATCH, DELETE assignments)
+#   - Requires `kpi.manage` for any change to other users.
+#   - A user may request assignment for THEMSELVES only when the request
+#     does NOT also set a target (target mutation is always admin-gated).
+#
+# Role-based fallbacks are intentionally avoided. Permission checks use
+# the same `get_user_permissions` table as the rest of the app.
+# ---------------------------------------------------------------------------
 
-# ─── helpers ────────────────────────────────────────────────────────────────
 
 def _current_user(
     db: Session,
@@ -66,16 +86,31 @@ def _current_user(
     )
 
 
-def _is_admin_or_manager(user: UserRow) -> bool:
-    return (user.role or "").lower() in ("admin", "manager", "mod")
-
-
-def _require_write(user: UserRow) -> None:
-    if not _is_admin_or_manager(user):
+def _require_kpi_view(user: UserRow, db: Session) -> None:
+    perms = get_user_permissions(db, user)
+    if "kpi.view" not in perms:
         raise HTTPException(
             status_code=403,
-            detail="Forbidden: yêu cầu quyền admin hoặc manager để chỉnh target/assignment.",
+            detail="Forbidden: yêu cầu quyền kpi.view để đọc KPI.",
         )
+
+
+def _require_kpi_manage(user: UserRow, db: Session) -> None:
+    """Target & cross-user assignment mutations require ``kpi.manage``."""
+    perms = get_user_permissions(db, user)
+    if "kpi.manage" not in perms:
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: yêu cầu quyền kpi.manage để chỉnh target/assignment.",
+        )
+
+
+def _can_view_other_user(user: UserRow, db: Session, target_email: str) -> bool:
+    """A user may view another user's KPI only with ``kpi.manage``."""
+    if (target_email or "").strip().lower() == (user.username or "").strip().lower():
+        return True
+    perms = get_user_permissions(db, user)
+    return "kpi.manage" in perms
 
 
 def _resolve_email(db: Session, user_email: str) -> int | None:
@@ -88,7 +123,14 @@ def _resolve_email(db: Session, user_email: str) -> int | None:
 # ─── KPI group catalog ──────────────────────────────────────────────────────
 
 @router.get("/groups")
-def list_groups(credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme)):
+def list_groups(
+    credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
+    db: Session = Depends(get_db),
+):
+    user = _current_user(db, credentials)
+    if not user:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    _require_kpi_view(user, db)
     return {
         "groups": [
             {
@@ -113,6 +155,7 @@ def list_targets(
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    _require_kpi_view(user, db)
     rows = db.execute(
         text("""
             SELECT t.id, t.reporting_year, t.kpi_group_code,
@@ -152,7 +195,7 @@ def upsert_target(
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    _require_write(user)
+    _require_kpi_manage(user, db)
 
     year = int(body.get("reporting_year") or 0)
     grp = str(body.get("kpi_group_code") or "").strip().upper()
@@ -218,7 +261,7 @@ def deactivate_target(
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    _require_write(user)
+    _require_kpi_manage(user, db)
     grp = (group_code or "").strip().upper()
     if grp not in {g.code for g in kpi_groups()}:
         raise HTTPException(status_code=400, detail="unknown kpi_group_code")
@@ -246,14 +289,25 @@ def list_assignments(
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    _require_kpi_view(user, db)
+
+    # Staff can only list their own assignments; admin/manager can list
+    # all assignments or filter to any user.
+    if user_email and not _can_view_other_user(user, db, user_email):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: chỉ kpi.manage mới được đọc assignment của user khác.",
+        )
+    if not user_email:
+        user_email = user.username
+
     params: dict[str, Any] = {"yr": year}
     where = "WHERE a.reporting_year = :yr"
-    if user_email:
-        uid = _resolve_email(db, user_email)
-        if uid is None:
-            return {"year": year, "user_email": user_email, "assignments": []}
-        where += " AND a.user_id = :uid"
-        params["uid"] = uid
+    uid = _resolve_email(db, user_email)
+    if uid is None:
+        return {"year": year, "user_email": user_email, "assignments": []}
+    where += " AND a.user_id = :uid"
+    params["uid"] = uid
 
     rows = db.execute(
         text(f"""
@@ -311,11 +365,15 @@ def create_assignment(
     if target_uid is None:
         raise HTTPException(status_code=404, detail=f"user {target_user_email} not found")
 
-    # Self-assign is allowed; assigning others requires admin/manager.
-    if target_uid != user.id and not _is_admin_or_manager(user):
+    # Assignment rules:
+    #   - Self-assign is allowed (with kpi.view), even without kpi.manage.
+    #   - Assigning ANY other user requires kpi.manage.
+    is_self = target_uid == user.id
+    perms = get_user_permissions(db, user)
+    if not is_self and "kpi.manage" not in perms:
         raise HTTPException(
             status_code=403,
-            detail="Forbidden: chỉ admin/manager mới được phân công cho user khác.",
+            detail="Forbidden: chỉ user có kpi.manage mới được phân công cho user khác.",
         )
 
     try:
@@ -350,7 +408,9 @@ def update_assignment(
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    _require_write(user)
+    # PATCH is admin-only: changes is_active / kpi_group_code affect
+    # what other users see.
+    _require_kpi_manage(user, db)
 
     updates: dict[str, Any] = {}
     if "is_active" in body:
@@ -381,7 +441,9 @@ def delete_assignment(
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
-    _require_write(user)
+    # Only kpi.manage can delete assignments. (Staff cannot self-delete
+    # because reassigning the org's KPI surface is an admin act.)
+    _require_kpi_manage(user, db)
     db.execute(text("DELETE FROM kpi_group_assignments WHERE id = :aid"), {"aid": assignment_id})
     db.commit()
     return {"ok": True}
@@ -392,25 +454,87 @@ def delete_assignment(
 @router.get("/snapshot")
 def snapshot(
     year: int = Query(..., ge=2000, le=2100),
-    user_email: str | None = Query(None),
+    user_email: str | None = Query(
+        None,
+        description="Staff omits this (defaults to themselves). Admin/manager may pass another email.",
+    ),
     credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
     db: Session = Depends(get_db),
 ):
+    """
+    Shared snapshot endpoint.
+
+    Admin/Manager with ``kpi.manage``:
+      - user_email omitted   → unit-wide snapshot (all groups).
+      - user_email provided  → user-scoped snapshot for that email.
+
+    Staff (no ``kpi.manage``):
+      - user_email omitted → user-scoped snapshot for the caller.
+      - user_email = self  → same as omitted.
+      - user_email = other → 403.
+    """
     user = _current_user(db, credentials)
     if not user:
         raise HTTPException(status_code=401, detail="Unauthorized")
 
     requested = (user_email or "").strip() or (user.username or "")
-    is_self = requested.lower() == (user.username or "").lower()
-    if not is_self and not _is_admin_or_manager(user):
-        raise HTTPException(status_code=403, detail="Forbidden: only admin/manager can view other user's snapshot")
+    requested_email = requested.lower()
+
+    # Authorization
+    is_self = requested_email == (user.username or "").strip().lower()
+    is_admin_unit = user_email is None and _can_view_other_user(user, db, "")
+    if not is_self and not is_admin_unit:
+        if not _can_view_other_user(user, db, requested):
+            raise HTTPException(
+                status_code=403,
+                detail="Forbidden: only kpi.manage may view other user's snapshot",
+            )
 
     target_uid = _resolve_email(db, requested)
-    if target_uid is None and user_email:
-        return {"year": year, "user_email": requested, "groups": [], "total_target": 0, "total_actual": 0, "unassigned": True}
     if target_uid is None:
-        target_uid = user.id
+        return {
+            "year": year,
+            "user_email": requested,
+            "groups": [],
+            "total_target": 0,
+            "total_actual": 0,
+            "unassigned": True,
+        }
+
+    # Admin/Manager unit-scope: pass the special sentinel -1 → unit snapshot.
+    perms = get_user_permissions(db, user)
+    if "kpi.manage" in perms and user_email is None:
+        unit = get_unit_year_snapshot(db, year)
+        payload = {
+            "year": year,
+            "user_email": None,
+            "scope": "unit",
+            "groups": [
+                {
+                    "kpi_group_code": g.kpi_group_code,
+                    "field_label": g.field_label,
+                    "member_domain_codes": list(g.member_domain_codes),
+                    "target_amount": g.target_amount,
+                    "actual_before_tax": g.actual_before_tax,
+                    "contract_count": g.contract_count,
+                    "valued_contract_count": g.valued_contract_count,
+                    "unresolved_value_count": g.unresolved_value_count,
+                    "has_target": g.has_target,
+                    "progress_percent": g.progress_percent,
+                    "member_breakdown": g.member_breakdown,
+                    "is_active": g.has_target,
+                }
+                for g in unit.groups
+            ],
+            "total_target": unit.total_target,
+            "total_actual": unit.total_actual,
+            "total_contract_count": unit.total_contract_count,
+            "completion_percent": unit.completion_percent,
+            "unassigned": False,
+        }
+        return payload
 
     payload = get_user_year_snapshot(db, target_uid, year)
     payload["user_email"] = requested
+    payload["scope"] = "user"
     return payload

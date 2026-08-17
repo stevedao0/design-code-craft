@@ -28,16 +28,21 @@ from sqlalchemy import and_, func, or_, text
 from sqlalchemy.orm import Session
 
 from ..core.database import get_db
-from ..core.security import decode_access_token, security_scheme
+from ..core.security import (
+    decode_access_token,
+    get_user_permissions,
+    security_scheme,
+)
 from ..models.contracts import ContractRecordRow
 from ..models.user import UserRow
-from ..services.revenue_resolver import get_signed_actual, normalize_contract_revenue
+from ..services.revenue_resolver import (
+    normalize_contract_revenue,
+    signed_date_year_clause,
+)
 from ..services.domain_registry import (
-    kpi_groups as _registry_kpi_groups,
-    kpi_group_member_codes as _registry_kpi_member_codes,
-    label_for_kpi_group as _registry_label_for_kpi_group,
     canonicalize_domain as _registry_canonicalize_domain,
     get_kpi_group_for_domain as _registry_get_kpi_group_for_domain,
+    kpi_groups as _registry_kpi_groups,
 )
 
 log = logging.getLogger("kpi_field")
@@ -96,52 +101,41 @@ KPI_FIELD_GROUPS: dict[str, dict] = {
     },
 }
 
-# Reverse map: canonical member code -> KPI group code
-_MEMBER_TO_GROUP: dict[str, str] = {}
-for _group_code, _cfg in KPI_FIELD_GROUPS.items():
-    for _member_code in _cfg["member_field_codes"]:
-        _MEMBER_TO_GROUP[_member_code] = _group_code
+# ─── Canonical mapping ─────────────────────────────────────────────────────
+# NOTE: KPI_FIELD_GROUPS is kept as a UI/bundle hint for the admin
+# overview (member_breakdown split). The SINGLE authoritative mapping
+# for "which contracts belong to which KPI group" is the canonical
+# domain registry in `services/domain_registry`. Every read path that
+# converts a raw ``linh_vuc`` into a KPI group MUST go through
+# `_registry_canonicalize_domain → _registry_get_kpi_group_for_domain`.
+# We do NOT keep a second alias map here.
 
-# Reverse map: normalized variant -> canonical member field code
-_VARIANT_TO_MEMBER: dict[str, str] = {}
-
-
-def _normalize_label(v: str) -> str:
-    """Normalize a label/variant for case/diacritic/space-insensitive matching."""
-    import unicodedata
-    if not v:
-        return ""
-    nfkd = unicodedata.normalize("NFKD", v)
-    ascii_val = "".join(c for c in nfkd if unicodedata.category(c) != "Mn")
-    return ascii_val.lower().replace("_", "").replace(" ", "")
-
-
-for _group_code, _cfg in KPI_FIELD_GROUPS.items():
-    for _member_code, _variants in _cfg["member_display_variants"].items():
-        for _variant in _variants:
-            _VARIANT_TO_MEMBER[_normalize_label(_variant)] = _member_code
+_KPI_FIELD_GROUPS_BUNDLE = KPI_FIELD_GROUPS
 
 
 def _variant_to_group(label: str | None) -> str | None:
-    """Resolve a stored linh_vuc / field_code label to its KPI group code."""
-    if not label:
-        return None
-    member = _VARIANT_TO_MEMBER.get(_normalize_label(label))
-    if member is None:
-        return None
-    return _MEMBER_TO_GROUP.get(member)
+    """Resolve a stored ``linh_vuc`` to its KPI group via the canonical
+    registry in ``services/domain_registry``. Unrecognized labels map to
+    None (callers must treat as "quarantined / non-KPI").
+    """
+    return _registry_get_kpi_group_for_domain(
+        _registry_canonicalize_domain(label)
+    )
 
 
 def _assignment_field_code_to_group(field_code: str) -> str | None:
-    """Map an assignment's stored field_code back to a KPI group code."""
-    if field_code in KPI_FIELD_GROUPS:
-        return field_code
-    for group_code, cfg in KPI_FIELD_GROUPS.items():
-        if cfg["assignment_field_code"] == field_code:
-            return group_code
-        if field_code in cfg["member_field_codes"]:
-            return group_code
-    return None
+    """Map an assignment's stored field_code back to a KPI group code.
+
+    Resolves via the canonical registry so the mapping stays unique.
+    """
+    if not field_code:
+        return None
+    fc = field_code.strip().upper()
+    # Direct group lookup if the assignment code IS a group code.
+    if fc in {g.code for g in _registry_kpi_groups()}:
+        return fc
+    # Otherwise it is a member-domain code.
+    return _registry_get_kpi_group_for_domain(fc)
 
 
 
@@ -230,7 +224,7 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+        .filter(signed_date_year_clause(year))
         .all()
     )
 
@@ -250,10 +244,11 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
     total_actual = 0
 
     for row in rows:
-        group_for_row = _variant_to_group(row.linh_vuc)
+        canonical = _registry_canonicalize_domain(row.linh_vuc)
+        group_for_row = _registry_get_kpi_group_for_domain(canonical)
         if group_for_row != group_code:
             continue
-        member_code = _VARIANT_TO_MEMBER.get(_normalize_label(row.linh_vuc))
+        member_code = canonical if canonical in cfg["member_field_codes"] else None
         if member_code is None:
             continue
         total_count += 1
@@ -284,14 +279,15 @@ def _resolve_actual_for_member(db: Session, year: int, member_field_code: str) -
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+        .filter(signed_date_year_clause(year))
         .all()
     )
     total = 0
     count = 0
     unresolved = 0
     for row in rows:
-        if _VARIANT_TO_MEMBER.get(_normalize_label(row.linh_vuc)) != member_field_code:
+        canon = _registry_canonicalize_domain(row.linh_vuc)
+        if canon != member_field_code:
             continue
         nr = normalize_contract_revenue(row)
         if nr.before_vat > 0:
@@ -325,25 +321,21 @@ def get_kpi_years(
 
     current_year = datetime.utcnow().year
 
-    # Collect years from KPI assignments + annual targets + contract records
+    # Collect years from canonical contracts by their SIGNED date, not by
+    # the legacy contract_year column. We extract the year component with
+    # ``EXTRACT`` so we don't need to load rows.
     years: set[int] = set()
-    for (yr,) in db.query(
-        func.distinct(ContractRecordRow.contract_year)
-    ).filter(ContractRecordRow.annex_no.is_(None)).all():
-        years.add(yr)
-    for (yr,) in db.query(
-        func.distinct(ContractRecordRow.contract_year)
-    ).filter(ContractRecordRow.annex_no.is_(None)).all():
-        years.add(yr)  # duplicate ok
-
-    # From kpi_field_assignments
-    try:
-        for (yr,) in db.query(
-            func.distinct(ContractRecordRow.contract_year)
-        ).filter(ContractRecordRow.annex_no.is_(None)).all():
-            years.add(yr)
-    except Exception:
-        pass
+    rows = db.execute(
+        text("""
+            SELECT DISTINCT EXTRACT(YEAR FROM ngay_lap_hop_dong)::INT AS y
+            FROM contract_records
+            WHERE annex_no IS NULL
+              AND ngay_lap_hop_dong IS NOT NULL
+        """),
+    ).fetchall()
+    for (y,) in rows:
+        if y is not None:
+            years.add(int(y))
 
     result = []
     for yr in sorted(years, reverse=True):
@@ -479,11 +471,13 @@ def get_field_domains(
             ).fetchall()
             for (fc,) in rows:
                 add_domain(str(fc))
-            # From contract_records
+            # From contract_records (by signed date, not contract_year)
             rows2 = db.execute(
                 text("""
                     SELECT DISTINCT linh_vuc FROM contract_records
-                    WHERE contract_year = :yr AND linh_vuc IS NOT NULL
+                    WHERE ngay_lap_hop_dong >= make_date(:yr, 1, 1)
+                      AND ngay_lap_hop_dong <  make_date(:yr + 1, 1, 1)
+                      AND linh_vuc IS NOT NULL
                 """),
                 {"yr": year},
             ).fetchall()
@@ -518,11 +512,12 @@ def get_field_domains(
             for (fc,) in rows:
                 add_domain(str(fc))
 
-        # From contract_records
+        # From contract_records (by signed date, not contract_year)
         rows2 = db.execute(
             text("""
                 SELECT DISTINCT linh_vuc FROM contract_records
-                WHERE contract_year = :yr
+                WHERE ngay_lap_hop_dong >= make_date(:yr, 1, 1)
+                  AND ngay_lap_hop_dong <  make_date(:yr + 1, 1, 1)
                   AND nguoi_thuc_hien_email = :email
                   AND linh_vuc IS NOT NULL
                   AND annex_no IS NULL
@@ -980,7 +975,7 @@ def get_field_kpi(
     branch_rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+        .filter(signed_date_year_clause(year))
         .all()
     )
 

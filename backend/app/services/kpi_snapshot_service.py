@@ -33,7 +33,10 @@ from ..services.domain_registry import (
     kpi_groups,
     label_for_kpi_group,
 )
-from ..services.revenue_resolver import normalize_contract_revenue
+from ..services.revenue_resolver import (
+    normalize_contract_revenue,
+    signed_date_year_clause,
+)
 
 
 @dataclass
@@ -123,18 +126,10 @@ def _year_window(year: int) -> tuple[date, date]:
 
 def _load_canonical_rows_for_year(db: Session, year: int) -> list[ContractRecordRow]:
     """Load canonical contracts for the year using ngay_lap_hop_dong window."""
-    win_start, win_end = _year_window(year)
     return (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(
-            (ContractRecordRow.ngay_lap_hop_dong >= win_start)
-            & (ContractRecordRow.ngay_lap_hop_dong < win_end)
-            | (
-                ContractRecordRow.ngay_lap_hop_dong.is_(None)
-                & (ContractRecordRow.contract_year == year)
-            )
-        )
+        .filter(signed_date_year_clause(year))
         .all()
     )
 
@@ -142,13 +137,17 @@ def _load_canonical_rows_for_year(db: Session, year: int) -> list[ContractRecord
 # ─── Public: per-year unit-wide snapshot ───────────────────────────────────
 
 def _compute_unit_snapshot_from_rows(
-    rows: list[ContractRecordRow], year: int
+    db: Session,
+    rows: list[ContractRecordRow],
+    year: int,
 ) -> UnitYearSnapshot:
     """Pure aggregation from a pre-loaded list of rows.
 
     Allows callers that already loaded rows (e.g. via raw SQL on a
     fixture DB whose schema differs slightly) to reuse the snapshot
-    logic. Same guarantees as `get_unit_year_snapshot`.
+    logic. Same guarantees as ``get_unit_year_snapshot``. ``db`` is
+    passed through so the snapshot can read ``kpi_group_targets`` from
+    the caller's session — no module-level state.
     """
     group_actuals: dict[str, int] = {}
     group_counts: dict[str, int] = {}
@@ -190,7 +189,9 @@ def _compute_unit_snapshot_from_rows(
         else:
             group_unresolved[grp_code] += 1
 
-    return _build_snapshot(year, group_actuals, group_counts, group_valued, group_unresolved, group_members)
+    return _build_snapshot(
+        db, year, group_actuals, group_counts, group_valued, group_unresolved, group_members,
+    )
 
 
 def _compute_unit_normalized_total_from_rows(
@@ -226,6 +227,7 @@ def _compute_unit_normalized_total_from_rows(
 
 
 def _build_snapshot(
+    db: Session,
     year: int,
     group_actuals: dict[str, int],
     group_counts: dict[str, int],
@@ -235,15 +237,18 @@ def _build_snapshot(
 ) -> UnitYearSnapshot:
     """Assemble a UnitYearSnapshot from already-computed group aggregates.
 
-    Reads kpi_group_targets via SQL on the same DB session passed in by
-    the caller. Kept separate so we can test the pure aggregation logic.
+    Reads ``kpi_group_targets`` through the caller's DB session. No
+    module-level state and no fallback to in-process dicts — this is
+    concurrent-safe across uvicorn workers because each request owns its
+    own session.
     """
+    target_map = _read_targets(db, year)
     snapshots: list[KpiGroupSnapshot] = []
     total_target = 0
     total_actual = 0
     total_count = 0
     for grp in kpi_groups():
-        target, is_active = _read_target(year, grp.code)
+        target, is_active = target_map.get(grp.code, (0, False))
         has_target = is_active and target > 0
         actual = group_actuals.get(grp.code, 0)
         cnt = group_counts.get(grp.code, 0)
@@ -252,6 +257,9 @@ def _build_snapshot(
         progress = (
             round(actual / target * 100, 1) if has_target else None
         )
+        # total_actual is computed independently of `has_target`: actual
+        # money earned in a group always counts toward the unit total,
+        # even when no target row exists yet for that group.
         snap = KpiGroupSnapshot(
             kpi_group_code=grp.code,
             field_label=label_for_kpi_group(grp.code) or grp.code,
@@ -266,10 +274,10 @@ def _build_snapshot(
             member_breakdown=list(group_members[grp.code].values()),
         )
         snapshots.append(snap)
+        total_actual += actual
+        total_count += cnt
         if has_target:
             total_target += target
-            total_actual += actual
-            total_count += cnt
 
     completion = (
         round(total_actual / total_target * 100, 1)
@@ -286,56 +294,80 @@ def _build_snapshot(
     )
 
 
-# Module-level target cache — overwritten by tests with monkey-patched
-# reader. Keeps get_unit_year_snapshot decoupled from the helper.
-_target_reader = None
+def _read_targets(db: Session, year: int) -> dict[str, tuple[int, bool]]:
+    """Bulk-fetch (target, is_active) for every KPI group of ``year``.
 
-
-def _read_target(year: int, group_code: str) -> tuple[int, bool]:
-    """Read (target_amount, is_active) for one KPI group/year.
-
-    Overridable via `set_target_reader()` so tests can plug a different
-    DB session. Default uses SQLAlchemy text query on the caller's DB.
+    Returns ``{group_code: (target_amount, is_active)}``. Missing rows
+    default to (0, False).
     """
-    if _target_reader is not None:
-        return _target_reader(year, group_code)
-    raise RuntimeError("kpi_snapshot_service: target reader not configured")
-
-
-def set_target_reader(fn) -> None:
-    """Inject a (year, group_code) -> (amount, is_active) reader.
-
-    The reader MUST return (0, False) when no row exists for that pair.
-    """
-    global _target_reader
-    _target_reader = fn
-
-
-def default_target_reader(db: Session):
-    """Factory: return a closure that reads kpi_group_targets via `db`."""
-    def reader(year: int, group_code: str) -> tuple[int, bool]:
-        row = db.execute(
-            text("""
-                SELECT target_amount_before_tax, is_active
-                FROM kpi_group_targets
-                WHERE reporting_year = :yr AND kpi_group_code = :gc
-                LIMIT 1
-            """),
-            {"yr": year, "gc": group_code},
-        ).fetchone()
-        if not row:
-            return (0, False)
-        return (int(row[0] or 0), bool(row[1]))
-    return reader
+    rows = db.execute(
+        text(
+            """
+            SELECT kpi_group_code, target_amount_before_tax, is_active
+            FROM kpi_group_targets
+            WHERE reporting_year = :yr
+            """
+        ),
+        {"yr": year},
+    ).fetchall()
+    return {
+        str(r[0]): (int(r[1] or 0), bool(r[2]))
+        for r in rows
+    }
 
 
 def get_unit_year_snapshot(db: Session, year: int) -> UnitYearSnapshot:
+    """Unit-wide KPI snapshot for ``year``.
+
+    Aggregates from canonical contracts whose ``ngay_lap_hop_dong`` is in
+    the half-open signed-date window. Reads ``kpi_group_targets`` from the
+    same session — no in-process state, safe across concurrent workers.
+    """
     rows = _load_canonical_rows_for_year(db, year)
-    # Install default reader for this call
-    set_target_reader(default_target_reader(db))
-    snap = _compute_unit_snapshot_from_rows(rows, year)
-    set_target_reader(None)
-    return snap
+    group_actuals: dict[str, int] = {}
+    group_counts: dict[str, int] = {}
+    group_valued: dict[str, int] = {}
+    group_unresolved: dict[str, int] = {}
+    group_members: dict[str, dict[str, dict]] = {}
+
+    for grp in kpi_groups():
+        group_actuals[grp.code] = 0
+        group_counts[grp.code] = 0
+        group_valued[grp.code] = 0
+        group_unresolved[grp.code] = 0
+        group_members[grp.code] = {
+            member: {
+                "member_field_code": member,
+                "contract_count": 0,
+                "valued_contract_count": 0,
+                "actual": 0,
+            }
+            for member in grp.member_domain_codes
+        }
+
+    for row in rows:
+        rr = _resolve_row(row)
+        if rr.kpi_group_code is None:
+            continue
+        if rr.kpi_group_code not in group_actuals:
+            continue
+        grp_code = rr.kpi_group_code
+        group_counts[grp_code] += 1
+        if rr.domain_code and rr.domain_code in group_members[grp_code]:
+            group_members[grp_code][rr.domain_code]["contract_count"] += 1
+        if rr.before_vat > 0:
+            group_valued[grp_code] += 1
+            group_actuals[grp_code] += rr.before_vat
+            if rr.domain_code and rr.domain_code in group_members[grp_code]:
+                group_members[grp_code][rr.domain_code]["valued_contract_count"] += 1
+                group_members[grp_code][rr.domain_code]["actual"] += rr.before_vat
+        else:
+            group_unresolved[grp_code] += 1
+
+    return _build_snapshot(
+        db, year,
+        group_actuals, group_counts, group_valued, group_unresolved, group_members,
+    )
 
 
 # ─── User-scoped view (assignment gating only) ─────────────────────────────
@@ -444,18 +476,10 @@ def get_unit_normalized_total(db: Session, year: int) -> dict:
     KPI group). Used to render "Tổng giá trị hợp đồng normalized trước
     Thuế GTGT" card without conflating it with KPI group totals.
     """
-    win_start, win_end = _year_window(year)
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(
-            (ContractRecordRow.ngay_lap_hop_dong >= win_start)
-            & (ContractRecordRow.ngay_lap_hop_dong < win_end)
-            | (
-                ContractRecordRow.ngay_lap_hop_dong.is_(None)
-                & (ContractRecordRow.contract_year == year)
-            )
-        )
+        .filter(signed_date_year_clause(year))
         .all()
     )
     total_actual = 0

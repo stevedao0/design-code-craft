@@ -255,8 +255,9 @@ def _before_vat_total_2026_in_kpi_groups() -> int:
     matches the API scope exactly.
     """
     # Build the canonical set the same way as the API.
-    from app.api.kpi_field import _VARIANT_TO_MEMBER, _normalize_label
-    target_norms = set(_normalize_label(m) for m in ("KARAOKE", "PHONG_THU_AM", "KHU_VUI_CHOI"))
+    from app.services.domain_registry import canonicalize_domain
+    target_canon = {canonicalize_domain(m) for m in ("KARAOKE", "PHONG_THU_AM", "KHU_VUI_CHOI")}
+    target_canon.discard(None)
     db = SessionLocal()
     try:
         rows = db.execute(
@@ -267,7 +268,7 @@ def _before_vat_total_2026_in_kpi_groups() -> int:
         ).fetchall()
         matched = []
         for (lv,) in rows:
-            if _normalize_label(lv) in target_norms:
+            if canonicalize_domain(lv) in target_canon:
                 matched.append(lv)
         if not matched:
             return 0

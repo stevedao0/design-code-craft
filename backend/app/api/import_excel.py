@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from ..core.database import get_db
 from ..core.security import decode_access_token, security_scheme
 from ..models.contracts import ContractRecordRow
+from ..services.domain_registry import canonicalize_domain
 
 logger = logging.getLogger(__name__)
 
@@ -443,6 +444,16 @@ async def import_contracts(
             if music_areas:
                 import json
                 clean_data["music_usage_areas"] = json.dumps(music_areas, ensure_ascii=False)
+
+            # Canonicalize write-boundary inputs so the canonical registry
+            # is the only source of truth. Raw labels from Excel must NOT
+            # land in business columns without going through this step.
+            for _canon_field in ("linh_vuc", "field_code"):
+                if _canon_field in clean_data and clean_data[_canon_field]:
+                    clean_data[_canon_field] = (
+                        canonicalize_domain(clean_data[_canon_field])
+                        or clean_data[_canon_field]
+                    )
 
             try:
                 existing = db.query(ContractRecordRow).filter(

@@ -27,7 +27,32 @@ from typing import Literal
 
 from sqlalchemy.orm import Session
 
+from datetime import date
+from typing import Tuple
+
+from sqlalchemy import and_
+
 from ..models.contracts import ContractRecordRow
+
+
+# Canonical year filter — uses ``ngay_lap_hop_dong`` (signed date) only.
+# No fallback to ``contract_year``: rows missing a signed date are
+# deliberately excluded so a buggy importer can't inflate the KPI total.
+SIGNED_DATE_YEAR_BOUNDS: dict[int, Tuple[date, date]] = {}
+
+
+def signed_date_year_bounds(year: int) -> Tuple[date, date]:
+    """Return the [start, end) signed-date window for ``year``."""
+    return (date(year, 1, 1), date(year + 1, 1, 1))
+
+
+def signed_date_year_clause(year: int):
+    """SQLAlchemy boolean clause: signed_date in [year-01-01, year+1-01-01)."""
+    start, end = signed_date_year_bounds(year)
+    return and_(
+        ContractRecordRow.ngay_lap_hop_dong >= start,
+        ContractRecordRow.ngay_lap_hop_dong < end,
+    )
 
 
 class RevenueBasis(Enum):

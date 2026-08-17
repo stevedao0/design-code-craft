@@ -1,29 +1,36 @@
 """
-Phase 1.0 fixture: create source-schema (legacy) tables on disposable DB 5433.
+Phase 1.0 fixture: create source-schema (legacy) tables on disposable DB.
 
-Tables to create (mirror prod schema for kpi-side):
-- kpi_field_assignments (with target_amount per user/group/year)
-- annual_kpi_targets (orphan kept untouched)
-- kpi_field_assignments_audit (optional helper)
+This is an upgrade revision of the V1 KPI source-schema fixture. It is
+idempotent: every CREATE uses IF NOT EXISTS. It only creates a
+schema skeleton; the actual data is owned by the versioned seed
+fixture (``phase1_seed_*.py``).
 
-Seed with fake (non-production) data:
-- 1 user (synthetic, not from prod users table)
-- 2 assignments: KARAOKE=4.5B, KHU_VUI_CHOI=200M, year=2026
-- 1 annual_kpi_targets row (orphan, kept intact by migration)
-- 4 contracts (fixture from prompt):
-    KARAOKE A: 100M, KARAOKE B: 200M, PHONG_THU_AM C: 50M, KHU_VUI_CHOI D: 80M
-  All contract records use canonical linh_vuc codes after our migration.
-  Raw domain variants (Karaoke, phong_thu_am, KHU VUI CHOI) get normalized.
-- 1 contract signed outside 2026 (must NOT count)
-- 1 contract legacy with only so_tien_value (must NOT count toward normalized KPI)
-- 1 contract with join-duplicating data (must count once)
-- 1 unknown domain (SCTT) → quarantine, NOT counted in KPI
+Connection details are read from environment so credentials never
+land in source. Required:
+  - DATABASE_URL (full libpq URL)
+
+Run from project root:
+    DATABASE_URL=... python -m backend.migrations.phase1_00_fixture_schema upgrade
+    DATABASE_URL=... python -m backend.migrations.phase1_00_fixture_schema downgrade
 """
+import os
+import sys
 import psycopg2
-from psycopg2.extras import RealDictCursor
-from decimal import Decimal
 
-DB_URL = "postgresql://vcpmc_user:change_me@localhost:5433/vcpmc_contract_new"
+
+DB_URL = os.environ.get("DATABASE_URL", "").strip()
+if not DB_URL:
+    sys.stderr.write(
+        "FATAL: DATABASE_URL is not set. "
+        "Provide a libpq URL via environment, e.g. "
+        "export DATABASE_URL=postgresql://user:pass@host:port/dbname\n"
+    )
+    sys.exit(2)
+
+
+HIST_TAG = "phase1_00_fixture_schema"
+
 
 DDL = [
     # Mirror kpi_field_assignments from prod
@@ -42,7 +49,7 @@ DDL = [
         updated_by_user_id INTEGER
     )
     """,
-    # annual_kpi_targets: kept as orphan, untouched
+    # annual_kpi_targets: kept as orphan, untouched by migration
     """
     CREATE TABLE IF NOT EXISTS annual_kpi_targets (
         id SERIAL PRIMARY KEY,
@@ -54,9 +61,7 @@ DDL = [
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
     """,
-    # New canonical catalog for domains (Phase 1.1 base)
-    # Note: existing domains table has only background domains; PHONG_THU_AM, KHU_VUI_CHOI
-    # must be added here. We DO NOT replace domains; we extend via new canonical table.
+    # New canonical catalog for domains
     """
     CREATE TABLE IF NOT EXISTS domain_catalog (
         code VARCHAR(64) PRIMARY KEY,
@@ -73,7 +78,7 @@ DDL = [
         canonical_code VARCHAR(64) NOT NULL REFERENCES domain_catalog(code)
     )
     """,
-    # KPI group registry (configurable)
+    # KPI group registry
     """
     CREATE TABLE IF NOT EXISTS kpi_group (
         code VARCHAR(64) PRIMARY KEY,
@@ -104,7 +109,7 @@ DDL = [
         UNIQUE (reporting_year, kpi_group_code)
     )
     """,
-    # Assignment per user/group/year (no target)
+    # Assignment per user/group/year (target NULL — only link)
     """
     CREATE TABLE IF NOT EXISTS kpi_group_assignments (
         id SERIAL PRIMARY KEY,
@@ -118,7 +123,7 @@ DDL = [
         UNIQUE (reporting_year, kpi_group_code, user_id)
     )
     """,
-    # Quarantine table for unknown domains
+    # Quarantine for unknown/unresolved domains
     """
     CREATE TABLE IF NOT EXISTS contract_quarantine (
         id SERIAL PRIMARY KEY,
@@ -128,28 +133,86 @@ DDL = [
         created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
     """,
+    # Migration history
+    """
+    CREATE TABLE IF NOT EXISTS schema_migrations (
+        tag VARCHAR(128) PRIMARY KEY,
+        applied_at TIMESTAMP NOT NULL DEFAULT NOW()
+    )
+    """,
 ]
 
 
-def main():
-    conn = psycopg2.connect(DB_URL)
-    conn.autocommit = True
-    cur = conn.cursor()
-    for sql in DDL:
-        cur.execute(sql)
-    print("DDL applied.")
+DROP_ORDER = [
+    "contract_quarantine",
+    "kpi_group_assignments",
+    "kpi_group_targets",
+    "kpi_group_member",
+    "kpi_group",
+    "domain_alias",
+    "domain_catalog",
+    "annual_kpi_targets",
+    "kpi_field_assignments",
+]
 
-    # Verify
-    cur.execute("""
-        SELECT table_name FROM information_schema.tables
-        WHERE table_schema='public' AND table_name IN
-          ('kpi_field_assignments','annual_kpi_targets','domain_catalog',
-           'domain_alias','kpi_group','kpi_group_member','kpi_group_targets',
-           'kpi_group_assignments','contract_quarantine')
-        ORDER BY table_name
-    """)
-    print("Created tables:", [r[0] for r in cur.fetchall()])
-    conn.close()
+
+def _connect():
+    return psycopg2.connect(DB_URL)
+
+
+def _mark_applied(cur, tag: str):
+    cur.execute(
+        "INSERT INTO schema_migrations (tag) VALUES (%s) ON CONFLICT (tag) DO NOTHING",
+        (tag,),
+    )
+
+
+def _mark_reverted(cur, tag: str):
+    cur.execute("DELETE FROM schema_migrations WHERE tag = %s", (tag,))
+
+
+def upgrade():
+    conn = _connect()
+    conn.autocommit = False
+    cur = conn.cursor()
+    try:
+        for sql in DDL:
+            cur.execute(sql)
+        _mark_applied(cur, HIST_TAG)
+        conn.commit()
+        print(f"upgrade {HIST_TAG} OK")
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def downgrade():
+    conn = _connect()
+    conn.autocommit = False
+    cur = conn.cursor()
+    try:
+        for tbl in DROP_ORDER:
+            cur.execute(f"DROP TABLE IF EXISTS {tbl} CASCADE")
+        _mark_reverted(cur, HIST_TAG)
+        conn.commit()
+        print(f"downgrade {HIST_TAG} OK")
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+def main():
+    if len(sys.argv) < 2 or sys.argv[1] not in ("upgrade", "downgrade"):
+        sys.stderr.write("usage: phase1_00_fixture_schema {upgrade|downgrade}\n")
+        sys.exit(1)
+    if sys.argv[1] == "upgrade":
+        upgrade()
+    else:
+        downgrade()
 
 
 if __name__ == "__main__":

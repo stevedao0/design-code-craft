@@ -31,9 +31,18 @@ def build_contract_record_from_draft(
     normalized: dict[str, object],
 ) -> ContractRecordRow:
     from app.services.background_template_resolver import resolve_template_code
+    from app.services.domain_registry import canonicalize_domain
 
     # Get contract_template_code from normalized data, default to TEMPLATE_1
     template_code = resolve_template_code(normalized.get("contract_template_code"))
+
+    # Canonicalize write-boundary inputs. Raw `linh_vuc` and `field_code`
+    # values must NOT be persisted as-is — they go through the central
+    # registry so every read path agrees on the same KPI group.
+    raw_linh_vuc = clean_text(normalized.get("linh_vuc"))
+    canonical_linh_vuc = canonicalize_domain(raw_linh_vuc) or raw_linh_vuc
+    raw_field_code = clean_text(normalized.get("field_code"))
+    canonical_field_code = canonicalize_domain(raw_field_code) or raw_field_code
 
     return ContractRecordRow(
         contract_no=clean_text(normalized.get("contract_no")),
@@ -41,10 +50,10 @@ def build_contract_record_from_draft(
         annex_no=None,
         ngay_lap_hop_dong=date_from_normalized(normalized, "ngay_lap_hop_dong"),
         domain_group=clean_text(normalized.get("domain_group")) or BACKGROUND_WORKSPACE_CODE,
-        linh_vuc=clean_text(normalized.get("linh_vuc")),
-        linh_vuc_hien_thi=clean_text(normalized.get("linh_vuc_hien_thi")),
+        linh_vuc=canonical_linh_vuc,
+        linh_vuc_hien_thi=clean_text(normalized.get("linh_vuc_hien_thi")) or canonical_linh_vuc,
         region_code=clean_text(normalized.get("region_code")),
-        field_code=clean_text(normalized.get("field_code")),
+        field_code=canonical_field_code,
         don_vi_ten=clean_text(normalized.get("don_vi_ten")),
         don_vi_dia_chi=clean_text(normalized.get("don_vi_dia_chi")),
         don_vi_dien_thoai=clean_text(normalized.get("don_vi_dien_thoai")),
@@ -249,6 +258,13 @@ def insert_contract_record_simple(
 
     _logger.info("[create-contract] candidate before insert contract_no=%s", contract_no)
 
+    # Canonicalize write-boundary inputs so business columns never receive
+    # raw labels bypassing the registry.
+    raw_lv = clean_text(candidate.get("linh_vuc"))
+    canon_lv = canonicalize_domain(raw_lv) or raw_lv
+    raw_fc = clean_text(field_code or candidate.get("field_code"))
+    canon_fc = canonicalize_domain(raw_fc) or raw_fc
+
     # Check for existing contract with same contract_no and annex_no IS NULL
     existing = db.query(ContractRecordRow).filter(
         ContractRecordRow.contract_year == contract_year,
@@ -267,10 +283,10 @@ def insert_contract_record_simple(
         annex_no=None,
         ngay_lap_hop_dong=parse_iso_date(candidate.get("ngay_lap_hop_dong")),
         domain_group=clean_text(candidate.get("domain_group")) or BACKGROUND_WORKSPACE_CODE,
-        linh_vuc=clean_text(candidate.get("linh_vuc")),
-        linh_vuc_hien_thi=clean_text(candidate.get("linh_vuc_hien_thi")),
+        linh_vuc=canon_lv,
+        linh_vuc_hien_thi=clean_text(candidate.get("linh_vuc_hien_thi")) or canon_lv,
         region_code=clean_text(candidate.get("region_code")),
-        field_code=clean_text(field_code or candidate.get("field_code")),
+        field_code=canon_fc,
         don_vi_ten=clean_text(candidate.get("don_vi_ten")),
         don_vi_dia_chi=clean_text(candidate.get("don_vi_dia_chi")),
         don_vi_dien_thoai=clean_text(candidate.get("don_vi_dien_thoai")),

@@ -30,7 +30,7 @@ function CollapsibleComponent({ children, defaultOpen = true }: CollapsibleProps
 
 const CollapsibleContext = React.createContext<{ open: boolean; setOpen: (v: boolean) => void }>({
   open: true,
-  setOpen: () => {},
+  setOpen: (_v: boolean) => undefined,
 });
 
 function CollapsibleTrigger({ children, className = '' }: CollapsibleTriggerProps) {
