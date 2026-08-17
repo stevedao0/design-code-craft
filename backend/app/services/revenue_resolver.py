@@ -157,3 +157,70 @@ def get_signed_actual(row: ContractRecordRow) -> int:
 def get_before_vat_revenue(row: ContractRecordRow) -> int:
     """BEFORE_VAT revenue: returns 0 if unresolved (call resolve_contract_revenue for status)."""
     return resolve_row_revenue_only(row, RevenueBasis.BEFORE_VAT)
+
+
+# ─── Normalized revenue (single source of truth for Reports & KPI) ─────────────
+#
+# ``so_tien_value`` is a legacy column that the import mapper and the
+# legacy sync path (see backend/app/api/contracts.py ~line 1168) populate
+# with the *after-VAT* total. Falling back to it for BEFORE_VAT would mix
+# after-VAT money into the before-VAT total and silently inflate KPIs.
+#
+# Therefore the normalized resolver for the Reports/KPI surface:
+#   1. Use royalty_amount_before_vat when positive.
+#   2. If missing but after_vat and vat_amount are positive, derive
+#      before = after - vat (algebraically valid for the phase-2 schema).
+#   3. Otherwise the record is unresolved (not silently pulled from
+#      so_tien_value).
+
+@dataclass
+class NormalizedRevenue:
+    before_vat: int
+    vat_amount: int
+    after_vat: int
+    before_vat_status: str       # "resolved" | "from_legacy_import" | "unresolved"
+    after_vat_status: str        # "resolved" | "unresolved"
+    value_source: str            # "phase2_before_vat" | "derived_after_minus_vat" | "legacy_after_vat" | "null"
+
+
+def normalize_contract_revenue(row: ContractRecordRow) -> NormalizedRevenue:
+    """Return (before_vat, vat, after_vat) using only well-defined mappings.
+
+    Falls back to after_vat - vat_amount when before_vat is missing but
+    after_vat and vat_amount are positive. ``so_tien_value`` is NOT used
+    as a substitute for before_vat because it represents the after-VAT
+    total in the legacy import path.
+    """
+    before = row.royalty_amount_before_vat
+    after = row.royalty_amount_after_vat
+    vat = row.vat_amount
+
+    if before is not None and before > 0:
+        before_n = int(before)
+        before_status = "resolved"
+        before_source = "phase2_before_vat"
+    elif (
+        (before is None or before <= 0)
+        and after is not None and after > 0
+        and vat is not None and vat > 0
+    ):
+        before_n = int(after - vat)
+        before_status = "from_legacy_import"
+        before_source = "derived_after_minus_vat"
+    else:
+        before_n = 0
+        before_status = "unresolved"
+        before_source = "null"
+
+    vat_n = int(vat) if vat is not None and vat > 0 else 0
+    after_n = int(after) if after is not None and after > 0 else 0
+    after_status = "resolved" if after_n > 0 else "unresolved"
+
+    return NormalizedRevenue(
+        before_vat=before_n,
+        vat_amount=vat_n,
+        after_vat=after_n,
+        before_vat_status=before_status,
+        after_vat_status=after_status,
+        value_source=before_source,
+    )

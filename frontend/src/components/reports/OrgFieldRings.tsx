@@ -117,8 +117,8 @@ function RingStack({
               style={{ color: active.progress_percent >= 100 ? 'var(--accent-primary, #4A7202)' : 'var(--text-primary, #1f1d1a)' }}>
               {active.has_target ? `${active.progress_percent.toFixed(1)}%` : '—'}
             </div>
-            <div className="mt-1.5 text-[11px] tabular-nums" style={{ color: 'var(--text-muted, #8a847c)' }}>
-              Đạt {compact(active.actual)} / MT {compact(active.target)}
+              <div className="mt-1.5 text-[11px] tabular-nums" style={{ color: 'var(--text-muted, #8a847c)' }}>
+              Đạt {compact(active.actual)} (chưa GTGT) / MT {compact(active.target)}
             </div>
             <div className="text-[11px] tabular-nums" style={{ color: 'var(--text-muted, #8a847c)' }}>
               {fmtNum(active.contract_count)} HĐ · {fmtNum(active.user_count)} NV
@@ -260,8 +260,8 @@ export function OrgFieldRings({ year }: { year: number }) {
           <div className="grid grid-cols-2 gap-px border-b lg:grid-cols-4"
             style={{ borderColor: 'var(--border-subtle, #ece7de)', background: 'var(--border-subtle, #ece7de)' }}>
             {[
-              { label: 'Tổng mục tiêu', value: fmtVND(totals.target), icon: TargetIcon },
-              { label: 'Tổng thực đạt', value: fmtVND(totals.actual), accent: true, icon: TrendingUpIcon },
+              { label: 'Tổng mục tiêu (chưa GTGT)', value: fmtVND(totals.target), icon: TargetIcon },
+              { label: 'Tổng thực hiện (chưa GTGT)', value: fmtVND(totals.actual), accent: true, icon: TrendingUpIcon },
               {
                 label: totals.gap > 0 ? 'Còn thiếu' : 'Vượt mục tiêu',
                 value: fmtVND(Math.abs(totals.gap)),
@@ -362,7 +362,7 @@ export function OrgFieldRings({ year }: { year: number }) {
                           }} />
                       </div>
                       <div className="mt-1 truncate text-[11px] tabular-nums" style={{ color: 'var(--text-muted, #8a847c)' }}>
-                        Đạt {fmtVND(row.actual)} / Mục tiêu {row.has_target ? fmtVND(row.target) : '—'}
+                        Đạt {fmtVND(row.actual)} (chưa GTGT) / Mục tiêu (chưa GTGT) {row.has_target ? fmtVND(row.target) : '—'}
                       </div>
                     </button>
                   </li>

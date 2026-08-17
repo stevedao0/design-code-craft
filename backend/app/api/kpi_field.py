@@ -31,7 +31,7 @@ from ..core.database import get_db
 from ..core.security import decode_access_token, security_scheme
 from ..models.contracts import ContractRecordRow
 from ..models.user import UserRow
-from ..services.revenue_resolver import get_signed_actual
+from ..services.revenue_resolver import get_signed_actual, normalize_contract_revenue
 
 log = logging.getLogger("kpi_field")
 
@@ -187,7 +187,7 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
         "contract_count": int,           # total canonical contracts in group
         "valued_contract_count": int,    # contracts whose canonical value > 0
         "unresolved_value_count": int,   # contracts in scope but value = 0
-        "actual": int,                   # sum of signed-actual values
+        "actual": int,                   # sum of normalized BEFORE-VAT values
         "member_breakdown": [
           {"member_field_code": str, "contract_count": int, "valued_contract_count": int, "actual": int},
           ...
@@ -199,12 +199,15 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
     - Filter canonical contracts only (annex_no IS NULL).
     - Classify linh_vuc to a KPI group via the centralized
       `KPI_FIELD_GROUPS` mapping (case/diacritic/space insensitive variants).
-    - Use the canonical signed-revenue chain:
-        royalty_amount_after_vat > royalty_amount_before_vat > so_tien_value
-      This matches the V1 KPI/Reports actual basis (`_signed_actual` in
-      `backend/app/api/reports_v2.py`).
-    - When none of those values is positive, the contract is counted as
-      `unresolved_value_count` and excluded from `actual`.
+    - Use the normalized BEFORE-VAT resolver
+      (`services.revenue_resolver.normalize_contract_revenue`) so:
+        * phase-2 ``royalty_amount_before_vat`` when positive,
+        * else derive ``after_vat - vat_amount`` when both are positive,
+        * otherwise record is unresolved (``unresolved_value_count``).
+      ``so_tien_value`` is intentionally NOT used as a fallback because
+      the legacy import/sync path maps it to the after-VAT total.
+    - Reports/KPI labels say "chưa GTGT" so the actual must stay on
+      the before-VAT basis.
     """
     cfg = KPI_FIELD_GROUPS.get(group_code)
     if not cfg:
@@ -248,12 +251,12 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
         total_count += 1
         stats = member_stats[member_code]
         stats["contract_count"] += 1
-        val = get_signed_actual(row)
-        if val > 0:
+        nr = normalize_contract_revenue(row)
+        if nr.before_vat > 0:
             total_valued += 1
-            total_actual += val
+            total_actual += nr.before_vat
             stats["valued_contract_count"] += 1
-            stats["actual"] += val
+            stats["actual"] += nr.before_vat
         else:
             total_unresolved += 1
 
@@ -947,9 +950,10 @@ def get_field_kpi(
     unit_total_actual = 0
     unit_total_count = 0
     for r in branch_rows:
-        val = get_signed_actual(r)
-        if val <= 0:
+        nr = normalize_contract_revenue(r)
+        if nr.before_vat <= 0:
             continue
+        val = nr.before_vat
         unit_total_actual += val
         unit_total_count += 1
         if _variant_to_group(r.linh_vuc) is not None:

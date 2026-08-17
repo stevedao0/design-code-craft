@@ -434,13 +434,13 @@ function FieldKpiCard({ field }: FieldKpiCardProps) {
           {hasTarget ? (
             <>
               <div className="flex justify-between">
-                <span style={{ color: 'var(--text-secondary)' }}>Mục tiêu:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Mục tiêu (chưa GTGT):</span>
                 <span className="font-medium tabular-nums" style={{ color: 'var(--text-primary)' }}>
                   {fmtVND(field.target)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span style={{ color: 'var(--text-secondary)' }}>Thực đạt:</span>
+                <span style={{ color: 'var(--text-secondary)' }}>Thực hiện (chưa GTGT):</span>
                 <span className="font-medium tabular-nums" style={{ color: 'var(--text-primary)' }}>
                   {fmtVND(field.actual)}
                 </span>
