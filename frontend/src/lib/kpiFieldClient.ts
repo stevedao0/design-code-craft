@@ -210,3 +210,146 @@ export async function getOrgFieldKpi(year: number): Promise<OrgFieldKpiResponse>
   );
 }
 
+// ─── KPI v2 (Phase 1.4) — shared snapshot for Admin and Staff ────────────────
+
+export interface KpiGroupRow {
+  kpi_group_code: string;
+  field_label: string;
+  member_domain_codes: string[];
+  target_amount: number;
+  actual_before_tax: number;
+  contract_count: number;
+  valued_contract_count: number;
+  unresolved_value_count: number;
+  has_target: boolean;
+  progress_percent: number | null;
+  member_breakdown: Array<{
+    member_field_code: string;
+    contract_count: number;
+    valued_contract_count: number;
+    actual: number;
+  }>;
+  is_active?: boolean;
+}
+
+export interface KpiSnapshotResponse {
+  year: number;
+  user_email?: string;
+  groups: KpiGroupRow[];
+  total_target: number;
+  total_actual: number;
+  total_contract_count: number;
+  completion_percent: number | null;
+  unassigned?: boolean;
+}
+
+export async function getKpiSnapshotV2(
+  year: number,
+  user_email?: string
+): Promise<KpiSnapshotResponse> {
+  const qs = new URLSearchParams({ year: String(year) });
+  if (user_email) qs.set('user_email', user_email);
+  return apiRequest<KpiSnapshotResponse>(
+    `/kpi-v2/snapshot?${qs.toString()}`,
+    { token: getToken() }
+  );
+}
+
+export interface KpiGroupOption {
+  code: string;
+  label: string;
+  member_domain_codes: string[];
+  sort_order: number;
+}
+
+export async function getKpiGroupsV2(): Promise<{ groups: KpiGroupOption[] }> {
+  return apiRequest<{ groups: KpiGroupOption[] }>('/kpi-v2/groups', { token: getToken() });
+}
+
+export interface KpiTargetRow {
+  id: number;
+  reporting_year: number;
+  kpi_group_code: string;
+  field_label: string;
+  target_amount_before_tax: number;
+  note: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listKpiTargetsV2(year: number): Promise<{ year: number; targets: KpiTargetRow[] }> {
+  return apiRequest<{ year: number; targets: KpiTargetRow[] }>(
+    `/kpi-v2/targets?year=${year}`,
+    { token: getToken() }
+  );
+}
+
+export async function upsertKpiTargetV2(body: {
+  reporting_year: number;
+  kpi_group_code: string;
+  target_amount_before_tax: number;
+  note?: string | null;
+}): Promise<KpiTargetRow> {
+  return apiRequest<KpiTargetRow>('/kpi-v2/targets', {
+    method: 'PUT',
+    body,
+    token: getToken(),
+  });
+}
+
+export interface KpiAssignmentRow {
+  id: number;
+  user_id: number;
+  user_email: string;
+  user_display_name: string | null;
+  kpi_group_code: string;
+  field_label: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function listKpiAssignmentsV2(
+  year: number,
+  user_email?: string
+): Promise<{ year: number; user_email?: string; assignments: KpiAssignmentRow[] }> {
+  const qs = new URLSearchParams({ year: String(year) });
+  if (user_email) qs.set('user_email', user_email);
+  return apiRequest<{ year: number; user_email?: string; assignments: KpiAssignmentRow[] }>(
+    `/kpi-v2/assignments?${qs.toString()}`,
+    { token: getToken() }
+  );
+}
+
+export async function createKpiAssignmentV2(body: {
+  reporting_year: number;
+  user_email: string;
+  kpi_group_code: string;
+  is_active?: boolean;
+}): Promise<KpiAssignmentRow> {
+  return apiRequest<KpiAssignmentRow>('/kpi-v2/assignments', {
+    method: 'POST',
+    body,
+    token: getToken(),
+  });
+}
+
+export async function patchKpiAssignmentV2(
+  id: number,
+  body: { is_active?: boolean; kpi_group_code?: string }
+): Promise<KpiAssignmentRow> {
+  return apiRequest<KpiAssignmentRow>(`/kpi-v2/assignments/${id}`, {
+    method: 'PATCH',
+    body,
+    token: getToken(),
+  });
+}
+
+export async function deleteKpiAssignmentV2(id: number): Promise<void> {
+  await apiRequest<void>(`/kpi-v2/assignments/${id}`, {
+    method: 'DELETE',
+    token: getToken(),
+  });
+}
+

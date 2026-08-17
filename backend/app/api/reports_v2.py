@@ -49,6 +49,8 @@ from ..services.revenue_resolver import (
     resolve_contract_revenue,
     RevenueBasis,
     get_before_vat_revenue,
+    get_normalized_before_vat,
+    normalize_contract_revenue,
 )
 
 log = logging.getLogger("reports_v2")
@@ -286,7 +288,7 @@ def get_annual_summary(
     expiring_count = 0
 
     for row in rows:
-        val = get_before_vat_revenue(row)
+        val = get_normalized_before_vat(row)
         actual += val
         contract_count += 1
         b = _renewal_bucket(row.renewal_status)
@@ -403,7 +405,7 @@ def get_annual_overview(
     bucket = {"new": [0, 0], "renewal": [0, 0], "frame": [0, 0], "unknown": [0, 0]}
 
     for row in rows:
-        val = get_before_vat_revenue(row)
+        val = get_normalized_before_vat(row)
         branch_count += 1
         branch_actual += val
         b = _renewal_bucket(row.renewal_status)
@@ -448,7 +450,7 @@ def get_annual_overview(
         u = per_user.get(owner_email)
         if not u:
             continue
-        val = get_before_vat_revenue(row)
+        val = get_normalized_before_vat(row)
         u["actual"] += val
         u["contract_count"] += 1
         b = _renewal_bucket(row.renewal_status)
@@ -552,7 +554,7 @@ def get_v2_overview(
     field_break: dict[str, dict[str, int]] = {}
 
     for row in rows:
-        val = get_before_vat_revenue(row)
+        val = get_normalized_before_vat(row)
         b = _renewal_bucket(row.renewal_status)
         bucket[b][0] += 1
         bucket[b][1] += val
@@ -618,9 +620,14 @@ def get_v2_overview(
 
     total_count = len(rows)
     # Authoritative before-vat chain for ALL revenue KPI (matches Dashboard /reports/summary)
-    total_revenue = sum(get_before_vat_revenue(r) for r in rows)
-    # Total contract value uses same authoritative chain
-    total_contract_value = total_revenue
+    actual = sum(get_normalized_before_vat(r) for r in rows)
+    # Authoritative before-VAT chain for the "Tổng giá trị hợp đồng" card,
+    # which now matches the label "chưa Thuế GTGT" exactly (no so_tien
+    # after-VAT inflation). `total_revenue` and `total_contract_value`
+    # are the same field at this layer because KPI dollar basis is
+    # before-VAT.
+    total_revenue = actual
+    total_contract_value = actual
     monthly_trend = [
         {"month": i + 1, "count": monthly_count[i], "actual": monthly_actual[i]}
         for i in range(12)
@@ -953,7 +960,7 @@ def get_v2_users_report(
         }
 
     for row in rows:
-        val = get_before_vat_revenue(row)
+        val = get_normalized_before_vat(row)
         b = _renewal_bucket(row.renewal_status)
         branch_total["contract_count"] += 1
         branch_total["actual"] += val
@@ -1068,7 +1075,7 @@ def get_v2_renewals(
         is_overdue = (end < today) if end else False
         owner_email = (old.nguoi_thuc_hien_email or "").strip().lower()
         u = user_by_email.get(owner_email)
-        new_val = get_before_vat_revenue(new)
+        new_val = get_normalized_before_vat(new)
         items_full.append(
             {
                 "old_contract_id": old.id,
@@ -1392,7 +1399,7 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
                 .filter(_f.lower(ContractRecordRow.nguoi_thuc_hien_email) == email)
                 .all()
             )
-            actual = sum(get_before_vat_revenue(r) for r in c_rows)
+            actual = sum(get_normalized_before_vat(r) for r in c_rows)
             target, target_zero = _resolve_target(year, user.username)
             rows.append({
                 "username": user.username,
@@ -1431,7 +1438,7 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
                        "contract_count": 0, "new_count": 0, "renewal_count": 0,
                        "actual": 0, "annual_target": None, "configured": False}
         for row in c_rows:
-            val = get_before_vat_revenue(row)
+            val = get_normalized_before_vat(row)
             b = _renewal_bucket(row.renewal_status)
             owner_email = (row.nguoi_thuc_hien_email or "").strip().lower()
             target_idx = per_user_idx.get(owner_email) or unassigned
@@ -1465,12 +1472,12 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
         user_by_email = {(u.username or "").strip().lower(): u for u in users}
         bucket = {"new": [0, 0], "renewal": [0, 0], "frame": [0, 0], "unknown": [0, 0]}
         for row in c_rows:
-            val = get_before_vat_revenue(row)
+            val = get_normalized_before_vat(row)
             b = _renewal_bucket(row.renewal_status)
             bucket[b][0] += 1
             bucket[b][1] += val
         rows = [
-            {"label": "Tổng hợp đồng", "count": len(c_rows), "value": sum(get_before_vat_revenue(r) for r in c_rows)},
+            {"label": "Tổng hợp đồng", "count": len(c_rows), "value": sum(get_normalized_before_vat(r) for r in c_rows)},
             {"label": "Ký mới", "count": bucket["new"][0], "value": bucket["new"][1]},
             {"label": "Tái ký", "count": bucket["renewal"][0], "value": bucket["renewal"][1]},
             {"label": "HĐ khung", "count": bucket["frame"][0], "value": bucket["frame"][1]},
@@ -1491,7 +1498,7 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
     bucket = {"new": [0, 0], "renewal": [0, 0], "frame": [0, 0], "unknown": [0, 0]}
     actual = 0
     for row in c_rows:
-        val = get_before_vat_revenue(row)
+        val = get_normalized_before_vat(row)
         actual += val
         b = _renewal_bucket(row.renewal_status)
         bucket[b][0] += 1

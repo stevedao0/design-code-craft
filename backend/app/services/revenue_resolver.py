@@ -159,6 +159,18 @@ def get_before_vat_revenue(row: ContractRecordRow) -> int:
     return resolve_row_revenue_only(row, RevenueBasis.BEFORE_VAT)
 
 
+def get_normalized_before_vat(row: ContractRecordRow) -> int:
+    """Authoritative before-VAT value for KPI/Reports — uses the shared
+    ``normalize_contract_revenue`` resolver. ``so_tien_value`` is NOT
+    used as a fallback here, so this number is consistent across all
+    Reports/KPI surfaces and the UI card labeled "chưa Thuế GTGT".
+
+    Replaces the old `get_before_vat_revenue` for KPI/Reports surfaces
+    where the label says "chưa GTGT". Do NOT use for after-VAT totals.
+    """
+    return int(normalize_contract_revenue(row).before_vat)
+
+
 # ─── Normalized revenue (single source of truth for Reports & KPI) ─────────────
 #
 # ``so_tien_value`` is a legacy column that the import mapper and the

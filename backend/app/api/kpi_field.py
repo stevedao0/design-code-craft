@@ -32,6 +32,13 @@ from ..core.security import decode_access_token, security_scheme
 from ..models.contracts import ContractRecordRow
 from ..models.user import UserRow
 from ..services.revenue_resolver import get_signed_actual, normalize_contract_revenue
+from ..services.domain_registry import (
+    kpi_groups as _registry_kpi_groups,
+    kpi_group_member_codes as _registry_kpi_member_codes,
+    label_for_kpi_group as _registry_label_for_kpi_group,
+    canonicalize_domain as _registry_canonicalize_domain,
+    get_kpi_group_for_domain as _registry_get_kpi_group_for_domain,
+)
 
 log = logging.getLogger("kpi_field")
 
@@ -282,14 +289,17 @@ def _resolve_actual_for_member(db: Session, year: int, member_field_code: str) -
     )
     total = 0
     count = 0
+    unresolved = 0
     for row in rows:
         if _VARIANT_TO_MEMBER.get(_normalize_label(row.linh_vuc)) != member_field_code:
             continue
-        val = get_signed_actual(row)
-        if val > 0:
-            total += val
+        nr = normalize_contract_revenue(row)
+        if nr.before_vat > 0:
+            total += nr.before_vat
             count += 1
-    return {"contract_count": count, "valued_contract_count": count, "unresolved_value_count": 0, "actual": total, "member_breakdown": []}
+        else:
+            unresolved += 1
+    return {"contract_count": count + unresolved, "valued_contract_count": count, "unresolved_value_count": unresolved, "actual": total, "member_breakdown": []}
 
 
 # Legacy entry point retained only so callers that imported it keep working.

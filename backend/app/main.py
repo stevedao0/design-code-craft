@@ -36,6 +36,7 @@ from .api.roles import router as roles_router
 from .api.reports import router as reports_router
 from .api.reports_v2 import kpi_router as kpi_router_v2, reports_v2_router
 from .api.kpi_field import router as kpi_field_router
+from .api.kpi_target_v2 import router as kpi_target_v2_router
 from .api.users import router as users_router
 from .api.import_excel import router as import_router
 from .api.bookmarklet_drafts import router as bookmarklet_drafts_router
@@ -96,6 +97,7 @@ app.include_router(reports_router)
 app.include_router(reports_v2_router)
 app.include_router(kpi_router_v2)
 app.include_router(kpi_field_router)
+app.include_router(kpi_target_v2_router)
 app.include_router(audit_router)
 app.include_router(import_router)
 app.include_router(dispatches_router)

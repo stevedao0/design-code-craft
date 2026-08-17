@@ -28,6 +28,24 @@ Mọi file xuất ra là **văn bản đối ngoại của VCPMC** — phải đ
 - Nếu lĩnh vực không có target hợp lệ, cột “Tiến độ” để trống / `—`,
   không hiển thị `0%`.
 
+## Ba phạm vi số liệu (không trộn lẫn)
+
+File Excel phải ghi rõ **ba loại tổng tiền** là ba phạm vi khác nhau.
+Không gọi chung là "doanh thu" mà không kèm nhãn phạm vi.
+
+| Loại                        | Tên field trong file                  | Phạm vi                                                                                          |
+| --------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `REPORT_TOTAL_BEFORE_TAX`   | "Tổng giá trị toàn bộ hợp đồng (trước Thuế GTGT)" | Tổng `before_vat` của toàn bộ hợp đồng hợp lệ trong năm, **không giới hạn trong KPI group**. |
+| `KPI_ACTUAL_TOTAL`          | "KPI thực đạt các lĩnh vực"           | Tổng `actual` của các KPI group đang hiển thị.                                                   |
+| `KPI_TARGET_TOTAL`          | "Tổng mục tiêu các lĩnh vực"          | Tổng `target` của các KPI group đang hiển thị.                                                   |
+
+- `REPORT_TOTAL_BEFORE_TAX` ≠ `KPI_ACTUAL_TOTAL` khi hợp đồng có domain
+  ngoài KPI group hoặc khi có hợp đồng `unresolved`.
+- Hai số này **không được** dùng thay thế cho nhau và **không được** cộng
+  chung vào cùng một ô.
+- Phần chênh lệch giữa hai tổng phải được ghi chú cuối file:
+  "Chênh lệch = hợp đồng ngoài phạm vi KPI + hợp đồng chưa giải quyết được giá trị".
+
 ## Theme dùng chung
 
 `frontend/src/lib/reports/workbookTheme.ts` giữ toàn bộ token ARGB + helper (`WB`, `WB_FONT`, `WB_FMT`, `wbStyle`, `wbBox`, `wbBarText`, `wbPageSetup`, `wbToneColors`, `wbSafeName`).

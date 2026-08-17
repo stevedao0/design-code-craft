@@ -34,7 +34,7 @@ import {
 import { getFieldKpi } from '@/lib/kpiFieldClient';
 import type { KpiFieldResponse } from '@/lib/kpiFieldClient';
 import { KpiCompositionCard } from '@/components/reports/KpiCompositionCard';
-import { OrgFieldRings } from '@/components/reports/OrgFieldRings';
+import { FieldKpiOverview } from '@/components/reports/FieldKpiOverview';
 import type { OverviewResponse, UsersReportResponse, RenewalsReportResponse } from '@/components/reports/types';
 import { useAuth } from '@/lib/auth';
 import { toast } from '@/lib/toast';
@@ -270,12 +270,10 @@ function StaffOverviewTab({
           </ReportTile>
 
           <ReportTile span={12} label="Cơ cấu KPI theo lĩnh vực" flush>
-            <KpiCompositionCard
+            <FieldKpiOverview
               year={year}
-              fields={fields}
-              totals={totals}
-              canViewMoney={canViewMoney}
-              subject={userEmail}
+              scope="staff"
+              userEmail={userEmail}
             />
           </ReportTile>
         </>
@@ -374,7 +372,7 @@ function BranchOverviewTab({
 
       {/* Hàng 2 — vòng KPI lĩnh vực chiếm trọn */}
       <div className="rp-c12" style={{ gridColumn: 'span 12', minWidth: 0 }}>
-        <OrgFieldRings year={year} />
+        <FieldKpiOverview year={year} scope="admin" />
       </div>
 
       {/* Hàng 3 — biểu đồ + các ô số liệu đậm đặc */}

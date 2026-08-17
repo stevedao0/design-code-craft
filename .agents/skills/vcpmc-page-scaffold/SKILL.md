@@ -268,6 +268,24 @@ nơi; phải resolve qua mapping này.
   các lĩnh vực được giao, không lọc theo người thực hiện").
 - Với Karaoke hiển thị một dòng, kèm ghi chú nhỏ: "Bao gồm: Karaoke, Phòng thu âm".
 
+## Trực quan KPI: Admin và Staff dùng chung component
+
+- Admin Ring (`OrgFieldRings`, `MultiRingKpi` trong `KpiFieldSection`) và
+  Staff Ring (`MultiRingKpi` trong `ReportsPage.StaffOverviewTab`) phải
+  dùng **chung component**, cùng bento, tile, màu, khoảng cách,
+  typography, responsive. Chỉ khác dataset theo quyền:
+
+  - Admin: tất cả lĩnh vực KPI tổ chức (`field-kpi-org`).
+  - Staff: chỉ các lĩnh vực có **assignment thật** (`field-kpi` user scope).
+
+- Cùng `(field, year)` phải render cùng giá trị actual, cùng target,
+  cùng số hợp đồng, cùng tiến độ, cùng màu.
+- Staff **không** được thấy nút quản lý / giao KPI nếu không có permission.
+- Nếu Staff không có assignment → hiện `ReportEmpty` thay vì Ring rỗng.
+- Ring nhỏ chỉ hiển thị "N lĩnh vực KPI" là sai bố cục — Ring phải là
+  Ring tiến độ như Admin: phần trăm hoàn thành chung + tiến độ từng
+  lĩnh vực.
+
 ## Trước khi báo xong
 
 - `cd frontend && npm run build` phải pass.
