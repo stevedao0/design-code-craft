@@ -23,6 +23,7 @@ from ..models.certificates import CertificateRecordRow
 from ..models.user import UserRow
 from ..services.report_excel_exporter import export_period_xlsx as build_period_excel
 from ..services.revenue_resolver import get_before_vat_revenue, get_signed_actual, normalize_contract_revenue
+from ..services.contract_year import parse_contract_year, contract_year_eq, contract_year_le
 from ..services.kpi_employee_portfolio import get_employee_kpi_portfolio
 from fastapi.security import HTTPAuthorizationCredentials
 
@@ -278,7 +279,7 @@ def _compute_user_kpi_totals(
             ContractRecordRow.so_tien_value,
         )
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(ContractRecordRow.contract_year == year)
+        .filter(contract_year_eq(ContractRecordRow.contract_no, year))
         .all()
     )
 
@@ -320,7 +321,9 @@ def get_reports_summary(
     - Contracts filtered to: annex_no IS NULL, domain_group='background' (matches app GCN source)
     - Active: end_date >= today, not cancelled/expired
     - Revenue uses so_tien_value (canonical field for Reports/KPI)
-    - Year filter uses ngay_lap_hop_dong (signing date)
+    - Year filter uses the ``/YYYY/`` token inside ``contract_no``; signed
+      date, ``contract_year``, created/updated time and annex dates are
+      NEVER used for year filtering.
 
     GCN source: certificate_records filtered to background domain_group.
     This matches ContractsListPage behavior where GCN is shown per contract.
@@ -403,13 +406,11 @@ def get_reports_summary(
         end = row.ngay_ket_thuc
         sign = row.ngay_lap_hop_dong
 
-        # Revenue by year (based on signing date)
-        # Business semantics: "Branch revenue" / "Doanh thu chi nhánh" / "Doanh thu KPI năm nay"
-        # represent the total payment contractually due (royalty_amount_after_vat).
-        # Use KPI_SIGNED chain (after_vat > before_vat > so_tien_value) — matches
-        # the kpi_field._signed_actual baseline used by KPI employee portfolio
-        # and the resolver.py top-of-file "Authoritative" contract.
-        sign_year = getattr(row, "contract_year", None) or (sign.year if sign else None)
+        # Revenue by year. Reporting year is determined by the ``/YYYY/``
+        # segment inside ``contract_no`` (see services.contract_year).
+        # Signed date, ``contract_year`` column, created/updated time and
+        # annex dates are NEVER used for year filtering.
+        sign_year = parse_contract_year(row.contract_no)
         if sign_year and sign_year in revenue_by_year:
             revenue_by_year[sign_year]["count"] += 1
             _val = get_signed_actual(row)
@@ -514,7 +515,7 @@ def get_reports_summary(
     year_contract_ids = {
         r.id for r in all_rows
         if r.id is not None
-        and (getattr(r, "contract_year", None) or (r.ngay_lap_hop_dong.year if r.ngay_lap_hop_dong else None)) == selected_year
+        and parse_contract_year(r.contract_no) == selected_year
     }
 
     # Count: contracts in year that have a cert with valid certificate_no
@@ -741,7 +742,7 @@ def list_pending_contracts(
 
     # Year filter - filter by contract_year field
     if year:
-        query = query.filter(ContractRecordRow.contract_year == year)
+        query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
 
     if employee:
         query = query.filter(ContractRecordRow.nguoi_thuc_hien_email == employee)
@@ -1088,7 +1089,7 @@ def export_signed_contracts_xlsx(
 
         contracts.append({
             "contract_no": str(r.contract_no or ""),
-            "year": str(r.contract_year or ""),
+            "year": str(parse_contract_year(r.contract_no) or ""),
             "customer_name": str(r.don_vi_ten or ""),
             "ten_bang_hieu": str(r.ten_bang_hieu or ""),
             "domain": domain_normalized,
@@ -1191,7 +1192,7 @@ def export_pending_contracts_xlsx(
         query = db.query(ContractRecordRow).filter(ContractRecordRow.annex_no.is_(None))
 
         if year:
-            query = query.filter(ContractRecordRow.contract_year == year)
+            query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
 
         if employee:
             query = query.filter(ContractRecordRow.nguoi_thuc_hien_email == employee)
@@ -1275,7 +1276,7 @@ def export_pending_contracts_xlsx(
 
             contracts.append({
                 "contract_no": str(r.contract_no or ""),
-                "year": str(r.contract_year or ""),
+                "year": str(parse_contract_year(r.contract_no) or ""),
                 "customer_name": str(r.don_vi_ten or ""),
                 "ten_bang_hieu": str(r.ten_bang_hieu or ""),
                 "domain": domain_normalized,
@@ -1419,7 +1420,7 @@ def _build_contract_dict(row, gcn_map: Optional[dict[int, str]] = None) -> dict:
 
     return {
         "contract_no": str(row.contract_no or ""),
-        "year": str(row.contract_year or ""),
+        "year": str(parse_contract_year(row.contract_no) or ""),
         "customer_name": str(row.don_vi_ten or ""),
         "ten_bang_hieu": str(row.ten_bang_hieu or ""),
         "domain": domain_normalized,
@@ -1599,7 +1600,7 @@ def export_contracts_xlsx(
             )
         
         if year:
-            query = query.filter(ContractRecordRow.contract_year == year)
+            query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
         
         if domain:
             query = query.filter(
@@ -1844,7 +1845,7 @@ def export_revenue_xlsx(
     
     # Apply filters
     if year:
-        query = query.filter(ContractRecordRow.contract_year == year)
+        query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
     
     if domain:
         query = query.filter(
@@ -1902,12 +1903,13 @@ def export_revenue_xlsx(
         elif status == "unknown":
             unknown_status_count += 1
         
-        # Revenue by year
-        contract_year = row.contract_year
-        if contract_year and contract_year in revenue_by_year:
-            revenue_by_year[contract_year]["count"] += 1
+        # Revenue by year. Reporting year is determined by the ``/YYYY/``
+        # segment inside ``contract_no`` (see services.contract_year).
+        contract_year_parsed = parse_contract_year(row.contract_no)
+        if contract_year_parsed and contract_year_parsed in revenue_by_year:
+            revenue_by_year[contract_year_parsed]["count"] += 1
             if row.so_tien_value is not None:
-                revenue_by_year[contract_year]["total"] += int(row.so_tien_value)
+                revenue_by_year[contract_year_parsed]["total"] += int(row.so_tien_value)
         
         # Field breakdown with normalization
         field_raw = str(row.linh_vuc_hien_thi or row.linh_vuc or "").strip()
@@ -2024,7 +2026,7 @@ def _build_full_data_dict(row) -> dict:
     return {
         # Template columns
         "so_hop_dong": str(row.contract_no or ""),
-        "nam_hop_dong": str(row.contract_year or ""),
+        "nam_hop_dong": str(parse_contract_year(row.contract_no) or ""),
         "so_phu_luc": str(row.annex_no or ""),
         "ten_don_vi": str(row.don_vi_ten or ""),
         "dia_chi_don_vi": dia_chi,
@@ -2106,7 +2108,7 @@ def export_full_data_xlsx(
     
     # Apply filters
     if year:
-        query = query.filter(ContractRecordRow.contract_year == year)
+        query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
     
     if domain:
         query = query.filter(
@@ -2450,7 +2452,7 @@ def get_employee_performance(
 
     # Apply filters
     if year:
-        query = query.filter(ContractRecordRow.contract_year == year)
+        query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
 
     if date_from:
         try:
@@ -2647,7 +2649,7 @@ def get_employee_contracts(
 
     # Apply filters
     if year:
-        query = query.filter(ContractRecordRow.contract_year == year)
+        query = query.filter(contract_year_eq(ContractRecordRow.contract_no, year))
 
     if date_from:
         try:

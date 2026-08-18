@@ -35,10 +35,8 @@ from ..core.security import (
 )
 from ..models.contracts import ContractRecordRow
 from ..models.user import UserRow
-from ..services.revenue_resolver import (
-    normalize_contract_revenue,
-    signed_date_year_clause,
-)
+from ..services.revenue_resolver import normalize_contract_revenue
+from ..services.contract_year import contract_year_eq
 from ..services.domain_registry import (
     canonicalize_domain as _registry_canonicalize_domain,
     get_kpi_group_for_domain as _registry_get_kpi_group_for_domain,
@@ -224,7 +222,7 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(signed_date_year_clause(year))
+        .filter(contract_year_eq(ContractRecordRow.contract_no, year))
         .all()
     )
 
@@ -279,7 +277,7 @@ def _resolve_actual_for_member(db: Session, year: int, member_field_code: str) -
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(signed_date_year_clause(year))
+        .filter(contract_year_eq(ContractRecordRow.contract_no, year))
         .all()
     )
     total = 0
@@ -321,16 +319,36 @@ def get_kpi_years(
 
     current_year = datetime.utcnow().year
 
-    # Collect years from canonical contracts by their SIGNED date, not by
-    # the legacy contract_year column. We extract the year component with
-    # ``EXTRACT`` so we don't need to load rows.
+    # Collect years from canonical contracts by parsing the ``/YYYY/``
+    # segment in ``contract_no`` (see services.contract_year). Signed
+    # date, contract_year column, created/updated time and annex dates
+    # are NEVER used to enumerate available reporting years.
     years: set[int] = set()
     rows = db.execute(
         text("""
-            SELECT DISTINCT EXTRACT(YEAR FROM ngay_lap_hop_dong)::INT AS y
+            SELECT DISTINCT CASE
+              WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 6) IS NOT NULL
+                AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 6) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+              THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 6) FROM 2 FOR 4)::int
+              WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 5) IS NOT NULL
+                AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 5) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+              THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 5) FROM 2 FOR 4)::int
+              WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 4) IS NOT NULL
+                AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 4) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+              THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 4) FROM 2 FOR 4)::int
+              WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 3) IS NOT NULL
+                AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 3) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+              THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 3) FROM 2 FOR 4)::int
+              WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 2) IS NOT NULL
+                AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 2) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+              THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 2) FROM 2 FOR 4)::int
+              WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 1) IS NOT NULL
+                AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 1) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+              THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 1) FROM 2 FOR 4)::int
+            END AS y
             FROM contract_records
             WHERE annex_no IS NULL
-              AND ngay_lap_hop_dong IS NOT NULL
+              AND contract_no IS NOT NULL
         """),
     ).fetchall()
     for (y,) in rows:
@@ -471,12 +489,30 @@ def get_field_domains(
             ).fetchall()
             for (fc,) in rows:
                 add_domain(str(fc))
-            # From contract_records (by signed date, not contract_year)
+            # From contract_records (year from /YYYY/ in contract_no, not signed date)
             rows2 = db.execute(
                 text("""
                     SELECT DISTINCT linh_vuc FROM contract_records
-                    WHERE ngay_lap_hop_dong >= make_date(:yr, 1, 1)
-                      AND ngay_lap_hop_dong <  make_date(:yr + 1, 1, 1)
+                    WHERE (CASE
+                            WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 6) IS NOT NULL
+                              AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 6) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                            THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 6) FROM 2 FOR 4)::int
+                            WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 5) IS NOT NULL
+                              AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 5) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                            THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 5) FROM 2 FOR 4)::int
+                            WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 4) IS NOT NULL
+                              AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 4) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                            THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 4) FROM 2 FOR 4)::int
+                            WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 3) IS NOT NULL
+                              AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 3) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                            THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 3) FROM 2 FOR 4)::int
+                            WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 2) IS NOT NULL
+                              AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 2) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                            THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 2) FROM 2 FOR 4)::int
+                            WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 1) IS NOT NULL
+                              AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 1) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                            THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 1) FROM 2 FOR 4)::int
+                          END) = :yr
                       AND linh_vuc IS NOT NULL
                 """),
                 {"yr": year},
@@ -516,8 +552,26 @@ def get_field_domains(
         rows2 = db.execute(
             text("""
                 SELECT DISTINCT linh_vuc FROM contract_records
-                WHERE ngay_lap_hop_dong >= make_date(:yr, 1, 1)
-                  AND ngay_lap_hop_dong <  make_date(:yr + 1, 1, 1)
+                WHERE (CASE
+                        WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 6) IS NOT NULL
+                          AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 6) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                        THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 6) FROM 2 FOR 4)::int
+                        WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 5) IS NOT NULL
+                          AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 5) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                        THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 5) FROM 2 FOR 4)::int
+                        WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 4) IS NOT NULL
+                          AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 4) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                        THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 4) FROM 2 FOR 4)::int
+                        WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 3) IS NOT NULL
+                          AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 3) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                        THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 3) FROM 2 FOR 4)::int
+                        WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 2) IS NOT NULL
+                          AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 2) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                        THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 2) FROM 2 FOR 4)::int
+                        WHEN regexp_substr(contract_no, '/(\\d{4})/', 1, 1) IS NOT NULL
+                          AND substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 1) FROM 2 FOR 4)::int BETWEEN 1990 AND 2100
+                        THEN substring(regexp_substr(contract_no, '/(\\d{4})/', 1, 1) FROM 2 FOR 4)::int
+                      END) = :yr
                   AND nguoi_thuc_hien_email = :email
                   AND linh_vuc IS NOT NULL
                   AND annex_no IS NULL
@@ -975,7 +1029,7 @@ def get_field_kpi(
     branch_rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(signed_date_year_clause(year))
+        .filter(contract_year_eq(ContractRecordRow.contract_no, year))
         .all()
     )
 

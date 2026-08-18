@@ -26,7 +26,8 @@ from .domain_registry import (
     canonicalize_domain,
     get_kpi_group_for_domain,
 )
-from .revenue_resolver import normalize_contract_revenue, signed_date_year_clause
+from .revenue_resolver import normalize_contract_revenue
+from .contract_year import contract_year_eq
 from ..models.contracts import ContractRecordRow
 
 
@@ -66,7 +67,7 @@ def _resolve_actual_for_group(db: Session, year: int, group_code: str) -> dict:
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(signed_date_year_clause(year))
+        .filter(contract_year_eq(ContractRecordRow.contract_no, year))
         .all()
     )
     total_count = 0

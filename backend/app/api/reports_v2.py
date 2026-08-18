@@ -51,6 +51,7 @@ from ..services.revenue_resolver import (
     get_normalized_before_vat,
     normalize_contract_revenue,
 )
+from ..services.contract_year import contract_year_sql_expression
 from ..services.kpi_snapshot_service import (
     get_user_year_snapshot,
     get_unit_year_snapshot,
@@ -170,15 +171,13 @@ def _resolve_user_id(db: Session, email: str) -> int | None:
 
 def _query_canonical_year(scope, year: int):
     """Apply the canonical year filter on top of ``scope`` (a SQLAlchemy
-    Query). Uses ``ngay_lap_hop_dong`` in the [year-01-01, year+1-01-01)
-    half-open window. NEVER falls back to ``contract_year`` when the
-    signed date is missing — such rows are out of scope on purpose.
+    Query). Year is parsed from the ``/YYYY/`` token inside
+    ``contract_no`` (see services.contract_year). NEVER falls back to
+    signed date, ``contract_year``, created/updated time, or annex
+    dates — rows without a valid year token are excluded on purpose.
     """
-    win_start = date(year, 1, 1)
-    win_end = date(year + 1, 1, 1)
     return scope.filter(
-        (ContractRecordRow.ngay_lap_hop_dong >= win_start)
-        & (ContractRecordRow.ngay_lap_hop_dong < win_end)
+        contract_year_sql_expression(ContractRecordRow.contract_no) == year
     )
 
 
@@ -289,14 +288,10 @@ def get_annual_summary(
     target = int(snap["total_target"] or 0) if snap["total_target"] is not None else None
 
     email = (user.username or "").strip().lower()
-    win_start, win_end = date(year, 1, 1), date(year + 1, 1, 1)
     own_rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(
-            (ContractRecordRow.ngay_lap_hop_dong >= win_start)
-            & (ContractRecordRow.ngay_lap_hop_dong < win_end)
-        )
+        .filter(contract_year_sql_expression(ContractRecordRow.contract_no) == year)
         .filter(ContractRecordRow.nguoi_thuc_hien_email.ilike(email))
         .all()
     )
@@ -1370,7 +1365,7 @@ def _resolve_scope_data(db: Session, user: UserRow, report_type: str, year: int)
         c_rows = (
             db.query(ContractRecordRow)
             .filter(ContractRecordRow.annex_no.is_(None))
-            .filter(ContractRecordRow.contract_year <= year)
+            .filter(contract_year_sql_expression(ContractRecordRow.contract_no) <= year)
             .filter(ContractRecordRow.ngay_ket_thuc.isnot(None))
             .all()
         )

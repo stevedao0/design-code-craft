@@ -4,7 +4,9 @@ KPI Snapshot Service — single backend service for KPI group/target/actual.
 Admin and User flows both call into this service. The service:
 
 - Filters canonical contracts only (annex_no IS NULL).
-- Uses signed_date >= year-01-01 AND signed_date < (year+1)-01-01.
+- Year is parsed from the ``/YYYY/`` segment inside ``contract_no`` (see
+  ``app.services.contract_year``). Signed date, ``contract_year``,
+  created/updated time and annex dates are NEVER used for year filtering.
 - Counts each contract_id at most once (DISTINCT).
 - Aggregates by canonical domain code → KPI group.
 - Applies the shared resolver `normalize_contract_revenue` from
@@ -33,10 +35,8 @@ from ..services.domain_registry import (
     kpi_groups,
     label_for_kpi_group,
 )
-from ..services.revenue_resolver import (
-    normalize_contract_revenue,
-    signed_date_year_clause,
-)
+from ..services.revenue_resolver import normalize_contract_revenue
+from ..services.contract_year import contract_year_sql_expression
 
 
 @dataclass
@@ -125,11 +125,17 @@ def _year_window(year: int) -> tuple[date, date]:
 
 
 def _load_canonical_rows_for_year(db: Session, year: int) -> list[ContractRecordRow]:
-    """Load canonical contracts for the year using ngay_lap_hop_dong window."""
+    """Load canonical contracts for the year using ``contract_no`` year token.
+
+    The reporting year is determined by the ``/YYYY/`` segment inside
+    ``contract_records.contract_no`` (see ``app.services.contract_year``).
+    Signed date, ``contract_year``, created/updated time and annex dates
+    are NEVER used for year filtering.
+    """
     return (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(signed_date_year_clause(year))
+        .filter(contract_year_sql_expression(ContractRecordRow.contract_no) == year)
         .all()
     )
 
@@ -479,7 +485,7 @@ def get_unit_normalized_total(db: Session, year: int) -> dict:
     rows = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.annex_no.is_(None))
-        .filter(signed_date_year_clause(year))
+        .filter(contract_year_sql_expression(ContractRecordRow.contract_no) == year)
         .all()
     )
     total_actual = 0
