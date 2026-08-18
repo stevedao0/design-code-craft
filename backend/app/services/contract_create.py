@@ -52,8 +52,7 @@ def _resolve_canonical_or_422(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=(
                 f"{field_label} '{cleaned}' không thuộc danh mục lĩnh vực đã chuẩn hoá. "
-                "Vui lòng chọn lĩnh vực từ danh sách (Karaoke, Phòng thu âm, "
-                "Khu vui chơi, SCTT, BD, Nhạc nền)."
+                "Vui lòng chọn lĩnh vực từ danh sách (Karaoke, Phòng thu âm, Khu vui chơi)."
             ),
         )
     return canonical

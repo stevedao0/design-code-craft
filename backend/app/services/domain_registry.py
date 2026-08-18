@@ -34,13 +34,15 @@ from dataclasses import dataclass
 # passed through canonicalize_domain() before being persisted or queried.
 
 _CANONICAL_DOMAINS: dict[str, dict] = {
-    "KARAOKE":      {"label_vi": "Karaoke",        "sort_order": 1, "is_active": True, "is_locked": False},
-    "PHONG_THU_AM": {"label_vi": "Phòng thu âm",   "sort_order": 2, "is_active": True, "is_locked": False},
-    "KHU_VUI_CHOI": {"label_vi": "Khu vui chơi",    "sort_order": 3, "is_active": True, "is_locked": False},
-    "SCTT":         {"label_vi": "SCTT",            "sort_order": 50, "is_active": True, "is_locked": False},
-    "BD":           {"label_vi": "BD",              "sort_order": 51, "is_active": True, "is_locked": False},
-    "BACKGROUND":   {"label_vi": "Nhạc nền",        "sort_order": 60, "is_active": True, "is_locked": False},
+    # Active KPI-capable domains
+    "KARAOKE":      {"label_vi": "Karaoke",      "sort_order": 1, "is_active": True, "is_locked": False},
+    "PHONG_THU_AM": {"label_vi": "Phòng thu âm", "sort_order": 2, "is_active": True, "is_locked": False},
+    "KHU_VUI_CHOI": {"label_vi": "Khu vui chơi",  "sort_order": 3, "is_active": True, "is_locked": False},
+    # Other registered domains (not used for new contracts)
+    "BACKGROUND":   {"label_vi": "Nhạc nền",      "sort_order": 60, "is_active": False, "is_locked": False},
 }
+# NOTE: SCTT, BD, Chăm sóc sức khỏe have been permanently retired.
+# They are NOT in this catalog; canonicalize_domain returns None for them.
 
 
 # ─── Alias map: normalized raw → canonical code ──────────────────────────────
@@ -69,12 +71,6 @@ _ALIAS_RAW_TO_CANONICAL: dict[str, str] = {
     "KHU_VUI_CHOI": "KHU_VUI_CHOI",
     "amusement": "KHU_VUI_CHOI",
     "entertainment": "KHU_VUI_CHOI",
-
-    # SCTT and BD (currently unresolved/quarantined by default)
-    "sctt": "SCTT",
-    "SCTT": "SCTT",
-    "bd": "BD",
-    "BD": "BD",
 
     # Background family
     "background": "BACKGROUND",

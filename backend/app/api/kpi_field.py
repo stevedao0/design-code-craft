@@ -453,8 +453,6 @@ def get_field_domains(
         'PHONG_THU_AM': 'Phòng thu âm',
         'Phòng thu âm': 'Phòng thu âm',
         'Studio': 'Phòng thu âm',
-        'BD': 'BD',
-        'SCTT': 'SCTT',
     }
 
     # Domain labels from master table (fallback)

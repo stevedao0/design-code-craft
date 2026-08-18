@@ -125,8 +125,6 @@ LINH_VUC_MAP: dict[str, str] = {
     'background': 'Background',
     'PHONG_THU_AM': 'Phòng thu âm',
     'Phòng thu âm': 'Phòng thu âm',
-    'BD': 'BD',
-    'SCTT': 'SCTT',
 }
 
 

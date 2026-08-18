@@ -214,8 +214,6 @@ _FIELD_CANON_MAP = {
     'background': 'background',
     'PHONG_THU_AM': 'phong thu am',
     'Phòng thu âm': 'phong thu am',
-    'BD': 'bd',
-    'SCTT': 'sctt',
 }
 
 
