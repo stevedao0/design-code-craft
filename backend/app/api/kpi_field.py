@@ -81,8 +81,12 @@ KPI_FIELD_GROUPS: dict[str, dict] = {
         "assignment_field_code": "KARAOKE",
         "member_field_codes": ("KARAOKE", "PHONG_THU_AM"),
         "member_display_variants": {
-            "KARAOKE": ("KARAOKE", "Karaoke", "karaoke", "KARAOKE "),
-            "PHONG_THU_AM": ("PHONG_THU_AM", "Phòng thu âm", "phong thu am", "phong_thu_am"),
+            "KARAOKE": ("KARAOKE", "Karaoke", "karaoke"),
+            "PHONG_THU_AM": (
+                "PHONG_THU_AM", "Phòng thu âm", "phòng thu âm",
+                "PHÒNG THU ÂM", "phong thu am", "PTA",
+                "PHONG_GHI_AM", "Phòng ghi âm", "phòng ghi âm",
+            ),
         },
     },
     "KHU_VUI_CHOI": {
@@ -91,9 +95,8 @@ KPI_FIELD_GROUPS: dict[str, dict] = {
         "member_field_codes": ("KHU_VUI_CHOI",),
         "member_display_variants": {
             "KHU_VUI_CHOI": (
-                "KHU_VUI_CHOI", "Khu vui chơi", "Khu vui choi",
-                "KHU VUI CHOI", "khu vui choi", "khu_vui_choi",
-                "ENTERTAINMENT", "entertainment",
+                "KHU_VUI_CHOI", "Khu vui chơi", "khu vui chơi",
+                "KHU VUI CHƠI", "khu vui choi", "KHU VUI CHOI",
             ),
         },
     },
@@ -438,21 +441,13 @@ def get_field_domains(
 
     is_admin = user.role in ("admin", "manager", "mod")
 
-    # Canonical field -> display label map (used for both dedup and label)
+    # Canonical field -> display label map. DB now stores only canonical codes,
+    # so legacy alias entries (and ENTERTAINMENT) were removed.
     field_display_labels: dict[str, str] = {
-        'KHU_VUI_CHOI': 'Khu vui chơi',
-        'Khu vui chơi': 'Khu vui chơi',
-        'ENTERTAINMENT': 'Khu vui chơi',
         'KARAOKE': 'Karaoke',
-        'Karaoke': 'Karaoke',
-        'karaoke': 'Karaoke',
-        'BACKGROUND': 'Nhạc nền',
-        'Background': 'Nhạc nền',
-        'background': 'Nhạc nền',
-        'background_music': 'Nhạc nền',
         'PHONG_THU_AM': 'Phòng thu âm',
-        'Phòng thu âm': 'Phòng thu âm',
-        'Studio': 'Phòng thu âm',
+        'KHU_VUI_CHOI': 'Khu vui chơi',
+        'BACKGROUND': 'Nhạc nền',
     }
 
     # Domain labels from master table (fallback)

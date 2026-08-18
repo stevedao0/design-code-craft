@@ -24,6 +24,7 @@ Spec rules encoded here:
 """
 from __future__ import annotations
 
+import re
 import unicodedata
 from dataclasses import dataclass
 
@@ -39,7 +40,7 @@ _CANONICAL_DOMAINS: dict[str, dict] = {
     "PHONG_THU_AM": {"label_vi": "Phòng thu âm", "sort_order": 2, "is_active": True, "is_locked": False},
     "KHU_VUI_CHOI": {"label_vi": "Khu vui chơi",  "sort_order": 3, "is_active": True, "is_locked": False},
     # Other registered domains (not used for new contracts)
-    "BACKGROUND":   {"label_vi": "Nhạc nền",      "sort_order": 60, "is_active": False, "is_locked": False},
+    "BACKGROUND":   {"label_vi": "Nhạc nền",      "sort_order": 60, "is_active": True, "is_locked": False},
 }
 # NOTE: SCTT, BD, Chăm sóc sức khỏe have been permanently retired.
 # They are NOT in this catalog; canonicalize_domain returns None for them.
@@ -50,36 +51,40 @@ _CANONICAL_DOMAINS: dict[str, dict] = {
 # not already a canonical code. Quarantine tables must catch such rows.
 
 _ALIAS_RAW_TO_CANONICAL: dict[str, str] = {
-    # KARAOKE family
-    "karaoke": "KARAOKE",
+    # KARAOKE family — exact approved aliases
     "KARAOKE": "KARAOKE",
+    "Karaoke": "KARAOKE",
+    "karaoke": "KARAOKE",
 
-    # PHONG_THU_AM family (raw Vietnamese + ascii variants)
-    "phòngthuâm": "PHONG_THU_AM",
+    # PHONG_THU_AM family — exact approved aliases only.
+    # PHONG_THU_AM is its own canonical domain, member of KPI group KARAOKE.
+    "PHONG_THU_AM": "PHONG_THU_AM",
+    "Phòng thu âm": "PHONG_THU_AM",
     "phòng thu âm": "PHONG_THU_AM",
+    "PHÒNG THU ÂM": "PHONG_THU_AM",
     "phong thu am": "PHONG_THU_AM",
-    "phong_thu_am": "PHONG_THU_AM",
-    "phongthuam": "PHONG_THU_AM",
-    "studio": "PHONG_THU_AM",
+    "PHONG THU AM": "PHONG_THU_AM",
+    "PTA": "PHONG_THU_AM",
+    "PHONG_GHI_AM": "PHONG_THU_AM",
+    "Phòng ghi âm": "PHONG_THU_AM",
+    "phòng ghi âm": "PHONG_THU_AM",
 
-    # KHU_VUI_CHOI family (raw + ENTERTAINMENT alias ONLY when explicitly approved)
-    "khuvuichơi": "KHU_VUI_CHOI",
-    "khu vui chơi": "KHU_VUI_CHOI",
-    "khu vui choi": "KHU_VUI_CHOI",
-    "khuvuichoi": "KHU_VUI_CHOI",
-    "khu_vui_choi": "KHU_VUI_CHOI",
+    # KHU_VUI_CHOI family — exact approved aliases only.
+    # ENTERTAINMENT is NOT an alias and must NOT be mapped automatically.
     "KHU_VUI_CHOI": "KHU_VUI_CHOI",
-    "amusement": "KHU_VUI_CHOI",
-    "entertainment": "KHU_VUI_CHOI",
+    "Khu vui chơi": "KHU_VUI_CHOI",
+    "khu vui chơi": "KHU_VUI_CHOI",
+    "KHU VUI CHƠI": "KHU_VUI_CHOI",
+    "khu vui choi": "KHU_VUI_CHOI",
+    "KHU VUI CHOI": "KHU_VUI_CHOI",
 
-    # Background family
-    "background": "BACKGROUND",
+    # Background family — distinct domain/module. NOT mapped to the three
+    # canonical KPI domains above.
     "BACKGROUND": "BACKGROUND",
+    "background": "BACKGROUND",
     "background_music": "BACKGROUND",
-    "nhạcnền": "BACKGROUND",
+    "Nhạc nền": "BACKGROUND",
     "nhạc nền": "BACKGROUND",
-    "nhac nen": "BACKGROUND",
-    "nhacnen": "BACKGROUND",
 }
 
 
@@ -120,23 +125,28 @@ for _grp in _KPI_GROUPS:
 
 def _normalize_label(v: str | None) -> str:
     """
-    Normalize a raw label for variant-insensitive alias lookup.
+    Normalize a raw label for explicit alias lookup.
 
-    - Strip leading/trailing whitespace.
-    - Unicode NFKD → ASCII.
-    - Lowercase.
-    - Drop underscores and spaces.
-    - Drop commas/periods.
+    Order:
+    1. Null/type guard.
+    2. Unicode NFC.
+    3. Trim leading/trailing whitespace.
+    4. Collapse runs of whitespace to a single space.
+    5. Case-fold (lowercase).
+    6. Strip outer whitespace again after collapsing.
+
+    Diacritics are NOT stripped — variant normalization happens only
+    through the explicit alias registry. Inputs not listed there
+    resolve to None.
     """
-    if not v:
+    if v is None:
         return ""
     s = str(v).strip()
-    nfkd = unicodedata.normalize("NFKD", s)
-    ascii_val = "".join(c for c in nfkd if unicodedata.category(c) != "Mn")
-    ascii_val = ascii_val.lower()
-    for ch in ("_", " ", ",", ".", "-", "/"):
-        ascii_val = ascii_val.replace(ch, "")
-    return ascii_val
+    if not s:
+        return ""
+    nfc = unicodedata.normalize("NFC", s)
+    nfc = re.sub(r"\s+", " ", nfc).strip()
+    return nfc.casefold()
 
 
 # Pre-compute normalized alias map once at import time

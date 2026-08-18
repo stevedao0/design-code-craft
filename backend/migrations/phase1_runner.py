@@ -17,11 +17,18 @@ from .phase1_lib import connect, ensure_history
 
 
 MIGRATIONS = [
-    ("phase1_00_fixture_schema", "phase1_00_fixture_schema"),
-    ("phase1_00b_seed_fixture",  "phase1_00b_seed_fixture"),
-    ("phase1_02a_seed_registry", "phase1_02a_seed_registry"),
-    ("phase1_02_migrate_targets", "phase1_02_migrate_targets"),
+    ("phase1_00_fixture_schema",  "phase1_00_fixture_schema"),
+    ("phase1_02a_seed_registry",   "phase1_02a_seed_registry"),
+    ("phase1_02b_retire_domains",  "phase1_02b_retire_domains"),
+    ("phase1_02c_normalize_domains", "phase1_02c_normalize_domains"),
+    ("phase1_02_migrate_targets",  "phase1_02_migrate_targets"),
 ]
+
+# Fixture seed (synthetic test data) is NOT in the default migration path.
+# Production runners MUST NOT load fixture rows. Operators must run
+# ``backend.tests.fixtures.seed_fixture`` explicitly with DB_MODE=test
+# and APP_ENV != production to seed the disposable DB.
+FIXTURE_TAG = "phase1_00b_seed_fixture"
 
 
 def _import(tag):

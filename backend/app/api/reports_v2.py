@@ -110,21 +110,14 @@ def _renewal_label(bucket: str) -> str:
     }.get(bucket, "Chưa xác định")
 
 
-# Map assignment/frontend field codes to contract_records.linh_vuc values.
-# Contract records use exact match on linh_vuc column with mixed-case values.
+# Map canonical code → display label. DB now only stores canonical codes,
+# so legacy alias entries were removed. ENTERTAINMENT is NOT an alias for
+# KHU_VUI_CHOI and must NOT appear here.
 LINH_VUC_MAP: dict[str, str] = {
-    'KHU_VUI_CHOI': 'Khu vui chơi',
-    'Khu vui chơi': 'Khu vui chơi',
-    'ENTERTAINMENT': 'Khu vui chơi',
-    'amusement': 'Khu vui chơi',
-    'KARAOKE': 'KARAOKE',
-    'Karaoke': 'Karaoke',
-    'karaoke': 'Karaoke',
-    'BACKGROUND': 'Background',
-    'Background': 'Background',
-    'background': 'Background',
+    'KARAOKE': 'Karaoke',
     'PHONG_THU_AM': 'Phòng thu âm',
-    'Phòng thu âm': 'Phòng thu âm',
+    'KHU_VUI_CHOI': 'Khu vui chơi',
+    'BACKGROUND': 'Nhạc nền',
 }
 
 

@@ -218,16 +218,12 @@ _FIELD_CANON_MAP = {
 
 
 def _normalize_field_for_match(raw: str) -> str:
-    """Match kpi_field._normalize_linh_vuc + canon_map lookup."""
+    """Match canonical code → DB stored linh_vuc value."""
     if not raw:
         return ""
     if raw in _FIELD_CANON_MAP:
         return _FIELD_CANON_MAP[raw]
-    import unicodedata
-    v = unicodedata.normalize('NFKD', raw)
-    ascii_val = ''.join(c for c in v if unicodedata.category(c) != 'Mn')
-    ascii_val = ascii_val.lower().replace('_', '').replace(' ', '')
-    return ascii_val
+    return raw
 
 
 def _compute_user_kpi_totals(

@@ -42,21 +42,25 @@ def test_karaoke_alias_resolves_to_canonical():
 
 
 def test_khu_vui_choi_alias_resolves_to_canonical():
-    for raw in ("Khu vui chơi", "khu vui choi", "KHU_VUI_CHOI", "khuvuichơi"):
+    for raw in ("Khu vui chơi", "khu vui choi", "KHU_VUI_CHOI", "KHU VUI CHƠI", "KHU VUI CHOI"):
         out = _resolve_canonical_or_422(raw=raw, field_label="linh_vuc")
         assert_eq(out, "KHU_VUI_CHOI", f"canonicalize({raw!r})")
     print("PASS test_khu_vui_choi_alias_resolves_to_canonical")
 
 
 def test_phong_thu_am_alias_resolves_to_canonical():
-    for raw in ("Phòng thu âm", "phong thu am", "PHONG_THU_AM", "studio"):
+    for raw in (
+        "Phòng thu âm", "phong thu am", "PHONG_THU_AM",
+        "PTA", "PHONG_GHI_AM", "Phòng ghi âm", "phòng ghi âm",
+        "PHÒNG THU ÂM",
+    ):
         out = _resolve_canonical_or_422(raw=raw, field_label="linh_vuc")
         assert_eq(out, "PHONG_THU_AM", f"canonicalize({raw!r})")
     print("PASS test_phong_thu_am_alias_resolves_to_canonical")
 
 
 def test_background_alias_resolves_to_canonical():
-    for raw in ("Nhạc nền", "background", "BACKGROUND", "nhac nen"):
+    for raw in ("Nhạc nền", "background", "BACKGROUND"):
         out = _resolve_canonical_or_422(raw=raw, field_label="linh_vuc")
         assert_eq(out, "BACKGROUND", f"canonicalize({raw!r})")
     print("PASS test_background_alias_resolves_to_canonical")
