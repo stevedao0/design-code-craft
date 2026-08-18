@@ -18,6 +18,7 @@ from .contract_validation import (
     parse_int_or_none,
     parse_iso_date,
 )
+from .domain_registry import canonicalize_domain, is_known_canonical_domain
 
 _logger = logging.getLogger(__name__)
 
@@ -26,12 +27,86 @@ def date_from_normalized(normalized: dict[str, object], key: str) -> date | None
     return parse_iso_date(normalized.get(key))
 
 
+def _resolve_canonical_or_422(
+    *,
+    raw: str | None,
+    field_label: str,
+) -> str:
+    """Resolve a write-boundary LABEL (linh_vuc) to its canonical domain code.
+
+    - Empty/None → reject as 422 (write boundary must receive a known label).
+    - Known canonical code (e.g. "KARAOKE") or recognized alias
+      (e.g. "Karaoke", "khu vui chơi") → return the canonical code.
+    - Anything else → reject as 422 with a meaningful message instead of
+      silently persisting the raw label into a business column.
+    """
+    cleaned = clean_text(raw)
+    if not cleaned:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{field_label} là bắt buộc và phải thuộc danh sách lĩnh vực đã chuẩn hoá.",
+        )
+    canonical = canonicalize_domain(cleaned)
+    if canonical is None or not is_known_canonical_domain(canonical):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=(
+                f"{field_label} '{cleaned}' không thuộc danh mục lĩnh vực đã chuẩn hoá. "
+                "Vui lòng chọn lĩnh vực từ danh sách (Karaoke, Phòng thu âm, "
+                "Khu vui chơi, SCTT, BD, Nhạc nền)."
+            ),
+        )
+    return canonical
+
+
+# field_code is NOT a domain. It is a contract-suffix tag (PR / MR) used to
+# distinguish contract scopes. It is also accepted as a canonical domain code
+# when callers want to keep the column aligned with linh_vuc. Allowed values:
+#   - canonical domain code (KARAOKE / KHU_VUI_CHOI / ...)
+#   - the suffix tags "PR" and "MR" (Phổ thông / Mục đích khác)
+_ALLOWED_FIELD_CODES: frozenset[str] = frozenset({"PR", "MR"})
+
+
+def _resolve_field_code_or_422(
+    *,
+    raw: str | None,
+    field_label: str = "Mã lĩnh vực (field_code)",
+) -> str:
+    """Resolve field_code at the write boundary.
+
+    Empty → reject 422.
+    Canonical domain code (KARAOKE / ...) → pass through.
+    Suffix tag (PR / MR) → pass through.
+    Anything else → reject 422.
+
+    Unlike linh_vuc, field_code is not a domain identifier; it is a contract
+    classification tag. We therefore do not canonicalize it via the domain
+    registry, but we still reject unrecognized values to avoid dirty data.
+    """
+    cleaned = clean_text(raw)
+    if not cleaned:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"{field_label} là bắt buộc.",
+        )
+    upper = cleaned.upper()
+    if upper in _ALLOWED_FIELD_CODES or is_known_canonical_domain(upper):
+        return upper
+    raise HTTPException(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        detail=(
+            f"{field_label} '{cleaned}' không hợp lệ. "
+            "Chỉ chấp nhận mã lĩnh vực chuẩn hoá (KARAOKE, KHU_VUI_CHOI, ...) "
+            "hoặc hậu tố hợp đồng (PR, MR)."
+        ),
+    )
+
+
 def build_contract_record_from_draft(
     *,
     normalized: dict[str, object],
 ) -> ContractRecordRow:
     from app.services.background_template_resolver import resolve_template_code
-    from app.services.domain_registry import canonicalize_domain
 
     # Get contract_template_code from normalized data, default to TEMPLATE_1
     template_code = resolve_template_code(normalized.get("contract_template_code"))
@@ -39,10 +114,13 @@ def build_contract_record_from_draft(
     # Canonicalize write-boundary inputs. Raw `linh_vuc` and `field_code`
     # values must NOT be persisted as-is — they go through the central
     # registry so every read path agrees on the same KPI group.
-    raw_linh_vuc = clean_text(normalized.get("linh_vuc"))
-    canonical_linh_vuc = canonicalize_domain(raw_linh_vuc) or raw_linh_vuc
-    raw_field_code = clean_text(normalized.get("field_code"))
-    canonical_field_code = canonicalize_domain(raw_field_code) or raw_field_code
+    canonical_linh_vuc = _resolve_canonical_or_422(
+        raw=normalized.get("linh_vuc"),
+        field_label="Lĩnh vực (linh_vuc)",
+    )
+    canonical_field_code = _resolve_field_code_or_422(
+        raw=normalized.get("field_code"),
+    )
 
     return ContractRecordRow(
         contract_no=clean_text(normalized.get("contract_no")),
@@ -259,11 +337,15 @@ def insert_contract_record_simple(
     _logger.info("[create-contract] candidate before insert contract_no=%s", contract_no)
 
     # Canonicalize write-boundary inputs so business columns never receive
-    # raw labels bypassing the registry.
-    raw_lv = clean_text(candidate.get("linh_vuc"))
-    canon_lv = canonicalize_domain(raw_lv) or raw_lv
-    raw_fc = clean_text(field_code or candidate.get("field_code"))
-    canon_fc = canonicalize_domain(raw_fc) or raw_fc
+    # raw labels bypassing the registry. Reject unresolved domains instead
+    # of silently persisting them as 422 (contract_create contract).
+    canon_lv = _resolve_canonical_or_422(
+        raw=candidate.get("linh_vuc"),
+        field_label="Lĩnh vực (linh_vuc)",
+    )
+    canon_fc = _resolve_field_code_or_422(
+        raw=field_code or candidate.get("field_code"),
+    )
 
     # Check for existing contract with same contract_no and annex_no IS NULL
     existing = db.query(ContractRecordRow).filter(

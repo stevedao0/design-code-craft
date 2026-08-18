@@ -2880,6 +2880,10 @@ def create_and_export_docx(
         )
     except Exception as exc:
         db.rollback()
+        # Re-raise HTTPException so FastAPI can map it to the proper status
+        # code (e.g. 422 from the write-boundary canonicalization check).
+        if isinstance(exc, HTTPException):
+            raise
         logger.exception("create_and_export_docx failed: %s", exc)
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
         return CreateAndExportDocxResponse(
