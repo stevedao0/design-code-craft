@@ -5,6 +5,10 @@
 # - No Caddy/HTTPS (Phase 5)
 # - No port 8000 conflict with dev
 # - Access: http://127.0.0.1:18000
+# NOTE: This stack does NOT include a PostgreSQL service.
+# The app connects to the PostgreSQL container at vcpmc_postgres
+# (from the contract project at F:\VCPMC\APPS\contract)
+# via host.docker.internal on the host machine.
 # =========================================
 
 services:
