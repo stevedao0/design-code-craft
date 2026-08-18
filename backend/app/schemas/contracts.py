@@ -402,8 +402,12 @@ class UpdateContractResponse(BaseModel):
     warnings: list[str] = []
 
 
-class DeleteContractCloneOnlyResponse(BaseModel):
-    """Response for safe clone-only contract deletion and admin delete-any."""
+class DeleteContractResponse(BaseModel):
+    """Response for contract deletion.
+
+    Authorization is based purely on the authenticated user's role/permission
+    against the active database. There is no clone-only or DB-mode guard.
+    """
     ok: bool
     mode: str
     message: str
@@ -415,7 +419,6 @@ class DeleteContractCloneOnlyResponse(BaseModel):
     deleted_related_rows: int = 0
     old_db_touched: bool = False
     blocked_final_certificates: int = 0
-    admin_delete_any_enabled: bool = False
     permission_used: str | None = None
     warnings: list[str] = []
     errors: list[str] = []

@@ -25,36 +25,6 @@ def is_full_access_user(user: UserRow, permissions: list[str]) -> bool:
     return any(permission in FULL_ACCESS_PERMISSIONS for permission in permissions)
 
 
-# Prefixes that mark a record as safe to delete (non-admin path)
-SAFE_DELETE_PREFIXES = (
-    "CLONE-NEWAPP-",
-    "TEST-NEWAPP-",
-    "MAKE-HD-",
-    "OLDAPP-DIRECT-",
-    "OLDAPP-FLOW-",
-    "UI-WORD-FALLBACK-",
-    "SMOKE-",
-    "UI-TEST-",
-    "DELETE-TEST-",
-)
-
-
-def is_safe_prefix_delete(contract_no: str | None) -> bool:
-    """Non-admin users can only delete records with safe test/clone prefixes."""
-    if not contract_no:
-        return False
-    upper = str(contract_no).strip().upper()
-    return any(upper.startswith(p) for p in SAFE_DELETE_PREFIXES)
-
-
-def is_admin_delete_any_user(user: UserRow, permissions: list[str]) -> bool:
-    """Admin/superuser/mod users who can delete any contract record in clone DB."""
-    role = str(user.role or "").strip().lower()
-    if role not in FULL_ACCESS_ROLES:
-        return False
-    return any(p in FULL_ACCESS_PERMISSIONS for p in permissions)
-
-
 def build_domain_condition(code: str):
     upper_linh_vuc = func.upper(func.trim(func.coalesce(ContractRecordRow.linh_vuc, "")))
     upper_display = func.upper(func.trim(func.coalesce(ContractRecordRow.linh_vuc_hien_thi, "")))

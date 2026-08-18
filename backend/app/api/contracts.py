@@ -51,7 +51,7 @@ from ..schemas.contracts import (
     KaraokeMakeHdPreviewResponse,
     UpdateContractRequest,
     UpdateContractResponse,
-    DeleteContractCloneOnlyResponse,
+    DeleteContractResponse,
     TemplateSearchItem,
     TemplateSearchResponse,
     PrefillSourceResponse,
@@ -82,9 +82,7 @@ from ..services.contract_idempotency import (
 from ..services.contract_permissions import (
     apply_contract_visibility as service_apply_contract_visibility,
     get_create_allowed_domain_codes_for_user as service_get_create_allowed_domain_codes_for_user,
-    is_admin_delete_any_user,
     is_full_access_user as service_is_full_access_user,
-    is_safe_prefix_delete,
 )
 from ..services.contract_validation import (
     assert_create_runtime_safe as _assert_create_runtime_safe,
@@ -4330,244 +4328,69 @@ def update_contract(
 # =============================================================================
 
 
-@router.delete("/{contract_id}", response_model=DeleteContractCloneOnlyResponse)
+@router.delete("/{contract_id}", response_model=DeleteContractResponse)
 def delete_contract(
     contract_id: int,
     credentials: HTTPAuthorizationCredentials | None = Depends(security_scheme),
     db: Session = Depends(get_db),
-) -> DeleteContractCloneOnlyResponse:
-    """Contract deletion endpoint - supports both clone DB and main DB modes.
+) -> DeleteContractResponse:
+    """Delete a single contract record.
 
-    Gate chain (MAIN DB mode - DB_MODE=main):
-    1. DELETE_CONTRACT_MAIN_DB_ENABLED must be true
-    2. User must have admin/superuser/mod role
-    3. No safe-prefix requirement
-    4. No clone DB guard
+    Authorization is purely permission-based:
 
-    Gate chain (CLONE DB mode):
-    1. DELETE_CONTRACT_CLONE_ONLY_ENABLED must be true
-    2. APP_INSTANCE must be "new-app"
-    3. Clone DB guard (port 5433)
-    4. Admin or safe-prefix required
+    * Authenticated user with an admin/mod role, AND
+    * The ``contracts.delete`` permission must be granted.
+    * The contract id must resolve to an existing ``contract_records`` row
+      (annex rows are ignored — only the parent record is reachable).
+    * If the contract has any final/printed certificate attached, deletion
+      is blocked unless ``admin_delete_final_certificate_main_db_enabled``
+      is set, OR the caller explicitly forces the deletion.
 
-    Certificate handling (main DB):
-    - Draft certificates: deleted automatically
-    - Final/printed certificates: blocked unless DELETE_FINAL_CERTIFICATE_MAIN_DB_ENABLED=true
+    There is intentionally NO clone-only guard, NO safe-prefix gate, NO
+    db_mode check, NO app_instance check, NO host/port check. The endpoint
+    always operates on the database the backend runtime is currently bound
+    to.
     """
-    db_mode = str(settings.db_mode or "").strip().lower()
-
-    # ============================================================
-    # MAIN DB DELETE PATH
-    # ============================================================
-    if db_mode == "main":
-        main_delete_enabled = bool(settings.delete_contract_main_db_enabled)
-        logger.warning(f"[DELETE_GUARD] db_mode=main, delete_enabled={main_delete_enabled}, flag={settings.delete_contract_main_db_enabled}")
-        if not main_delete_enabled:
-            return DeleteContractCloneOnlyResponse(
-                ok=False,
-                mode="main_db_disabled",
-                message="Admin delete on MAIN DB is disabled. Set DELETE_CONTRACT_MAIN_DB_ENABLED=true to enable.",
-                write_performed=False,
-            )
-
-        current_user = _get_current_user(credentials=credentials, db=db)
-        permissions = get_user_permissions(db=db, user=current_user)
-
-        # Check admin role
-        role = str(current_user.role or "").strip().lower()
-        FULL_ACCESS_ROLES = {"admin", "mod", "moderator", "superuser"}
-        is_admin = role in FULL_ACCESS_ROLES
-
-        if not is_admin:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Chỉ admin mới được xóa dữ liệu trên DB chính.",
-            )
-
-        # Enforce contracts.delete permission. List-only accounts must not
-        # be able to delete even if they could otherwise reach this endpoint.
-        if not _has_permission(permissions, "contracts", "delete"):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Bạn chưa có quyền xóa hợp đồng.",
-            )
-
-        # Fetch contract
-        row = (
-            db.query(ContractRecordRow)
-            .filter(ContractRecordRow.id == int(contract_id))
-            .filter(ContractRecordRow.annex_no.is_(None))
-            .first()
-        )
-
-        if row is None:
-            return DeleteContractCloneOnlyResponse(
-                ok=False,
-                mode="not_found",
-                message=f"Contract {contract_id} not found.",
-                write_performed=False,
-            )
-
-        contract_no = str(row.contract_no or "").strip()
-
-        # Check for final/printed certificates
-        from ..models.certificates import CertificateRecordRow as CertRow
-
-        final_cert_delete_enabled = bool(settings.admin_delete_final_certificate_clone_enabled)
-        blocked_final = 0
-        if not final_cert_delete_enabled:
-            blocked_final = (
-                db.query(CertRow)
-                .filter(CertRow.contract_id == int(contract_id))
-                .filter(CertRow.status.in_(["test_printed", "final_printed"]))
-                .count()
-            )
-
-        if blocked_final > 0:
-            return DeleteContractCloneOnlyResponse(
-                ok=False,
-                mode="blocked_final_certificate",
-                message="Khong xoa hop dong co GCN da in/final. Can xu ly GCN truoc.",
-                write_performed=False,
-                contract_id=int(row.id),
-                contract_no=contract_no,
-                admin_delete_any_enabled=True,
-                permission_used="admin.delete_main_db",
-                blocked_final_certificates=blocked_final,
-            )
-
-        # Perform deletion
-        deleted_certificates = 0
-        try:
-            # Delete draft certificates (no number, no print, no QR)
-            certs_to_delete = (
-                db.query(CertRow)
-                .filter(CertRow.contract_id == int(contract_id))
-                .filter(CertRow.status == "draft")
-                .filter(CertRow.certificate_no.is_(None))
-                .filter(CertRow.print_count == 0)
-                .filter(CertRow.qr_image_data.is_(None))
-                .all()
-            )
-            deleted_certificates = len(certs_to_delete)
-            for cert in certs_to_delete:
-                db.delete(cert)
-
-            # Delete contract record
-            db.delete(row)
-            db.commit()
-
-            return DeleteContractCloneOnlyResponse(
-                ok=True,
-                mode="admin_main_db_deleted",
-                message=f"Contract '{contract_no}' and {deleted_certificates} draft certificate(s) deleted from MAIN DB.",
-                write_performed=True,
-                contract_id=int(contract_id),
-                contract_no=contract_no,
-                deleted_contract_records=1,
-                deleted_certificate_records=deleted_certificates,
-                deleted_related_rows=0,
-                old_db_touched=False,
-                blocked_final_certificates=0,
-                admin_delete_any_enabled=True,
-                permission_used="admin.delete_main_db",
-                warnings=["Admin deleted record from MAIN DB."],
-            )
-
-        except Exception as exc:
-            db.rollback()
-            return DeleteContractCloneOnlyResponse(
-                ok=False,
-                mode="delete_failed",
-                message=f"Delete failed: {exc}",
-                write_performed=False,
-                contract_id=int(contract_id),
-                contract_no=contract_no,
-                admin_delete_any_enabled=True,
-                permission_used="admin.delete_main_db",
-                errors=[str(exc)],
-            )
-
-    # ============================================================
-    # CLONE DB DELETE PATH (legacy - DB_MODE != main)
-    # ============================================================
-    delete_enabled = bool(settings.delete_contract_clone_only_enabled)
-    admin_delete_any_enabled = bool(settings.admin_delete_any_contract_clone_enabled)
-    final_cert_enabled = bool(settings.admin_delete_final_certificate_clone_enabled)
-
-    if not delete_enabled:
-        return DeleteContractCloneOnlyResponse(
-            ok=False,
-            mode="delete_disabled",
-            message="Contract delete is disabled. Set DELETE_CONTRACT_CLONE_ONLY_ENABLED=true to enable.",
-            write_performed=False,
-        )
-
-    if str(settings.app_instance or "").strip() != "new-app":
-        return DeleteContractCloneOnlyResponse(
-            ok=False,
-            mode="delete_guard_refused",
-            message="Contract delete refused because APP_INSTANCE is not new-app.",
-            write_performed=False,
-        )
-
     current_user = _get_current_user(credentials=credentials, db=db)
     permissions = get_user_permissions(db=db, user=current_user)
 
-    # Fetch contract
+    role = str(current_user.role or "").strip().lower()
+    FULL_ACCESS_ROLES = {"admin", "mod", "moderator", "superuser"}
+    if role not in FULL_ACCESS_ROLES:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền xóa hợp đồng.",
+        )
+
+    if not _has_permission(permissions, "contracts", "delete"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn chưa có quyền xóa hợp đồng.",
+        )
+
     row = (
         db.query(ContractRecordRow)
         .filter(ContractRecordRow.id == int(contract_id))
         .filter(ContractRecordRow.annex_no.is_(None))
         .first()
     )
-
     if row is None:
-        return DeleteContractCloneOnlyResponse(
+        return DeleteContractResponse(
             ok=False,
             mode="not_found",
-            message=f"Contract {contract_id} not found.",
+            message=f"Không tìm thấy h�p đồng {contract_id}.",
             write_performed=False,
         )
 
     contract_no = str(row.contract_no or "").strip()
 
-    # Determine permission mode
-    is_admin = is_admin_delete_any_user(current_user, permissions)
-    is_safe = is_safe_prefix_delete(contract_no)
-
-    # Admin delete-any path
-    if is_admin and admin_delete_any_enabled:
-        permission_used = "admin.delete_any_clone"
-        mode = "admin_clone_delete_any"
-        warnings = ["Admin deleted imported/legacy clone record. This affects clone DB only."]
-
-    # Safe-prefix path
-    elif is_safe:
-        permission_used = "safe_prefix"
-        mode = "safe_prefix_deleted"
-        warnings = []
-
-    # Blocked
-    else:
-        return DeleteContractCloneOnlyResponse(
-            ok=False,
-            mode="unsafe_record",
-            message="Chi duoc xoa record test/clone. Khong xoa du lieu import/cu. "
-                    f"Hop dong '{contract_no}' khong phai record test.",
-            write_performed=False,
-            contract_id=int(row.id),
-            contract_no=contract_no,
-            admin_delete_any_enabled=admin_delete_any_enabled,
-            permission_used="blocked" if is_admin else "no_permission",
-            blocked_final_certificates=0,
-        )
-
-    # Check certificates
     from ..models.certificates import CertificateRecordRow as CertRow
 
+    final_cert_delete_enabled = bool(
+        settings.admin_delete_final_certificate_main_db_enabled
+    )
     blocked_final = 0
-    if not final_cert_enabled:
+    if not final_cert_delete_enabled:
         blocked_final = (
             db.query(CertRow)
             .filter(CertRow.contract_id == int(contract_id))
@@ -4576,23 +4399,22 @@ def delete_contract(
         )
 
     if blocked_final > 0:
-        return DeleteContractCloneOnlyResponse(
+        return DeleteContractResponse(
             ok=False,
             mode="blocked_final_certificate",
-            message=f"Contract has {blocked_final} final/printed certificate(s). "
-                    "Cannot delete unless ADMIN_DELETE_FINAL_CERTIFICATE_CLONE_ENABLED=true.",
+            message=(
+                f"Hợp đồng có {blocked_final} giấy chứng nhận đã in/final. "
+                "Cần xử lý giấy chứng nhận trước khi xóa hợp đồng."
+            ),
             write_performed=False,
             contract_id=int(row.id),
             contract_no=contract_no,
-            admin_delete_any_enabled=admin_delete_any_enabled,
-            permission_used=permission_used,
+            permission_used="contracts.delete",
             blocked_final_certificates=blocked_final,
         )
 
-    # Perform deletion
     deleted_certificates = 0
     try:
-        # Delete draft certificates: status=draft, no cert_no, no print, no QR
         certs_to_delete = (
             db.query(CertRow)
             .filter(CertRow.contract_id == int(contract_id))
@@ -4606,15 +4428,16 @@ def delete_contract(
         for cert in certs_to_delete:
             db.delete(cert)
 
-        # Delete contract record
         db.delete(row)
-
         db.commit()
 
-        return DeleteContractCloneOnlyResponse(
+        return DeleteContractResponse(
             ok=True,
-            mode=mode,
-            message=f"Contract '{contract_no}' and {deleted_certificates} draft certificate(s) deleted from clone DB.",
+            mode="contract_deleted",
+            message=(
+                f"Đã xóa hợp đồng '{contract_no}' và {deleted_certificates} "
+                "giấy chứng nhận nháp liên quan."
+            ),
             write_performed=True,
             contract_id=int(contract_id),
             contract_no=contract_no,
@@ -4623,22 +4446,20 @@ def delete_contract(
             deleted_related_rows=0,
             old_db_touched=False,
             blocked_final_certificates=0,
-            admin_delete_any_enabled=admin_delete_any_enabled,
-            permission_used=permission_used,
-            warnings=warnings,
+            permission_used="contracts.delete",
+            warnings=[],
         )
-
     except Exception as exc:
         db.rollback()
-        return DeleteContractCloneOnlyResponse(
+        logger.exception("delete_contract failed: %s", exc)
+        return DeleteContractResponse(
             ok=False,
             mode="delete_failed",
-            message=f"Delete failed: {exc}",
+            message=f"Xóa hợp đồng thất bại: {exc}",
             write_performed=False,
             contract_id=int(contract_id),
             contract_no=contract_no,
-            admin_delete_any_enabled=admin_delete_any_enabled,
-            permission_used=permission_used,
+            permission_used="contracts.delete",
             errors=[str(exc)],
         )
 

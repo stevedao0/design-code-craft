@@ -41,6 +41,5 @@ def health(request: Request) -> dict:
         "app_instance": settings.app_instance,
         "api": "new-backend",
         "database": current_db,
-        "delete_contract_main_db_enabled": settings.delete_contract_main_db_enabled,
         **db_info,
     }

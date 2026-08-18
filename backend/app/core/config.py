@@ -40,10 +40,7 @@ class Settings:
     sync_certificate_clone_only_enabled: bool
     print_certificate_enabled: bool
     print_certificate_clone_only_enabled: bool
-    delete_contract_clone_only_enabled: bool
-    delete_contract_main_db_enabled: bool
-    admin_delete_any_contract_clone_enabled: bool
-    admin_delete_final_certificate_clone_enabled: bool
+    admin_delete_final_certificate_main_db_enabled: bool
     export_template_root: str
     export_output_root: str
     preview_storage_path: str
@@ -93,10 +90,7 @@ def get_settings() -> Settings:
         sync_certificate_clone_only_enabled=_parse_bool(os.getenv("SYNC_CERTIFICATE_CLONE_ONLY_ENABLED", "true")),
         print_certificate_enabled=_parse_bool(os.getenv("PRINT_CERTIFICATE_ENABLED", "true")),
         print_certificate_clone_only_enabled=_parse_bool(os.getenv("PRINT_CERTIFICATE_CLONE_ONLY_ENABLED", "true")),
-        delete_contract_clone_only_enabled=_parse_bool(os.getenv("DELETE_CONTRACT_CLONE_ONLY_ENABLED", "false")),
-        delete_contract_main_db_enabled=_parse_bool(os.getenv("DELETE_CONTRACT_MAIN_DB_ENABLED", "false")),
-        admin_delete_any_contract_clone_enabled=_parse_bool(os.getenv("ADMIN_DELETE_ANY_CONTRACT_CLONE_ENABLED", "false")),
-        admin_delete_final_certificate_clone_enabled=_parse_bool(os.getenv("ADMIN_DELETE_FINAL_CERTIFICATE_CLONE_ENABLED", "false")),
+        admin_delete_final_certificate_main_db_enabled=_parse_bool(os.getenv("ADMIN_DELETE_FINAL_CERTIFICATE_MAIN_DB_ENABLED", "false")),
         export_template_root=os.getenv("EXPORT_TEMPLATE_ROOT", r"F:\APPs\templates"),
         export_output_root=os.getenv("EXPORT_OUTPUT_ROOT", r"F:\APPs\storage"),
         preview_storage_path=os.getenv("PREVIEW_STORAGE_PATH", r"F:\APPs\storage\preview"),
